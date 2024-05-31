@@ -1,11 +1,18 @@
 Package: argminCS
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Argmin Inference over a Discrete Candidate Set
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Tianyu Zhang, Hao Lee, Jing Lei
+Maintainer: Hao LEE <haolee@andrew.cmu.edu>
+Description: Functions to perform inference on argmin/argmax, particularly, 
+  help construct a discrete confidence set for argmin/argmax.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+URL: https://github.com/xu3cl4/argminCS
+BugReports: https://github.com/xu3cl4/argminCS/issues
+RoxygenNote: 7.3.1
+Imports: 
+    ggplot2,
+    glue,
+    LDATS
