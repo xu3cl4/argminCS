@@ -107,10 +107,9 @@ is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimenion of interest for hypothesis test.
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-#' @param threshold A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.
-#' @param n.pairs The number of \eqn{(i,j)} pairs for estimation; defaults to 100.
-#' @param verbose A boolean value; defaults to FALSE. If verbose=TRUE, the number of iterations would be printed to console.
-#' @param mult.factor In each iteration, \eqn{\lambda} would be multiplied by mult.factor to yield an enlarged \eqn{\lambda}.
+#' @param mult.factor In each iteration, \eqn{\lambda} would be multiplied by mult.factor to yield an enlarged \eqn{\lambda}; defaults to 2.
+#' @param verbose A boolean value indicating if the number of iterations should be printed to console; defaults to FALSE.
+#' @inheritDotParams is.lambda.feasible
 #'
 #' @return An (potentially) enlarged \eqn{\lambda}.
 #' @export
@@ -134,7 +133,7 @@ is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05
 #'
 #' ## print out the number of iterations
 #' lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean, verbose=TRUE)
-lambda.adaptive.enlarge <- function(lambda, data, r, sample.mean=NULL, threshold=0.05, n.pairs=100, verbose=FALSE, mult.factor=2){
+lambda.adaptive.enlarge <- function(lambda, data, r, sample.mean=NULL, mult.factor=2, verbose=FALSE, ...){
 
   n <- nrow(data)
 
@@ -144,12 +143,12 @@ lambda.adaptive.enlarge <- function(lambda, data, r, sample.mean=NULL, threshold
 
   lambda.curr <- lambda
   lambda.next <- mult.factor*lambda
-  feasible <- is.lambda.feasible(lambda.next, data, r, sample.mean=sample.mean, threshold=threshold, n.pairs=n.pairs)
+  feasible <- is.lambda.feasible(lambda.next, data, r, sample.mean=sample.mean, ...)
   count <- 1
   while (feasible & lambda.next < n){
     lambda.curr <- lambda.next
     lambda.next <- mult.factor*lambda.next
-    feasible <- is.lambda.feasible(lambda.next, data, r, sample.mean=sample.mean, threshold=threshold, n.pairs=pairs)
+    feasible <- is.lambda.feasible(lambda.next, data, r, sample.mean=sample.mean, ...)
     count <- count + 1
   }
   if (verbose){
