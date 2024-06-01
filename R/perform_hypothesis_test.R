@@ -1,45 +1,60 @@
 #' Perform argmin hypothesis test
 #'
-#' Perform hypothesis test to see if the given dimension may be an argmin. Multiple methods are supported.
+#' This is a wrapper to perform hypothesis test to see if a given dimension may be an argmin. Multiple methods are supported.
 #'
 #' @details The supported methods include:\tabular{ll}{
-#'    \code{softmin.LOO (SML)} \tab The scaled test statistic \cr
+#'    \code{softmin.LOO (SML)} \tab LOO (leave-one-out) algorithm, using the exponential weightings. \cr
 #'    \tab \cr
-#'    \code{argmin.LOO (HML)} \tab The standard deviation estimate. \cr
+#'    \code{argmin.LOO (HML)} \tab A variant of SML, but it uses (hard) argmin rather than exponential weighting.
+#'    The method is not recommended. \cr
 #'    \tab \cr
-#'    \code{nonsplit (NS)} \tab  \cr
+#'    \code{nonsplit (NS)} \tab  A variant of SML, but no splitting is involved.
+#'    One needs to pass a fixed lambda value as a required additional argument.\cr
 #'    \tab \cr
-#'    \code{fold (FD)} \tab  \cr
+#'    \code{fold (FD)} \tab A n fold version of SML. \cr
 #'    \tab \cr
-#'    \code{GU} \tab The method in \cr
+#'    \code{GU} \tab The method in \insertCite{dey.2024}{argminCS}. \cr
 #'    \tab \cr
-#'    \code{CCK.self.normalization (SN)} \tab Modified from the self-normalization method in \cr
+#'    \code{CCK.self.normalization (SN)} \tab Modified from the self-normalization method in \insertCite{cck.many.moments}{argminCS}. \cr
 #'    \tab \cr
-#'    \code{CCK.bootstrap (CB)} \tab Modified from the bootstrap method in. See also for a motivation. \cr
+#'    \code{CCK.bootstrap (CB)} \tab Modified from the bootstrap method in \insertCite{cck.many.moments}{argminCS}. See also \insertCite{lei.cvc}{argminCS}. \cr
 #'    \tab \cr
-#'    \code{Bonferroni (MT)} \tab Multiple Testing with Bonferroni's correction. \cr
+#'    \code{Bonferroni (MT)} \tab Multiple testing with Bonferroni's correction. \cr
 #' }
-#' If computation is a concern, use 'SN' or 'MT'. Otherise, 'SML' is recommended.
+#' If computation is a concern, use 'SN' or 'MT'. Otherwise, 'SML' is recommended.
 #'
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimension of interest for hypothesis test.
 #' @param method A string indicating the method for hypothesis test. Passing an abbreviation is allowed.
 #' For the list of supported methods and their abbreviations, see Details.
 #' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible}.
+#' Please specify a correct argument name if you intend to use any of them.
 #'
 #' @return 'Accept' or 'Reject'. A string indicating whether the given dimension could be an argmin (Accept) or not (Reject).
 #' @export
 #'
 #' @examples
 #'
+#' @references{
+#'   \insertRef{cck.many.moments}{argminCS}
+#'
+#'   \insertRef{lei.cvc}{argminCS}
+#'
+#'   \insertRef{dey.2024}{argminCS}
+#' }
+#'
 argmin.HT <- function(data, r, method='softmin.LOO', ...){
   if (method == 'softmin.LOO' | method == 'SML'){
+    return (argmin.HT.LOO(data, r, ...)$ans)
 
   } else if (method == 'argmin.LOO' | method == 'HML') {
+    return (argmin.HT.LOO(data, r, min.algor=getMin.argmin.LOO, ...)$ans)
 
   } else if (method == 'nonsplit' | method == 'NS') {
+    return (argmin.HT.nonsplit(data, r, ...)$ans)
 
   } else if (method == 'fold' | method == 'FD') {
+    return (argmin.HT.fold(data, r, ...)$ans)
 
   } else if (method == 'GU') {
 
@@ -55,7 +70,7 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
   }
 }
 
-#' Perform argmin hypothesis test.
+#' Perform argmin hypothesis test, using the LOO (leave-one-out) algorithm.
 #'
 #' Test if a dimension may be argmin, using the LOO (leave-one-out) algorithm in Zhang et al 2024.
 #'
@@ -112,7 +127,7 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
 }
 
 
-#' Perform argmin hypothesis test.
+#' Perform argmin hypothesis test without any splitting.
 #'
 #' Test if a dimension may be argmin withtout any splitting.
 #'
@@ -154,9 +169,9 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 }
 
 
-#' Perform argmin hypothesis test.
+#' Perform argmin hypothesis test by splitting into folds.
 #'
-#' Test if a dimension may be argmin withtout any splitting.
+#' Test if a dimension may be argmin by splitting into folds.
 #'
 #' @details
 #' This method does not support any data-driven way to tune lambda for now. Try to use argmin.HT.LOO instead.
@@ -165,6 +180,7 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #' @param r The dimension of interest for hypothesis test.
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
+#' @param n.fold The number of folds.
 #'
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat.scale} \tab The scaled test statistic \cr
@@ -173,10 +189,14 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
-argmin.HT.fold <- function(data, r, lambda, alpha=0.05){
+argmin.HT.fold <- function(data, r, lambda, alpha=0.05, n.fold=2){
   n <- nrow(data)
   p <- ncol(data)
   val.critical <- qnorm(1-alpha, 0, 1)
+
+  if (n.fold == n){
+    return (argmin.HT.LOO(data, r, sample.mean=colMeans(data), lambda=lambda))
+  }
 
   if (p == 2){
     diffs <- data[,j] - data[,-r]

@@ -7,8 +7,9 @@
 #'
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
-#' @param r The dimenion of interest for hypothesis test.
+#' @param r The dimension of interest for hypothesis test.
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
+#' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
 #' @param threshold A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.
 #' @param n.pairs The number of \eqn{(i,j)} pairs for estimation; defaults to 100.
 #' @param seed An integer-valued seed for subsampling. If no value is given, the seed would be set to \eqn{\lceil 17} threshold \eqn{\lambda \rceil}.
@@ -105,11 +106,12 @@ is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05
 #'
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
-#' @param r The dimenion of interest for hypothesis test.
+#' @param r The dimension of interest for hypothesis test.
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
+#' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
 #' @param mult.factor In each iteration, \eqn{\lambda} would be multiplied by mult.factor to yield an enlarged \eqn{\lambda}; defaults to 2.
 #' @param verbose A boolean value indicating if the number of iterations should be printed to console; defaults to FALSE.
-#' @inheritDotParams is.lambda.feasible
+#' @param ... Additional arguments to \link{is.lambda.feasible}.
 #'
 #' @return An (potentially) enlarged \eqn{\lambda}.
 #' @export
@@ -163,7 +165,7 @@ lambda.adaptive.enlarge <- function(lambda, data, r, sample.mean=NULL, mult.fact
 #' For its precise definition, we refer to the paper Zhang et al 2024.
 #'
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
-#' @param r The dimenion of interest for hypothesis test.
+#' @param r The dimension of interest for hypothesis test.
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 #' @param const A scaling constant for the data driven \eqn{\lambda}; defaults to 2.5. As its value gets larger, the first order stability tends to increase while power might decrease.
 #'

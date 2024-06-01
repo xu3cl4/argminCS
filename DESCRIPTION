@@ -3,7 +3,7 @@ Type: Package
 Title: Argmin Inference over a Discrete Candidate Set
 Version: 0.1.0
 Author: Tianyu Zhang, Hao Lee, Jing Lei
-Maintainer: Hao LEE <haolee@andrew.cmu.edu>
+Maintainer: Hao Lee <haolee@andrew.cmu.edu>
 Description: Functions to perform inference on argmin/argmax, particularly, 
   help construct a discrete confidence set for argmin/argmax.
 License: MIT + file LICENSE
@@ -12,7 +12,10 @@ LazyData: true
 URL: https://github.com/xu3cl4/argminCS
 BugReports: https://github.com/xu3cl4/argminCS/issues
 RoxygenNote: 7.3.1
+RdMacros: Rdpack
 Imports: 
-    ggplot2,
+    caret,
     glue,
-    LDATS
+    LDATS,
+    Rdpack,
+    stats

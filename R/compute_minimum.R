@@ -4,10 +4,11 @@
 #' more specifically, the quantity Q in Zhang et al 2024.
 #'
 #' @param i An index of the sample to be left out.
-#' @param r The dimenion of interest for hypothesis test; excluded from the calculation of softmin.
+#' @param r The dimension of interest for hypothesis test; excluded from the calculation of softmin.
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
+#' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
 #' @param print.weights A boolean specifying if the exponential weightings are printed to the console; defaults to False.
 #'
 #' @return The minimum calculated from softmin under the leave-one-out scheme with the r-th dimension excluded (The quantity Q in Zhang et al).
@@ -47,10 +48,11 @@ getMin.softmin.LOO <- function(i, r, data, lambda, sample.mean=NULL, print.weigh
 #' more specifically, the quantity Q in Zhang et al 2024.
 #'
 #' @param i An index of the sample to be left out.
-#' @param r The dimenion of interest for hypothesis test; excluded from the calculation of softmin.
+#' @param r The dimension of interest for hypothesis test; excluded from the calculation of softmin.
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param lambda NULL; in-place to ease the implementation.
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
+#' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
 #' @param ties.method A string indicating the method to tackle with ties: 'average' (or simply 'a'), 'random' (or simple 'r); defaults to average.
 #' @param seed An integer seed in case that 'random' is chosen to tackle with ties. If no value is given, the seed would be set to \eqn{i*r + 11}.
 #'

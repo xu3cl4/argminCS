@@ -1,15 +1,14 @@
-CS <- function(Xs, lambda, alpha, y.algor=getY.softmax, pre.screening=F){
+CS.argmin <- function(data, method, alpha=0.05){
+
+}
+
+CS <- function(Xs, lambda, alpha, y.algor=getY.softmax){
   # Xs: n by p
   # lambda: parameter for exponential weighting
   # alpha: a desired significance level
   p <- ncol(Xs)
   idx <- 1:p
   mean.smp <- colMeans(Xs)
-  if (pre.screening){
-    idx <- screening(Xs, mean.smp)
-    Xs <- Xs[,idx]
-    mean.smp <- mean.smp[idx]
-  }
 
   res <- rep(NA, p)
   if (length(idx) == 1) {
@@ -22,7 +21,7 @@ CS <- function(Xs, lambda, alpha, y.algor=getY.softmax, pre.screening=F){
   return (res)
 }
 
-CS.adaptive <- function(Xs, alpha, const, y.algor=getY.softmax, pre.screening=F, enlarge=F){
+CS.adaptive <- function(Xs, alpha, const, y.algor=getY.softmax, enlarge=F){
   # Xs: n by p
   # lambda: parameter for exponential weighting
   # alpha: a desired significance level
@@ -221,4 +220,8 @@ CS.CCK.self.normalized <- function(Xs, alpha){
   })
 
   return (res)
+}
+
+CS.CCK.bootstrap <- function(data, alpha){
+
 }
