@@ -25,10 +25,10 @@
 #'
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimension of interest for hypothesis test.
-#' @param method A string indicating the method for hypothesis test. Passing an abbreviation is allowed.
+#' @param method A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
 #' For the list of supported methods and their abbreviations, see Details.
 #' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible}.
-#' Please specify a correct argument name if you intend to use any of them.
+#' A correct argument name needs to be specified if it is used.
 #'
 #' @return 'Accept' or 'Reject'. A string indicating whether the given dimension could be an argmin (Accept) or not (Reject).
 #' @export
@@ -63,6 +63,7 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
   } else if (method == 'CCK.bootstrap' | method == 'CB') {
 
   } else if (method == 'Bonferroni' | method == 'MT') {
+    return (argmin.HT.MT(data, r, ...)$ans)
 
   } else {
     stop("'method' should be one of 'softmin.LOO' (SML), 'argmin.LOO' (HML),
@@ -122,7 +123,7 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
   sigma <- sd(diffs) # 2n
   test.stat <- sqrt(n)*(sample.mean[r] - mean(Qs))
   test.stat.scale <- test.stat/sigma
-  ans <- ifelse(test.stat.scale < val.critical, 'Accept', 'Reject')
+  ans <- ifelse(test.stat.scale <= val.critical, 'Accept', 'Reject')
   return (list(test.stat.scale=test.stat.scale, std=sigma, ans=ans))
 }
 
@@ -276,4 +277,43 @@ argmin.HT.GU <- function(risk.theta, alpha, risk.best.idx.tr, omega, idx=1){
   test.stat <- exp(-omega*(risk.best.idx.tr - risk.theta))
   # reject the test stat if test >= 1/alpha; otherwise, keep it
   return (if (test.stat < 1/alpha) idx else NA)
+}
+
+#' Perform argmin hypothesis test, using multiple testing with Bonferroni's correction.
+#'
+#' Test if a dimension may be argmin, using multiple testing with Bonferroni's correction.
+#'
+#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
+#' @param r The dimension of interest for hypothesis test.
+#' @param r.min The sample argmin of the data; defaults to NULL. It can be calculated via which.min(colMeans(data)).
+#' @param test The test to perform: 't' or 'z' test; defaults to 'z'.
+#' If data are believed to be normally distributed, use 't'; otherwise 'z'.
+#' @param alpha The significance level of the hypothesis test; defaults to 0.05.
+#'
+#' @return A list containing:\tabular{ll}{
+#'    \code{p.val} \tab p value without Bonferroni's correction. \cr
+#'    \tab \cr
+#'    \code{ans} \tab 'Reject' or 'Accept' \cr
+#' }
+argmin.HT.MT <- function(data, r, r.min=NULL, test='z', alpha=0.05){
+
+  val.critical <- alpha/(p-1)
+
+  if (is.null(r.min)){
+    mean <- colMeans(Xs) # np
+    r.min <- which.min(mean) #p
+  }
+
+  p.val <- NULL
+  if (test == 't'){
+    # t test
+    p.val <- stats::t.test(Xs[,j]-Xs[,r.min], alternative='greater')$p.value
+  } else{
+    # z.test
+    diffs <- Xs[,j] - Xs[,r.min]
+    p.val <- BSDA::z.test(diffs, sigma.x=sd(diffs), alternative='greater')$p.value
+  }
+
+  ans <- ifelse(p.val > critical, 'Accept', 'Reject')
+  return (list(p.val=p.val, ans=ans))
 }
