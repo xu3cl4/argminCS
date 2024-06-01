@@ -115,6 +115,8 @@ is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05
 #' @return An (potentially) enlarged \eqn{\lambda}.
 #' @export
 #'
+#' @seealso \link{is.lambda.feasible}
+#'
 #' @examples
 #' n <- 300
 #' mu <- (1:10)/10
@@ -151,7 +153,7 @@ lambda.adaptive.enlarge <- function(lambda, data, r, sample.mean=NULL, threshold
     count <- count + 1
   }
   if (verbose){
-    print(glue('before: {lambda}, after: {lambda.curr}, iteration: {count}'))
+    print(glue::glue('before: {lambda}, after: {lambda.curr}, iteration: {count}'))
   }
   return (lambda.curr)
 }
@@ -178,10 +180,10 @@ lambda.adaptive.enlarge <- function(lambda, data, r, sample.mean=NULL, threshold
 #' sample.mean <- colMeans(data)
 #'
 #' ## compute a data-driven lambda, and check its feasibility
-#' lambda.adaptive(lambda, data, 1, sample.mean=sample.mean)
+#' lambda.adaptive(data, 1, sample.mean=sample.mean)
 #'
 #' ## want to ensure a greater stability
-#' lambda.adaptive(lambda, data, 1, sample.mean=sample.mean, const=3)
+#' lambda.adaptive(data, 1, sample.mean=sample.mean, const=3)
 lambda.adaptive <- function(data, r, sample.mean=NULL, const=2.5){
   n <- nrow(data)
   p <- ncol(data)
