@@ -1,22 +1,51 @@
-is.lambda.feasible <- function(lambda, data, mean.smp, r, const=0.1){
-  #### the subroutine is used to check whether the given lambda satisfies the first
-  #### order stability, using the leave-2-out estimates
-
-  # lambda   : a proposed lambda to be checked if it satisfies the first order stability
-  # data     : n by p
-  # mean.smp : sample mean of data (p by 1), calculated by colMeans(data)
-  # r        : the dimension to be tested
-
-  # output : a boolean value indicating if the given lambda satisfies the first order stability
+#' Check the feasibility of a tuning parameter \eqn{\lambda}
+#'
+#' Check the feasibility of a tuning parameter \eqn{\lambda} by examining
+#' whether its resulting \eqn{\nabla_i K_j} is less than a threshold value,
+#' i.e., the first order stability is likely achieved.
+#' For further details, we refer to the paper Zhang et al 2024.
+#'
+#' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
+#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
+#' @param r The dimenion of interest for hypothesis test.
+#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
+#' @param threshold A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.
+#' @param n.pairs The number of \eqn{(i,j)} pairs for estimation; defaults to 100.
+#' @param seed An integer-valued seed for subsampling. If no value is given, the seed would be set to \eqn{\lceil 17} threshold \eqn{\lambda \rceil}.
+#'
+#' @return A boolean value indicating if the given \eqn{\lambda} likely gives the first order stability.
+#' @export
+#'
+#' @examples
+#' n <- 300
+#' mu <- (1:10)/10
+#' cov <- diag(length(mu))
+#' set.seed(31)
+#' data <- MASS::mvrnorm(n, mu, cov)
+#' sample.mean <- colMeans(data)
+#'
+#' ## compute a data-driven lambda, and check its feasibility
+#' lambda <- lambda.adaptive(data, 1, sample.mean=sample.mean)
+#' is.lambda.feasible(lambda, data, 1, sample.mean=sample.mean)
+#'
+#' ## want to ensure a greater stability
+#' is.lambda.feasible(lambda, data, 1, sample.mean=sample.mean, threshold=0.01)
+#'
+#' ## smaller n.pairs to speed up computation
+#' is.lambda.feasible(lambda, data, 1, sample.mean=sample.mean, n.pairs=50)
+is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05, n.pairs=100, seed=NULL){
 
   n <- nrow(data)
   p <- ncol(data)
-  val.critical <- const
+
+  if (is.null(sample.mean)){
+    sample.mean <- colMeans(data)
+  }
 
   ## use at most 100 pairs of samples for estimation
   n.pairs <- 100
   if (n < 200){
-    if (n %% 2 ==0){
+    if (n %% 2 == 0){
       n.pairs <- as.integer(n/2)
     } else {
       n.pairs <- as.integer((n - 1)/2)
@@ -24,12 +53,15 @@ is.lambda.feasible <- function(lambda, data, mean.smp, r, const=0.1){
   }
 
   ## subsample from the given sample
-  set.seed(ceiling(const*lambda))
+  if (is.null(seed)){
+    seed <- ceiling(17*threshold*lambda)
+  }
+  set.seed(seed)
   sample.indices <- sample(n, 2*n.pairs)
   index.pairs <- cbind(sample.indices[1:n.pairs], sample.indices[(n.pairs+1):(2*n.pairs)])
 
   differences.by.perturbing.one <- sapply(1:n.pairs, function(i){
-
+    # i is the perturbed index
     index.first <- index.pairs[i,1]
     index.second <- index.pairs[i,2]
 
@@ -37,72 +69,129 @@ is.lambda.feasible <- function(lambda, data, mean.smp, r, const=0.1){
     j <- max(index.first, index.second)+1
     if (j > n){
       index.candidates <- setdiff(1:3, c(index.first, index.second))
-      set.seed(ceiling(i*lambda))
-      j <- sample(index.candidates, 1)
+      if (length(index.candidates) > 1){
+        set.seed(ceiling(i*seed))
+        j <- sample(index.candidates, 1)
+      } else {
+        j <- index.candidates[1]
+      }
     }
 
-    mu.no.j.i <- (mean.smp*n - data[j,] - data[index.second,])/(n-2)
-    mu.no.j.i.perturbed <- (mean.smp*n - data[j,] - data[index.first,])/(n-2)
+    mu.no.j.i <- (sample.mean*n - data[j,] - data[index.second,])/(n-2)
+    mu.no.j.i.perturbed <- (sample.mean*n - data[j,] - data[index.first,])/(n-2)
 
-    weights.1 <- softmax(-lambda*mu.no.j.i[-r])
-    weights.2 <- softmax(-lambda*mu.no.j.i.perturbed[-r])
+    weights.1 <- LDATS::softmax(-lambda*mu.no.j.i[-r])
+    weights.2 <- LDATS::softmax(-lambda*mu.no.j.i.perturbed[-r])
 
-    difference <- sum((weights.1 - weights.2)*(data[j, -r] - mean.smp[-r]))
+    difference <- sum((weights.1 - weights.2)*(data[j, -r] - sample.mean[-r]))
     return (difference)
   })
 
   difference.by.perturbing.one.squared <- mean(differences.by.perturbing.one^2)
 
   # estimate variance by leaving one out
-  Qs <- sapply(index.pairs[,1], function(x) return (getY.softmax(x, r, data, mean.smp, lambda)))
+  Qs <- sapply(index.pairs[,1], function(x) return (getMin.softmin.LOO(x, r, data, lambda, sample.mean)))
   diffs <- data[index.pairs[,1],r] - Qs
   variance <- var(diffs)
 
   scaled.difference.by.perturbing.one.squared <- difference.by.perturbing.one.squared/variance
-  return (ifelse(n*scaled.difference.by.perturbing.one.squared < val.critical, T, F))
+  return (ifelse(n*scaled.difference.by.perturbing.one.squared < threshold, T, F))
 }
 
-lambda.adaptive.enlarge <- function(lambda, data, mean.smp, r, const=0.1){
-  # lambda   : initial lambda
-  # data     : n by p
-  # mean.smp : sample mean of data (p by 1), calculated by colMeans(data)
-  # r        : the dimension to be tested
+#' Iteratively enlarge a tuning parameter \eqn{\lambda} in a data-driven way.
+#'
+#' Iteratively enlarge a tuning parameter \eqn{\lambda} to enhance the power of hypothesis testing.
+#' The iterative algorithm ends when an enlarged \eqn{\lambda} unlikely yields the first order stability.
+#'
+#' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
+#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
+#' @param r The dimenion of interest for hypothesis test.
+#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
+#' @param threshold A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.
+#' @param n.pairs The number of \eqn{(i,j)} pairs for estimation; defaults to 100.
+#' @param verbose A boolean value; defaults to FALSE. If verbose=TRUE, the number of iterations would be printed to console.
+#' @param mult.factor In each iteration, \eqn{\lambda} would be multiplied by mult.factor to yield an enlarged \eqn{\lambda}.
+#'
+#' @return An (potentially) enlarged \eqn{\lambda}.
+#' @export
+#'
+#' @examples
+#' n <- 300
+#' mu <- (1:10)/10
+#' cov <- diag(length(mu))
+#' set.seed(31)
+#' data <- MASS::mvrnorm(n, mu, cov)
+#' sample.mean <- colMeans(data)
+#'
+#' ## compute a data-driven lambda, and check its feasibility
+#' lambda <- lambda.adaptive(data, 1, sample.mean=sample.mean)
+#' lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean)
+#'
+#' ## want to ensure a greater stability
+#' lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean, threshold=0.01)
+#'
+#' ## print out the number of iterations
+#' lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean, verbose=TRUE)
+lambda.adaptive.enlarge <- function(lambda, data, r, sample.mean=NULL, threshold=0.05, n.pairs=100, verbose=FALSE, mult.factor=2){
+
   n <- nrow(data)
 
+  if (is.null(sample.mean)){
+    sample.mean <- colMeans(data)
+  }
+
   lambda.curr <- lambda
-  lambda.next <- 2*lambda
-  feasible <- is.lambda.feasible(lambda.next, data, mean.smp, r, const)
+  lambda.next <- mult.factor*lambda
+  feasible <- is.lambda.feasible(lambda.next, data, r, sample.mean=sample.mean, threshold=threshold, n.pairs=n.pairs)
   count <- 1
   while (feasible & lambda.next < n){
     lambda.curr <- lambda.next
-    lambda.next <- 2*lambda.next
-    feasible <- is.lambda.feasible(lambda.next, data, mean.smp, r, const)
-    #print(glue('{lambda.next} {feasible}'))
+    lambda.next <- mult.factor*lambda.next
+    feasible <- is.lambda.feasible(lambda.next, data, r, sample.mean=sample.mean, threshold=threshold, n.pairs=pairs)
     count <- count + 1
   }
-  print(glue('before: {lambda}, after: {lambda.curr}, iteration: {count}'))
+  if (verbose){
+    print(glue('before: {lambda}, after: {lambda.curr}, iteration: {count}'))
+  }
   return (lambda.curr)
 }
 
-lambda.adaptive <- function(data, mean.smp, r, const=1){
-  # r is the index of the 'argmin'
-  # data: n by p
-  # const: scaling parameter for lambda
+#' Generate a data-driven \eqn{\lambda}.
+#'
+#' Generate a data-driven \eqn{\lambda} motivated by the derivation of the first order stability.
+#' For its precise definition, we refer to the paper Zhang et al 2024.
+#'
+#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
+#' @param r The dimenion of interest for hypothesis test.
+#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
+#' @param const A scaling constant for the data driven \eqn{\lambda}; defaults to 2.5. As its value gets larger, the first order stability tends to increase while power might decrease.
+#'
+#' @return A data-driven \eqn{\lambda}.
+#' @export
+#'
+#' @examples
+#' n <- 300
+#' mu <- (1:10)/10
+#' cov <- diag(length(mu))
+#' set.seed(31)
+#' data <- MASS::mvrnorm(n, mu, cov)
+#' sample.mean <- colMeans(data)
+#'
+#' ## compute a data-driven lambda, and check its feasibility
+#' lambda.adaptive(lambda, data, 1, sample.mean=sample.mean)
+#'
+#' ## want to ensure a greater stability
+#' lambda.adaptive(lambda, data, 1, sample.mean=sample.mean, const=3)
+lambda.adaptive <- function(data, r, sample.mean=NULL, const=2.5){
   n <- nrow(data)
   p <- ncol(data)
-  Xs.min <- sapply(1:n, function(i){
-    mu.hat.noi <- (mean.smp*n - data[i,])/(n-1)
 
-    # find argmin among all dimensions except r
-    # s <- 0
-    # val.min <- 1e4 # any sufficiently large value
-    # for (t in 1:p){
-    #   if (t != r & mu.hat.noi[t] < val.min){
-    #     s <- t
-    #     val.min <- mu.hat.noi[t]
-    #   }
-    # }
-    # return (data[i,s])
+  if (is.null(sample.mean)){
+    sample.mean <- colMeans(data)
+  }
+  Xs.min <- sapply(1:n, function(i){
+    mu.hat.noi <- (sample.mean*n - data[i,])/(n-1)
+
     min.indices <- which(mu.hat.noi[-r] == min(mu.hat.noi[-r]))
 
     set.seed(i)

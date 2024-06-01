@@ -1,13 +1,13 @@
 #' Compute the minimum, using softmin.
 #'
 #' Compute the minimum, using softmin, under the leave-one-out (LOO) scheme;
-#' more specifically, the quantity Q in Zhang et al.
+#' more specifically, the quantity Q in Zhang et al 2024.
 #'
 #' @param i An index of the sample to be left out.
 #' @param r The dimenion of interest for hypothesis test; excluded from the calculation of softmin.
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
-#' @param sample.mean The sample mean of the n samples in data; defaults to be NULL. It can be calculated via colMeans(data).
+#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 #' @param print.weights A boolean specifying if the exponential weightings are printed to the console; defaults to False.
 #'
 #' @return The minimum calculated from softmin under the leave-one-out scheme with the r-th dimension excluded (The quantity Q in Zhang et al).
@@ -38,20 +38,21 @@ getMin.softmin.LOO <- function(i, r, data, lambda, sample.mean=NULL, print.weigh
   if (print.weights){
     print(glue::glue('weights are {weights}'))
   }
-  return (sum(weights*data[i,-j])) #2p
+  return (sum(weights*data[i,-r])) #2p
 }
 
 #' Compute the minimum, using argmin.
 #'
 #' Compute the minimum, using (hard)argmin, under the leave-one-out (LOO) scheme;
-#' more specifically, the quantity Q in Zhang et al.
+#' more specifically, the quantity Q in Zhang et al 2024.
 #'
 #' @param i An index of the sample to be left out.
 #' @param r The dimenion of interest for hypothesis test; excluded from the calculation of softmin.
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
-#' @param sample.mean The sample mean of the n samples in data; defaults to be NULL. It can be calculated via colMeans(data).
+#' @param lambda NULL; in-place to ease the implementation.
+#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 #' @param ties.method A string indicating the method to tackle with ties: 'average' (or simply 'a'), 'random' (or simple 'r); defaults to average.
-#' @param seed An integer seed in case that 'random' is chosen to tackle with ties; defaults to i*r + 11.
+#' @param seed An integer seed in case that 'random' is chosen to tackle with ties. If no value is given, the seed would be set to \eqn{i*r + 11}.
 #'
 #' @return The minimum calculated from argmin under the leave-one-out scheme with the r-th dimension excluded (The quantity Q in Zhang et al).
 #' @export
@@ -68,7 +69,7 @@ getMin.softmin.LOO <- function(i, r, data, lambda, sample.mean=NULL, print.weigh
 #' ## calculate the sample.mean outside the function. This may foster LOO implementation computation-wise
 #' getMin.argmin.LOO(7, 1, data, sqrt(n), sample.mean=colMeans(data))
 
-getMin.argmin.LOO <- function(i, r, data, lambda, sample.mean=NULL, ties.method='average', seed=NULL){
+getMin.argmin.LOO <- function(i, r, data, lambda=NULL, sample.mean=NULL, ties.method='average', seed=NULL){
   n <- nrow(data)
   p <- ncol(data)
   if (is.null(sample.mean)){
@@ -84,10 +85,10 @@ getMin.argmin.LOO <- function(i, r, data, lambda, sample.mean=NULL, ties.method=
     }
     set.seed(seed)
     r.i.hat <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
-    return (data[i,-j][r.i.hat])
+    return (data[i,-r][r.i.hat])
   } else if (ties.method == 'random' | ties.method == 'r'){
     # average over all argmins
-    return (sum((data[i,-j])[min.indices])/length(min.indices))
+    return (sum((data[i,-r])[min.indices])/length(min.indices))
   } else {
     stop("'ties.method' should be one of 'average', 'random'")
   }
