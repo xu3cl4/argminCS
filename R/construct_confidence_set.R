@@ -26,10 +26,11 @@
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param method A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
 #' For the list of supported methods and their abbreviations, see Details.
+#' @param alpha The significance level; defaults to 0.05. The function produces a (1-alpha) confidence set.
 #' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{argmin.HT.nonsplit}, \link{argmin.HT.fold}, \link{argmin.HT.MT}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}.
 #' A correct argument name needs to be specified if it is used.
 #'
-#' @return A vector of indices (0-based) representing the confidence set.
+#' @return A vector of indices (0-based) representing the (1 - alpha) confidence set.
 #' @export
 #'
 #' @examples
@@ -79,7 +80,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     return (which(res == 'Accept'))
 
   } else if (method == 'Bonferroni' | method == 'MT') {
-    sample.mean <- colMeans(Xs) # np
+    sample.mean <- colMeans(data) # np
     min.indices <- which.min(sample.mean)
     r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
     r.min.sec <- find.sub.argmin(sample.mean, r.min)

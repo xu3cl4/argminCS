@@ -101,7 +101,7 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
 
   n <- nrow(data)
   p <- ncol(data)
-  val.critical <- qnorm(1-alpha, 0, 1)
+  val.critical <- stats::qnorm(1-alpha, 0, 1)
 
   if (is.null(sample.mean)){
     sample.mean <- colMeans(data)
@@ -122,7 +122,7 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
     Qs <- sapply(1:n, function(i) return (min.algor(i, r, data, lambda, sample.mean=sample.mean))) # 4np
   }
   diffs <- data[,r] - Qs # n
-  sigma <- sd(diffs) # 2n
+  sigma <- stats::sd(diffs) # 2n
   test.stat <- sqrt(n)*(sample.mean[r] - mean(Qs))
   test.stat.scale <- test.stat/sigma
   ans <- ifelse(test.stat.scale <= val.critical, 'Accept', 'Reject')
@@ -153,7 +153,7 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
 #' }
 argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
   n <- nrow(data)
-  val.critical <- qnorm(1-alpha, 0, 1)
+  val.critical <- stats::qnorm(1-alpha, 0, 1)
 
   if (is.null(sample.mean)){
     sample.mean <- colMeans(data)
@@ -163,7 +163,7 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
   Qs <- data[,-r] %*% weights
   diffs <- data[,r] - Qs
 
-  sigma <- sd(diffs) # 2n
+  sigma <- stats::sd(diffs) # 2n
   test.stat <- sqrt(n)*(sample.mean[r] - mean(Qs))
   test.stat.scale <- test.stat/sigma
 
@@ -195,17 +195,17 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 argmin.HT.fold <- function(data, r, lambda, alpha=0.05, n.fold=2){
   n <- nrow(data)
   p <- ncol(data)
-  val.critical <- qnorm(1-alpha, 0, 1)
+  val.critical <- stats::qnorm(1-alpha, 0, 1)
 
   if (n.fold == n){
     return (argmin.HT.LOO(data, r, sample.mean=colMeans(data), lambda=lambda))
   }
 
   if (p == 2){
-    diffs <- data[,j] - data[,-r]
-    var.smp <- sum((diffs - mean(diffs))^2)/(n-1)
+    diffs <- data[,r] - data[,-r]
+    sigma <- stats::sd(diffs)
     test.stat <- sqrt(n)*mean(diffs)
-    test.stat.scale <- test.stat/sqrt(var.smp)
+    test.stat.scale <- test.stat/sigma
     ans <- ifelse(test.stat.scale < val.critical, 'Accept', 'Reject')
     return (list(test.stat.scale=test.stat.scale, std=sigma, ans=ans))
   } else{
@@ -219,7 +219,7 @@ argmin.HT.fold <- function(data, r, lambda, alpha=0.05, n.fold=2){
       in.fold <- data[flds[[fold]],]
       weights <- LDATS::softmax(-lambda*mu.out.fold[-r])
       Qs <- in.fold[,-r] %*% weights
-      diffs.fold <- in.fold[,j] - Qs
+      diffs.fold <- in.fold[,r] - Qs
       return (diffs.fold)
     })
     diffs <- do.call(c, diffs)
@@ -305,7 +305,7 @@ argmin.HT.MT <- function(data, r, test='z', r.min=NULL, r.min.sec=NULL, alpha=0.
   val.critical <- alpha/(p-1)
 
   if (is.null(r.min) | is.null(r.min.sec)){
-    sample.mean <- colMeans(Xs) # np
+    sample.mean <- colMeans(data) # np
     min.indices <- which.min(sample.mean)
     r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
     r.min.sec <- find.sub.argmin(sample.mean, r.min)
@@ -323,14 +323,14 @@ argmin.HT.MT <- function(data, r, test='z', r.min=NULL, r.min.sec=NULL, alpha=0.
     # z.test
     if (r == r.min){
       diffs <- data[,r] - data[,r.min.sec]
-      p.val <- BSDA::z.test(diffs, sigma.x=sd(diffs), alternative='greater')$p.value
+      p.val <- BSDA::z.test(diffs, sigma.x=stats::sd(diffs), alternative='greater')$p.value
     } else {
       diffs <- data[,r] - data[,r.min]
-      p.val <- BSDA::z.test(diffs, sigma.x=sd(diffs), alternative='greater')$p.value
+      p.val <- BSDA::z.test(diffs, sigma.x=stats::sd(diffs), alternative='greater')$p.value
     }
   }
 
-  ans <- ifelse(p.val > critical, 'Accept', 'Reject')
+  ans <- ifelse(p.val > val.critical, 'Accept', 'Reject')
   return (list(p.val=p.val, ans=ans))
 }
 
@@ -358,7 +358,7 @@ argmin.HT.SN <- function(data, r, sample.mean=NULL, alpha=0.05){
   n <- nrow(data)
   p <- ncol(data)
 
-  norm.quantile <- qnorm(1 - alpha/(p-1))
+  norm.quantile <- stats::qnorm(1 - alpha/(p-1))
   val.critical <- ifelse(norm.quantile^2 >= n,Inf,norm.quantile/sqrt(1-norm.quantile^2/n))
 
   if (is.null(sample.mean)){
@@ -366,7 +366,7 @@ argmin.HT.SN <- function(data, r, sample.mean=NULL, alpha=0.05){
   }
 
   diffs <- matrix(rep(data[,r], p-1), nrow=n, byrow=F) - data[,-r] # np
-  sd.diffs <- apply(diffs, 2, sd) # 3np
+  sd.diffs <- apply(diffs, 2, stats::sd) # 3np
   mean.diffs <- NULL
   if (is.null(sample.mean)){
     # even without this step, the algorithm still requires np operations
@@ -376,7 +376,7 @@ argmin.HT.SN <- function(data, r, sample.mean=NULL, alpha=0.05){
   }
   ratios <- mean.diffs/sd.diffs
   test.stat <- sqrt(n)*max(ratios)
-  ans <- ifelse(test.stat <= val.critival, 'Accept', 'Reject')
+  ans <- ifelse(test.stat <= val.critical, 'Accept', 'Reject')
   return (list(test.stat=test.stat, ans=ans))
 }
 
@@ -412,7 +412,7 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
   }
 
   diffs <- matrix(rep(data[,r], p-1), nrow=n, byrow=F) - data[,-r] # np
-  sd.diffs <- apply(diffs, 2, sd) # 3np
+  sd.diffs <- apply(diffs, 2, stats::sd) # 3np
   mean.diffs <- NULL
   if (is.null(sample.mean)){
     # even without this step, the algorithm still requires np operations
@@ -429,7 +429,7 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
                           function(i){
                             seed <- ceiling(abs(i*r*data[1,1]))
                             set.seed(seed)
-                            Gaussian.vec <- rnorm(n, 0, 1)
+                            Gaussian.vec <- stats::rnorm(n, 0, 1)
                             test.stat.MB <- sqrt(n)*max(colMeans(diffs.centered*Gaussian.vec)/sd.diffs)
                             return (test.stat.MB)
                             })

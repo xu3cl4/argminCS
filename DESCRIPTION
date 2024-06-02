@@ -18,5 +18,6 @@ Imports:
     caret,
     glue,
     LDATS,
+    MASS,
     Rdpack,
     stats

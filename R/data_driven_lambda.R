@@ -93,7 +93,7 @@ is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05
   # estimate variance by leaving one out
   Qs <- sapply(index.pairs[,1], function(x) return (getMin.softmin.LOO(x, r, data, lambda, sample.mean)))
   diffs <- data[index.pairs[,1],r] - Qs
-  variance <- var(diffs)
+  variance <- stats::var(diffs)
 
   scaled.difference.by.perturbing.one.squared <- difference.by.perturbing.one.squared/variance
   return (ifelse(n*scaled.difference.by.perturbing.one.squared < threshold, T, F))
@@ -205,5 +205,5 @@ lambda.adaptive <- function(data, r, sample.mean=NULL, const=2.5){
     X.min <- data[i, -r][min.idx]
     return (X.min)
   })
-  return (sqrt(n)/(const*sd(Xs.min)))
+  return (sqrt(n)/(const*stats::sd(Xs.min)))
 }
