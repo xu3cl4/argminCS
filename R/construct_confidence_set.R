@@ -35,6 +35,7 @@
 #'
 #' @examples
 #'
+#' @importFrom Rdpack reprompt
 #' @references{
 #'   \insertRef{cck.many.moments}{argminCS}
 #'
@@ -93,41 +94,41 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
   }
 }
 
-CS.GU <- function(X, alpha, omega=NULL){
-
-  n <- nrow(X)
-  p <- ncol(X)
-
-  if (is.null(omega)){
-    omega <- omega.bootstrap(X, alpha)
-  }
-
-  ## split the data
-  set.seed(p*n)
-  idx.tr <- sample(1:n, n/2, replace=F)
-  X.tr <- X[idx.tr,]
-  X.tt <- X[-idx.tr,]
-
-  # get the best model over training set
-  risks.tr <- colMeans(X.tr)
-  idx.min.tr <- which.min(risks.tr)
-
-  # evaluate the best model from the training set over the testing set
-  risk.idx.min.tr <- mean(X.tt[idx.min.tr,])
-
-  # compute the learning rate
-  if (is.null(omega)){
-    omega <- omega.bootstrap(X, alpha)
-  }
-
-  idx <- 1:p
-  res <- rep(NA, p)
-  smp.mean.tt <- colMeans(X.tt)
-  res.s <- idx[sapply(1:length(idx), function(j) argmin.HT.GU(
-    smp.mean.tt[j], alpha, risk.idx.min.tr, omega, idx=j))]
-  res.s <- na.omit(res.s)
-  res[res.s] <- res.s
-  return (res)
-}
+# CS.GU <- function(X, alpha, omega=NULL){
+#
+#   n <- nrow(X)
+#   p <- ncol(X)
+#
+#   if (is.null(omega)){
+#     omega <- omega.bootstrap(X, alpha)
+#   }
+#
+#   ## split the data
+#   set.seed(p*n)
+#   idx.tr <- sample(1:n, n/2, replace=F)
+#   X.tr <- X[idx.tr,]
+#   X.tt <- X[-idx.tr,]
+#
+#   # get the best model over training set
+#   risks.tr <- colMeans(X.tr)
+#   idx.min.tr <- which.min(risks.tr)
+#
+#   # evaluate the best model from the training set over the testing set
+#   risk.idx.min.tr <- mean(X.tt[idx.min.tr,])
+#
+#   # compute the learning rate
+#   if (is.null(omega)){
+#     omega <- omega.bootstrap(X, alpha)
+#   }
+#
+#   idx <- 1:p
+#   res <- rep(NA, p)
+#   smp.mean.tt <- colMeans(X.tt)
+#   res.s <- idx[sapply(1:length(idx), function(j) argmin.HT.GU(
+#     smp.mean.tt[j], alpha, risk.idx.min.tr, omega, idx=j))]
+#   res.s <- na.omit(res.s)
+#   res[res.s] <- res.s
+#   return (res)
+# }
 
 

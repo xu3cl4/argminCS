@@ -17,6 +17,7 @@
 #' @return A boolean value indicating if the given \eqn{\lambda} likely gives the first order stability.
 #' @export
 #'
+#' @importFrom MASS mvrnorm
 #' @examples
 #' n <- 300
 #' mu <- (1:10)/10
@@ -118,9 +119,10 @@ is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05
 #'
 #' @seealso \link{is.lambda.feasible}
 #'
+#' @importFrom MASS mvrnorm
 #' @examples
 #' n <- 300
-#' mu <- (1:10)/10
+#' mu <- (1:10)/5
 #' cov <- diag(length(mu))
 #' set.seed(31)
 #' data <- MASS::mvrnorm(n, mu, cov)
@@ -131,7 +133,7 @@ is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05
 #' lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean)
 #'
 #' ## want to ensure a greater stability
-#' lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean, threshold=0.01)
+#' lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean, threshold=0.001)
 #'
 #' ## print out the number of iterations
 #' lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean, verbose=TRUE)
@@ -172,6 +174,7 @@ lambda.adaptive.enlarge <- function(lambda, data, r, sample.mean=NULL, mult.fact
 #' @return A data-driven \eqn{\lambda}.
 #' @export
 #'
+#' @importFrom MASS mvrnorm
 #' @examples
 #' n <- 300
 #' mu <- (1:10)/10

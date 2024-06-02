@@ -35,6 +35,7 @@
 #'
 #' @examples
 #'
+#' @importFrom Rdpack reprompt
 #' @references{
 #'   \insertRef{cck.many.moments}{argminCS}
 #'
@@ -42,7 +43,7 @@
 #'
 #'   \insertRef{dey.2024}{argminCS}
 #' }
-#'
+
 argmin.HT <- function(data, r, method='softmin.LOO', ...){
   if (method == 'softmin.LOO' | method == 'SML'){
     return (argmin.HT.LOO(data, r, ...)$ans)
@@ -350,6 +351,7 @@ argmin.HT.MT <- function(data, r, test='z', r.min=NULL, r.min.sec=NULL, alpha=0.
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
 #'
+#' @importFrom Rdpack reprompt
 #' @references{
 #'  \insertRef{cck.many.moments}{argminCS}
 #' }
@@ -397,6 +399,7 @@ argmin.HT.SN <- function(data, r, sample.mean=NULL, alpha=0.05){
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
 #'
+#' @importFrom Rdpack reprompt
 #' @references{
 #'  \insertRef{cck.many.moments}{argminCS}
 #'

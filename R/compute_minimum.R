@@ -14,6 +14,7 @@
 #' @return The minimum calculated from softmin under the leave-one-out scheme with the r-th dimension excluded (The quantity Q in Zhang et al).
 #' @export
 #'
+#' @importFrom MASS mvrnorm
 #' @examples
 #' n <- 100
 #' mu <- (1:10)/10
@@ -60,6 +61,7 @@ getMin.softmin.LOO <- function(i, r, data, lambda, sample.mean=NULL, print.weigh
 #' @return The minimum calculated from argmin under the leave-one-out scheme with the r-th dimension excluded (The quantity Q in Zhang et al).
 #' @export
 #'
+#' @importFrom MASS mvrnorm
 #' @examples
 #' n <- 100
 #' mu <- (1:10)/10
