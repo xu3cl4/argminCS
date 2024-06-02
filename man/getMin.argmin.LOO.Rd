@@ -46,6 +46,7 @@ data <- MASS::mvrnorm(n, mu, cov)
 ## let the function calculate the sample.mean
 getMin.argmin.LOO(7, 1, data, sqrt(n))
 
-## calculate the sample.mean outside the function. This may foster LOO implementation computation-wise
+## calculate the sample.mean outside the function.
+## This may foster LOO implementation computation-wise
 getMin.argmin.LOO(7, 1, data, sqrt(n), sample.mean=colMeans(data))
 }

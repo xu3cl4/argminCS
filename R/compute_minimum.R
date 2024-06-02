@@ -23,7 +23,8 @@
 #' ## let the function calculate the sample.mean
 #' getMin.softmin.LOO(7, 1, data, sqrt(n))
 #'
-#' ## calculate the sample.mean outside the function. This may foster LOO implementation computation-wise
+#' ## calculate the sample.mean outside the function.
+#' ## This may foster LOO implementation computation-wise
 #' getMin.softmin.LOO(7, 1, data, sqrt(n), sample.mean=colMeans(data))
 #'
 #  ## require the function to print out the exponential weights to the console
@@ -68,7 +69,8 @@ getMin.softmin.LOO <- function(i, r, data, lambda, sample.mean=NULL, print.weigh
 #' ## let the function calculate the sample.mean
 #' getMin.argmin.LOO(7, 1, data, sqrt(n))
 #'
-#' ## calculate the sample.mean outside the function. This may foster LOO implementation computation-wise
+#' ## calculate the sample.mean outside the function.
+#' ## This may foster LOO implementation computation-wise
 #' getMin.argmin.LOO(7, 1, data, sqrt(n), sample.mean=colMeans(data))
 
 getMin.argmin.LOO <- function(i, r, data, lambda=NULL, sample.mean=NULL, ties.method='average', seed=NULL){

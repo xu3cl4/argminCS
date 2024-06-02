@@ -298,23 +298,32 @@ argmin.HT.GU <- function(risk.theta, alpha, risk.best.idx.tr, omega, idx=1){
 #'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
-argmin.HT.MT <- function(data, r, r.min=NULL, test='z', alpha=0.05){
+argmin.HT.MT <- function(data, r, test='z', alpha=0.05){
 
   val.critical <- alpha/(p-1)
 
   if (is.null(r.min)){
-    mean <- colMeans(Xs) # np
-    r.min <- which.min(mean) #p
+    sample.mean <- colMeans(Xs) # np
+    min.indices <- which.min(sample.mean)
+    r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
   }
 
   p.val <- NULL
   if (test == 't'){
     # t test
-    p.val <- stats::t.test(Xs[,j]-Xs[,r.min], alternative='greater')$p.value
+    if (r == r.min){
+
+    } else {
+      p.val <- stats::t.test(data[,r]-data[,r.min], alternative='greater')$p.value
+    }
   } else{
     # z.test
-    diffs <- Xs[,j] - Xs[,r.min]
-    p.val <- BSDA::z.test(diffs, sigma.x=sd(diffs), alternative='greater')$p.value
+    diffs <- data[,r] - data[,r.min]
+    if (r == r.min){
+
+    } else {
+      p.val <- BSDA::z.test(diffs, sigma.x=sd(diffs), alternative='greater')$p.value
+    }
   }
 
   ans <- ifelse(p.val > critical, 'Accept', 'Reject')
@@ -422,7 +431,6 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
                             })
 
   p.val <- mean(test.stat.MBs > test.stat)
-
-  ans <- ifelse(p,val > alpha, 'Accept', 'Reject')
+  ans <- ifelse(p.val > alpha, 'Accept', 'Reject')
   return (list(p.val=p.val, ans=ans))
 }

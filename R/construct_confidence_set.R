@@ -1,51 +1,94 @@
-CS.argmin <- function(data, method, alpha=0.05){
+#' Construct a discrete confidence set for argmin.
+#'
+#' This is a wrapper to construct a discrete confidence set for argmin.. Multiple methods are supported.
+#'
+#' @details The supported methods include:\tabular{ll}{
+#'    \code{softmin.LOO (SML)} \tab LOO (leave-one-out) algorithm, using the exponential weightings. \cr
+#'    \tab \cr
+#'    \code{argmin.LOO (HML)} \tab A variant of SML, but it uses (hard) argmin rather than exponential weighting.
+#'    The method is not recommended. \cr
+#'    \tab \cr
+#'    \code{nonsplit (NS)} \tab  A variant of SML, but no splitting is involved.
+#'    One needs to pass a fixed lambda value as a required additional argument.\cr
+#'    \tab \cr
+#'    \code{fold (FD)} \tab A n fold version of SML. \cr
+#'    \tab \cr
+#'    \code{GU} \tab The method in \insertCite{dey.2024}{argminCS}. \cr
+#'    \tab \cr
+#'    \code{CCK.self.normalization (SN)} \tab Modified from the self-normalization method in \insertCite{cck.many.moments}{argminCS}. \cr
+#'    \tab \cr
+#'    \code{CCK.bootstrap (CB)} \tab Modified from the bootstrap method in \insertCite{cck.many.moments}{argminCS}. See also \insertCite{lei.cvc}{argminCS}. \cr
+#'    \tab \cr
+#'    \code{Bonferroni (MT)} \tab Multiple testing with Bonferroni's correction. \cr
+#' }
+#' If computation is a concern, use 'MT'. Otherwise, 'SML' is recommended.
+#'
+#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
+#' @param method A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
+#' For the list of supported methods and their abbreviations, see Details.
+#' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{argmin.HT.nonsplit}, \link{argmin.HT.fold}, \link{argmin.HT.MT}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}.
+#' A correct argument name needs to be specified if it is used.
+#'
+#' @return A vector of indices (0-based) representing the confidence set.
+#' @export
+#'
+#' @examples
+#'
+#' @references{
+#'   \insertRef{cck.many.moments}{argminCS}
+#'
+#'   \insertRef{lei.cvc}{argminCS}
+#'
+#'   \insertRef{dey.2024}{argminCS}
+#' }
+#'
+CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
 
-}
+  p <- ncol(data)
 
-CS <- function(Xs, lambda, alpha, y.algor=getY.softmax){
-  # Xs: n by p
-  # lambda: parameter for exponential weighting
-  # alpha: a desired significance level
-  p <- ncol(Xs)
-  idx <- 1:p
-  mean.smp <- colMeans(Xs)
+  if (method == 'softmin.LOO' | method == 'SML'){
+    sample.mean <- colMeans(data)
+    res <- sapply(1:p, function(r) {argmin.HT.LOO(data, r, sample.mean=sample.mean, ...)$ans})
+    return (which(res == 'Accept'))
 
-  res <- rep(NA, p)
-  if (length(idx) == 1) {
-    res[idx] <- idx
-    return (res)
+  } else if (method == 'argmin.LOO' | method == 'HML') {
+    sample.mean <- colMeans(data)
+    res <- sapply(1:p, function(r) {argmin.HT.LOO(
+      data, r, min.algor=getMin.argmin.LOO, sample.mean=sample.mean, ...)$ans})
+    return (which(res == 'Accept'))
+
+  } else if (method == 'nonsplit' | method == 'NS') {
+    sample.mean <- colMeans(data)
+    res <- sapply(1:p, function(r) {argmin.HT.nonsplit(data, r, sample.mean=sample.mean, ...)$ans})
+    return (which(res == 'Accept'))
+
+  } else if (method == 'fold' | method == 'FD') {
+    res <- sapply(1:p, function(r) {argmin.HT.fold(data, r, ...)$ans})
+    return (which(res == 'Accept'))
+
+  } else if (method == 'GU') {
+
+  } else if (method == 'CCK.self.normalization' | method == 'SN'){
+    sample.mean <- colMeans(data)
+    res <- sapply(1:p, function(r) {argmin.HT.SN(data, r, sample.mean=sample.mean, ...)$ans})
+    return (which(res == 'Accept'))
+
+  } else if (method == 'CCK.bootstrap' | method == 'CB') {
+    sample.mean <- colMeans(data)
+    res <- sapply(1:p, function(r) {argmin.HT.bootstrap(data, r, sample.mean=sample.mean, ...)$ans})
+    return (which(res == 'Accept'))
+
+  } else if (method == 'Bonferroni' | method == 'MT') {
+    sample.mean <- colMeans(Xs) # np
+    min.indices <- which.min(sample.mean)
+    r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
+    res <- sapply(1:p, function(r) {argmin.HT.MT(data, r, r.min=r.min, ...)$ans})
+    return (which(res == 'Accept'))
+
+  } else {
+    stop("'method' should be one of 'softmin.LOO' (SML), 'argmin.LOO' (HML),
+         'nonsplit' (NS), 'fold' (FD), 'GU', 'CCK.bootstrap' (CB), 'Bonferroni' (MT)")
   }
-  res.s <- idx[sapply(1:length(idx), function(j) argmin.HT(Xs, mean.smp, j, lambda, alpha, y.algor))]
-  res.s <- na.omit(res.s)
-  res[res.s] <- res.s
-  return (res)
-}
-
-CS.adaptive <- function(Xs, alpha, const, y.algor=getY.softmax, enlarge=F){
-  # Xs: n by p
-  # lambda: parameter for exponential weighting
-  # alpha: a desired significance level
-  # 8 np^2
-  p <- ncol(Xs)
-  idx <- 1:p
-  mean.smp <- colMeans(Xs)
-  if (pre.screening){
-    idx <- screening(Xs, mean.smp)
-    Xs <- Xs[,idx]
-    mean.smp <- mean.smp[idx]
-  }
-
-  res <- rep(NA, p)
-  if (length(idx) == 1){
-    res[idx] <- idx
-    return (res)
-  }
-  # p
-  res.s <- idx[sapply(1:length(idx), function(j)
-    argmin.HT.adaptive(Xs, mean.smp, j, alpha, const, y.algor, enlarge))]
-  res.s <- na.omit(res.s)
-  res[res.s] <- res.s
-  return (res)
 }
 
 CS.GU <- function(X, alpha, omega=NULL){
@@ -85,143 +128,4 @@ CS.GU <- function(X, alpha, omega=NULL){
   return (res)
 }
 
-CS.non.split <- function(Xs, lambda, alpha, y.algor=getY.softmax, pre.screening=F, n.fold=2){
-  # Xs: n by p
-  # lambda: parameter for exponential weighting
-  # alpha: a desired significance level
-  p <- ncol(Xs)
-  idx <- 1:p
-  mean.smp <- colMeans(Xs)
-  if (pre.screening){
-    idx <- screening(Xs, mean.smp)
-    Xs <- Xs[,idx]
-    mean.smp <- mean.smp[idx]
-  }
 
-  res <- rep(NA, p)
-  if (length(idx) == 1) {
-    res[idx] <- idx
-    return (res)
-  }
-  res.s <- idx[sapply(1:length(idx), function(j) argmin.HT.nonsplit(Xs, mean.smp, j, lambda, alpha, y.algor))]
-  res.s <- na.omit(res.s)
-  res[res.s] <- res.s
-  return (res)
-}
-
-CS.split <- function(Xs, lambda, alpha, pre.screening=F, n.fold=2){
-  # Xs: n by p
-  # lambda: parameter for expoential weighting
-  # alpha: a desired significance level
-  p <- ncol(Xs)
-  idx <- 1:p
-  mean.smp <- NULL
-  if (pre.screening){
-    mean.smp <- colMeans(Xs)
-    idx <- screening(Xs, mean.smp)
-    Xs <- Xs[,idx]
-    mean.smp <- mean.smp[idx]
-  }
-
-  res <- rep(NA, p)
-  if (length(idx) == 1) {
-    res[idx] <- idx
-    return (res)
-  }
-  res.s <- idx[sapply(1:length(idx), function(j) argmin.HT.fold(Xs, j, lambda, alpha, n.fold=n.fold))]
-  res.s <- na.omit(res.s)
-  res[res.s] <- res.s
-  return (res)
-}
-
-CS.naive <- function(Xs, alpha){
-  # Xs: n by p
-  # alpha: the desired significance level
-  p <- ncol(Xs)
-  n <- nrow(Xs)
-  val.critical <- qnorm(1-alpha, 0, 1)
-
-  mean <- colMeans(Xs) # np
-  j.star <- which.min(mean) #p
-  # np
-  res <- sapply(1:p, function(j){
-    if (j == j.star){
-      return (j.star)
-    }
-    else{
-      test.stat <- sqrt(n)*(mean[j] - mean[j.star])
-      diffs <- Xs[,j] - Xs[,j.star] #n
-      sigma <- sd(diffs) # n
-      test.stat.scale <- test.stat/sigma
-    }
-    return (if (test.stat.scale < val.critical) j else NA)
-  })
-  return (res)
-}
-
-CS.MT <- function(Xs, alpha, test='t'){
-  # Xs:    n by p
-  # alpha: the desired significance level to be Bonferroni corrected
-  # test:  the specified test for hypothesis testing
-  #        two options: (1) 't': t test (2) 'z': z test
-  p <- ncol(Xs)
-  n <- nrow(Xs)
-  val.critical <- alpha/(p-1)
-
-  mean <- colMeans(Xs) # np
-  j.star <- which.min(mean) #p
-
-  res <- NULL
-  if (test == 't'){
-    # t test
-    res <- sapply(1:p, function(j){
-      if (j == j.star){
-        return (j.star)
-      } else{
-        p.val <- t.test(Xs[,j]-Xs[,j.star], alternative='greater')$p.value
-        return (if (p.val > val.critical) j else NA)
-      }
-    })
-  } else{
-    # z test
-    res <- sapply(1:5, function(j){
-      if (j == j.star){
-        return (j.star)
-      } else{
-        #print(sd(Xs[,j]))
-        #print(sd(Xs[,j.star]))
-        p.val <- z.test(Xs[,j], sigma.x=sd(Xs[,j]),
-                        Xs[,j.star], sigma.y=sd(Xs[,j.star]),
-                        alternative='greater')$p.value
-        return (if (p.val > val.critical) j else NA)
-      }
-    })
-    res <- c(res, rep(NA, p-s-1))
-  }
-  return (res)
-}
-
-CS.CCK.self.normalized <- function(Xs, alpha){
-  ## approximately 4*p^2*n
-  n <- nrow(Xs)
-  p <- ncol(Xs)
-
-  norm.quantile <- qnorm(1 - alpha/(p-1))
-  val.critical <- ifelse(norm.quantile^2 >= n,Inf,norm.quantile/sqrt(1-norm.quantile^2/n))
-
-  mean.smp <- colMeans(Xs)
-  res <- sapply(1:p, function(j){
-    mean.diffs <- mean.smp[j] - mean.smp[-j] # p
-    diffs <- matrix(rep(Xs[,j], p-1), nrow=n, byrow=F) - Xs[,-j] # np
-    sd.diffs <- apply(diffs, 2, sd) # 3np
-    ratios <- mean.diffs/sd.diffs
-    test.stat <- sqrt(n)*max(ratios)
-    return (if (test.stat <= val.critical) j else NA)
-  })
-
-  return (res)
-}
-
-CS.CCK.bootstrap <- function(data, alpha){
-
-}
