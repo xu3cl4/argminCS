@@ -4,6 +4,7 @@
 #' @param idx An index to be excluded
 #'
 #' @return The index of the second smallest dimension (as an integer).
+#' @export
 #'
 #' @examples
 #' nums <- c(1,3,2)

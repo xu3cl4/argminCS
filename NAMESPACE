@@ -2,6 +2,7 @@
 
 export(CS.argmin)
 export(argmin.HT)
+export(find.sub.argmin)
 export(getMin.argmin.LOO)
 export(getMin.softmin.LOO)
 export(is.lambda.feasible)
