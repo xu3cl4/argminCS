@@ -288,7 +288,8 @@ argmin.HT.GU <- function(risk.theta, alpha, risk.best.idx.tr, omega, idx=1){
 #'
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimension of interest for hypothesis test.
-#' @param r.min The sample argmin of the data; defaults to NULL. It can be calculated via which.min(colMeans(data)).
+#' @param r.min The sample argmin of the sample mean of data; defaults to NULL.
+#' @param r.min.sec The index of the second smallest dimension of the sample mean of the data; defaults to NULL.
 #' @param test The test to perform: 't' or 'z' test; defaults to 'z'.
 #' If data are believed to be normally distributed, use 't'; otherwise 'z'.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
@@ -298,30 +299,33 @@ argmin.HT.GU <- function(risk.theta, alpha, risk.best.idx.tr, omega, idx=1){
 #'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
-argmin.HT.MT <- function(data, r, test='z', alpha=0.05){
+argmin.HT.MT <- function(data, r, test='z', r.min=NULL, r.min.sec=NULL, alpha=0.05){
 
+  p <- ncol(data)
   val.critical <- alpha/(p-1)
 
-  if (is.null(r.min)){
+  if (is.null(r.min) | is.null(r.min.sec)){
     sample.mean <- colMeans(Xs) # np
     min.indices <- which.min(sample.mean)
     r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
+    r.min.sec <- find.sub.argmin(sample.mean, r.min)
   }
 
   p.val <- NULL
   if (test == 't'){
     # t test
     if (r == r.min){
-
+      p.val <- stats::t.test(data[,r]-data[,r.min.sec], alternative='greater')$p.value
     } else {
       p.val <- stats::t.test(data[,r]-data[,r.min], alternative='greater')$p.value
     }
   } else{
     # z.test
-    diffs <- data[,r] - data[,r.min]
     if (r == r.min){
-
+      diffs <- data[,r] - data[,r.min.sec]
+      p.val <- BSDA::z.test(diffs, sigma.x=sd(diffs), alternative='greater')$p.value
     } else {
+      diffs <- data[,r] - data[,r.min]
       p.val <- BSDA::z.test(diffs, sigma.x=sd(diffs), alternative='greater')$p.value
     }
   }

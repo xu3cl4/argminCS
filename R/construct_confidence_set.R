@@ -82,7 +82,8 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     sample.mean <- colMeans(Xs) # np
     min.indices <- which.min(sample.mean)
     r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
-    res <- sapply(1:p, function(r) {argmin.HT.MT(data, r, r.min=r.min, ...)$ans})
+    r.min.sec <- find.sub.argmin(sample.mean, r.min)
+    res <- sapply(1:p, function(r) {argmin.HT.MT(data, r, r.min=r.min, r.min.sec=r.min.sec, ...)$ans})
     return (which(res == 'Accept'))
 
   } else {

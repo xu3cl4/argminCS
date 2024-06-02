@@ -1,11 +1,31 @@
-HT.performance <- function(j.star, HT.res){
-  # j.star is the true argmin
-  # HT.res n.sim by p
-  # a data matrix. Each of its row is a confidence set from a simulation
-  n.sim <- nrow(HT.res)
-  coverage <- sum(HT.res[,j.star])/n.sim
-  lengths <- rowSums(HT.res)
-  overcover.rate <- length(which((lengths > 1) & (HT.res[,j.star]==1)))/n.sim
-  length.avg <- mean(lengths)
-  return (list(coverage=coverage, overcover.rate=overcover.rate, length.avg=length.avg))
+#' Get the index of the smallest dimension apart from an index
+#'
+#' @param nums A vector of numbers
+#' @param idx An index to be excluded
+#'
+#' @return The index of the second smallest dimension (as an integer).
+#' @export
+#'
+#' @examples
+#' nums <- c(1,3,2)
+#' find.sub.argmin(nums,1)
+#' ## return 3
+#'
+#' nums <- c(1,1,2)
+#' find.sub.argmin(nums,1)
+#' ## return 2
+find.sub.argmin <- function(nums, idx){
+  p <- length(nums)
+
+  min.idx.sec <- -1
+  min.val <- 1e308
+  for (s in 1:p){
+    if (s != idx){
+      if (nums[s] < min.val){
+        min.idx.sec <- s
+        min.val <- nums[s]
+      }
+    }
+  }
+  return (min.idx.sec)
 }
