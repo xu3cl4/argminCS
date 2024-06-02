@@ -12,7 +12,7 @@
 #' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
 #' @param threshold A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.
 #' @param n.pairs The number of \eqn{(i,j)} pairs for estimation; defaults to 100.
-#' @param seed An integer-valued seed for subsampling. If no value is given, the seed would be set to \eqn{\lceil 17} threshold \eqn{\lambda \rceil}.
+#' @param seed An integer-valued seed for subsampling. If no value is given, the seed would be set, using the value of other arguments.
 #'
 #' @return A boolean value indicating if the given \eqn{\lambda} likely gives the first order stability.
 #' @export
@@ -55,7 +55,7 @@ is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05
 
   ## subsample from the given sample
   if (is.null(seed)){
-    seed <- ceiling(17*threshold*lambda)
+    seed <- ceiling(abs(data[1,1]*threshold*lambda))
   }
   set.seed(seed)
   sample.indices <- sample(n, 2*n.pairs)
@@ -197,7 +197,8 @@ lambda.adaptive <- function(data, r, sample.mean=NULL, const=2.5){
 
     min.indices <- which(mu.hat.noi[-r] == min(mu.hat.noi[-r]))
 
-    set.seed(i)
+    seed <- ceiling(abs(i*r*data[1,1]))
+    set.seed(seed)
     min.idx <- ifelse(length(min.indices) > 1,
                       sample(c(min.indices), 1), min.indices[1])
 

@@ -62,6 +62,7 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
     return (argmin.HT.SN(data, r, ...))
 
   } else if (method == 'CCK.bootstrap' | method == 'CB') {
+    return (argmin.HT.bootstrap(data, r, ...))
 
   } else if (method == 'Bonferroni' | method == 'MT') {
     return (argmin.HT.MT(data, r, ...)$ans)
@@ -209,7 +210,8 @@ argmin.HT.fold <- function(data, r, lambda, alpha=0.05, n.fold=2){
     return (list(test.stat.scale=test.stat.scale, std=sigma, ans=ans))
   } else{
     ### create folds
-    set.seed(13*n.fold)
+    seed <- ceiling(abs(13*r*data[1,1]))
+    set.seed(seed)
     flds <- caret::createFolds(1:n, k=n.fold, list=T, returnTrain=F)
 
     diffs <- lapply(1:n.fold, function(fold) {
@@ -374,6 +376,7 @@ argmin.HT.SN <- function(data, r, sample.mean=NULL, alpha=0.05){
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 #' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
+#' @param B The number of bootstrap samples; defaults to 200.
 #'
 #' @return A list containing:\tabular{ll}{
 #'    \code{p.val} \tab p value of the test \cr
@@ -386,13 +389,10 @@ argmin.HT.SN <- function(data, r, sample.mean=NULL, alpha=0.05){
 #'
 #'  \insertRef{lei.cvc}{argminCS}
 #' }
-argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05){
+argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
 
   n <- nrow(data)
   p <- ncol(data)
-
-  norm.quantile <- qnorm(1 - alpha/(p-1))
-  val.critical <- ifelse(norm.quantile^2 >= n,Inf,norm.quantile/sqrt(1-norm.quantile^2/n))
 
   if (is.null(sample.mean)){
     sample.mean <- colMeans(data)
@@ -409,6 +409,20 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05){
   }
   ratios <- mean.diffs/sd.diffs
   test.stat <- sqrt(n)*max(ratios)
-  ans <- ifelse(test.stat <= val.critival, 'Accept', 'Reject')
-  return (list(test.stat=test.stat, ans=ans))
+
+  # n by p matrix
+  diffs.centered <- diffs - matrix(rep(mean.diffs, n), nrow=n, byrow=T)
+  test.stat.MBs <- sapply(1:B,
+                          function(i){
+                            seed <- ceiling(abs(i*r*data[1,1]))
+                            set.seed(seed)
+                            Gaussian.vec <- rnorm(n, 0, 1)
+                            test.stat.MB <- sqrt(n)*max(colMeans(diffs.centered*Gaussian.vec)/sd.diffs)
+                            return (test.stat.MB)
+                            })
+
+  p.val <- mean(test.stat.MBs > test.stat)
+
+  ans <- ifelse(p,val > alpha, 'Accept', 'Reject')
+  return (list(p.val=p.val, ans=ans))
 }

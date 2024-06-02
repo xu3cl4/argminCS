@@ -83,7 +83,7 @@ getMin.argmin.LOO <- function(i, r, data, lambda=NULL, sample.mean=NULL, ties.me
   if (ties.method == 'average' | ties.method == 'a'){
     #randomly select an argmin
     if (is.null(seed)) {
-      seed <- i*r + 11
+      seed <- ceiling(abs(i*r*11*data[1,1]))
     }
     set.seed(seed)
     r.i.hat <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
