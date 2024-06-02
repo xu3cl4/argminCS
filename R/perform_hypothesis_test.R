@@ -1,4 +1,4 @@
-#' Perform argmin hypothesis test
+#' A wrapper to perform argmin hypothesis test.
 #'
 #' This is a wrapper to perform hypothesis test to see if a given dimension may be an argmin. Multiple methods are supported.
 #'
@@ -21,7 +21,7 @@
 #'    \tab \cr
 #'    \code{Bonferroni (MT)} \tab Multiple testing with Bonferroni's correction. \cr
 #' }
-#' If computation is a concern, use 'SN' or 'MT'. Otherwise, 'SML' is recommended.
+#' If computation is a concern, use 'MT'. Otherwise, 'SML' is recommended.
 #'
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimension of interest for hypothesis test.
@@ -58,7 +58,8 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
 
   } else if (method == 'GU') {
 
-  } else if (method == 'CCK.self.normalization' | method == 'SN') {
+  } else if (method == 'CCK.self.normalization' | method == 'SN'){
+    return (argmin.HT.SN(data, r, ...))
 
   } else if (method == 'CCK.bootstrap' | method == 'CB') {
 
@@ -71,7 +72,7 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
   }
 }
 
-#' Perform argmin hypothesis test, using the LOO (leave-one-out) algorithm.
+#' Perform argmin hypothesis test.
 #'
 #' Test if a dimension may be argmin, using the LOO (leave-one-out) algorithm in Zhang et al 2024.
 #'
@@ -128,9 +129,9 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
 }
 
 
-#' Perform argmin hypothesis test without any splitting.
+#' Perform argmin hypothesis test.
 #'
-#' Test if a dimension may be argmin withtout any splitting.
+#' Test if a dimension may be argmin without any splitting.
 #'
 #' @details
 #' This method is not recommended, given its poor performance when p is small.
@@ -170,7 +171,7 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 }
 
 
-#' Perform argmin hypothesis test by splitting into folds.
+#' Perform argmin hypothesis test.
 #'
 #' Test if a dimension may be argmin by splitting into folds.
 #'
@@ -279,7 +280,7 @@ argmin.HT.GU <- function(risk.theta, alpha, risk.best.idx.tr, omega, idx=1){
   return (if (test.stat < 1/alpha) idx else NA)
 }
 
-#' Perform argmin hypothesis test, using multiple testing with Bonferroni's correction.
+#' Perform argmin hypothesis test.
 #'
 #' Test if a dimension may be argmin, using multiple testing with Bonferroni's correction.
 #'
@@ -316,4 +317,98 @@ argmin.HT.MT <- function(data, r, r.min=NULL, test='z', alpha=0.05){
 
   ans <- ifelse(p.val > critical, 'Accept', 'Reject')
   return (list(p.val=p.val, ans=ans))
+}
+
+#' Perform argmin hypothesis test.
+#'
+#' Test if a dimension may be argmin, adapting the one-step self-normalization method in \insertCite{cck.many.moments}{argminCS}.
+#'
+#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
+#' @param r The dimension of interest for hypothesis test.
+#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
+#' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
+#' @param alpha The significance level of the hypothesis test; defaults to 0.05.
+#'
+#' @return A list containing:\tabular{ll}{
+#'    \code{test.stat} \tab The test statistic \cr
+#'    \tab \cr
+#'    \code{ans} \tab 'Reject' or 'Accept' \cr
+#' }
+#'
+#' @references{
+#'  \insertRef{cck.many.moments}{argminCS}
+#' }
+argmin.HT.SN <- function(data, r, sample.mean=NULL, alpha=0.05){
+
+  n <- nrow(data)
+  p <- ncol(data)
+
+  norm.quantile <- qnorm(1 - alpha/(p-1))
+  val.critical <- ifelse(norm.quantile^2 >= n,Inf,norm.quantile/sqrt(1-norm.quantile^2/n))
+
+  if (is.null(sample.mean)){
+    sample.mean <- colMeans(data)
+  }
+
+  diffs <- matrix(rep(data[,r], p-1), nrow=n, byrow=F) - data[,-r] # np
+  sd.diffs <- apply(diffs, 2, sd) # 3np
+  mean.diffs <- NULL
+  if (is.null(sample.mean)){
+    # even without this step, the algorithm still requires np operations
+    mean.diffs <- colMeans(diffs)
+  } else {
+    mean.diffs <- sample.mean[r] - sample.mean[-r] # p
+  }
+  ratios <- mean.diffs/sd.diffs
+  test.stat <- sqrt(n)*max(ratios)
+  ans <- ifelse(test.stat <= val.critival, 'Accept', 'Reject')
+  return (list(test.stat=test.stat, ans=ans))
+}
+
+#' Perform argmin hypothesis test.
+#'
+#' Test if a dimension may be argmin, adapting the one-step bootstrap method in \insertCite{cck.many.moments}{argminCS}.
+#'
+#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
+#' @param r The dimension of interest for hypothesis test.
+#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
+#' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
+#' @param alpha The significance level of the hypothesis test; defaults to 0.05.
+#'
+#' @return A list containing:\tabular{ll}{
+#'    \code{p.val} \tab p value of the test \cr
+#'    \tab \cr
+#'    \code{ans} \tab 'Reject' or 'Accept' \cr
+#' }
+#'
+#' @references{
+#'  \insertRef{cck.many.moments}{argminCS}
+#'
+#'  \insertRef{lei.cvc}{argminCS}
+#' }
+argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05){
+
+  n <- nrow(data)
+  p <- ncol(data)
+
+  norm.quantile <- qnorm(1 - alpha/(p-1))
+  val.critical <- ifelse(norm.quantile^2 >= n,Inf,norm.quantile/sqrt(1-norm.quantile^2/n))
+
+  if (is.null(sample.mean)){
+    sample.mean <- colMeans(data)
+  }
+
+  diffs <- matrix(rep(data[,r], p-1), nrow=n, byrow=F) - data[,-r] # np
+  sd.diffs <- apply(diffs, 2, sd) # 3np
+  mean.diffs <- NULL
+  if (is.null(sample.mean)){
+    # even without this step, the algorithm still requires np operations
+    mean.diffs <- colMeans(diffs)
+  } else {
+    mean.diffs <- sample.mean[r] - sample.mean[-r] # p
+  }
+  ratios <- mean.diffs/sd.diffs
+  test.stat <- sqrt(n)*max(ratios)
+  ans <- ifelse(test.stat <= val.critival, 'Accept', 'Reject')
+  return (list(test.stat=test.stat, ans=ans))
 }
