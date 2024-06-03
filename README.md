@@ -13,7 +13,7 @@ samples with a valid type 1 control, while exhibiting desirable
 statistical power. In particular, the method ‘softmin.LOO’ is the main
 innovative component in the paper *Winners with Confidence: Argmin
 Inference over a High-Dimensional Discrete Candidate Set* by Tianyu
-Zhang, Hao Lee and Jing Lei}. Several other methods are also implemented
+Zhang, Hao Lee and Jing Lei. Several other methods are also implemented
 within the package to ease method comparison and simulations.
 
 ## Citation
