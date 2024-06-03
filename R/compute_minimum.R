@@ -84,15 +84,15 @@ getMin.argmin.LOO <- function(i, r, data, lambda=NULL, sample.mean=NULL, ties.me
   mu.hat.noi <- (sample.mean*n - data[i,])/(n-1)
   min.indices <- c(1:(p-1))[which(mu.hat.noi[-r] == min(mu.hat.noi[-r]))]
 
-  if (ties.method == 'average' | ties.method == 'a'){
+  if (ties.method == 'random' | ties.method == 'r'){
     #randomly select an argmin
     if (is.null(seed)) {
-      seed <- ceiling(abs(i*r*11*data[1,1]))
+      seed <- ceiling(abs(i*r*11*data[1,1]*n*p))
     }
     set.seed(seed)
     r.i.hat <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
     return (data[i,-r][r.i.hat])
-  } else if (ties.method == 'random' | ties.method == 'r'){
+  } else if (ties.method == 'average' | ties.method == 'a'){
     # average over all argmins
     return (sum((data[i,-r])[min.indices])/length(min.indices))
   } else {

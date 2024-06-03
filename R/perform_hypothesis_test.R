@@ -6,12 +6,12 @@
 #'    \code{softmin.LOO (SML)} \tab LOO (leave-one-out) algorithm, using the exponential weightings. \cr
 #'    \tab \cr
 #'    \code{argmin.LOO (HML)} \tab A variant of SML, but it uses (hard) argmin rather than exponential weighting.
-#'    The method is not recommended. \cr
+#'    The method is not recommended because its type 1 error is not controlled. \cr
 #'    \tab \cr
 #'    \code{nonsplit (NS)} \tab  A variant of SML, but no splitting is involved.
 #'    One needs to pass a fixed lambda value as a required additional argument.\cr
 #'    \tab \cr
-#'    \code{fold (FD)} \tab A n fold version of SML. \cr
+#'    \code{fold (FD)} \tab A n fold version of SML. One needs to pass a fixed lambda value as a required additional argument.\cr
 #'    \tab \cr
 #'    \code{GU} \tab The method in \insertCite{dey.2024}{argminCS}. \cr
 #'    \tab \cr
@@ -34,7 +34,37 @@
 #' @export
 #'
 #' @examples
+#' r <- 4
+#' n <- 200
+#' mu <- (1:20)/20
+#' cov <- diag(length(mu))
+#' set.seed(108)
+#' data <- MASS::mvrnorm(n, mu, cov)
+#' sample.mean <- colMeans(data)
 #'
+#' ## softmin.LOO
+#' argmin.HT(data, r)
+#'
+#' ## argmin.LOO
+#' argmin.HT(data, r, method='HML')
+#'
+#' ## nonsplit
+#' argmin.HT(data, r, method='NS', lambda=sqrt(n)/2.5)
+#'
+#' ### fold
+#' ## defaults to 2 fold
+#' argmin.HT(data, r, method='FD', lambda=sqrt(n)/2.5)
+#' ## 5 fold
+#' argmin.HT(data, r, method='FD', lambda=sqrt(n)/2.5, n.fold=5)
+#'
+#' ## self-normalization
+#' argmin.HT(data, r, method='SN')
+#'
+#' ## bootstrap
+#' argmin.HT(data, r, method='CB')
+#'
+#' ## Bonferroni (choose t test because of normal data)
+#' argmin.HT(data, r, method='MT', test='t')
 #' @importFrom Rdpack reprompt
 #' @references{
 #'   \insertRef{cck.many.moments}{argminCS}
@@ -46,16 +76,16 @@
 
 argmin.HT <- function(data, r, method='softmin.LOO', ...){
   if (method == 'softmin.LOO' | method == 'SML'){
-    return (argmin.HT.LOO(data, r, ...)$ans)
+    return (argmin.HT.LOO(data, r, ...))
 
   } else if (method == 'argmin.LOO' | method == 'HML') {
-    return (argmin.HT.LOO(data, r, min.algor=getMin.argmin.LOO, ...)$ans)
+    return (argmin.HT.LOO(data, r, min.algor=getMin.argmin.LOO, ...))
 
   } else if (method == 'nonsplit' | method == 'NS') {
-    return (argmin.HT.nonsplit(data, r, ...)$ans)
+    return (argmin.HT.nonsplit(data, r, ...))
 
   } else if (method == 'fold' | method == 'FD') {
-    return (argmin.HT.fold(data, r, ...)$ans)
+    return (argmin.HT.fold(data, r, ...))
 
   } else if (method == 'GU') {
 
@@ -66,7 +96,7 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
     return (argmin.HT.bootstrap(data, r, ...))
 
   } else if (method == 'Bonferroni' | method == 'MT') {
-    return (argmin.HT.MT(data, r, ...)$ans)
+    return (argmin.HT.MT(data, r, ...))
 
   } else {
     stop("'method' should be one of 'softmin.LOO' (SML), 'argmin.LOO' (HML),
@@ -92,6 +122,8 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
 #'
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat.scale} \tab The scaled test statistic \cr
+#'    \tab \cr
+#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
 #'    \tab \cr
 #'    \code{std} \tab The standard deviation estimate. \cr
 #'    \tab \cr
@@ -127,7 +159,7 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
   test.stat <- sqrt(n)*(sample.mean[r] - mean(Qs))
   test.stat.scale <- test.stat/sigma
   ans <- ifelse(test.stat.scale <= val.critical, 'Accept', 'Reject')
-  return (list(test.stat.scale=test.stat.scale, std=sigma, ans=ans))
+  return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans))
 }
 
 
@@ -147,6 +179,8 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
 #'
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat.scale} \tab The scaled test statistic \cr
+#'    \tab \cr
+#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
 #'    \tab \cr
 #'    \code{std} \tab The standard deviation estimate. \cr
 #'    \tab \cr
@@ -169,7 +203,7 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
   test.stat.scale <- test.stat/sigma
 
   ans <- ifelse(test.stat.scale < val.critical, 'Accept', 'Reject')
-  return (list(test.stat.scale=test.stat.scale, std=sigma, ans=ans))
+  return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans))
 }
 
 
@@ -188,6 +222,8 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #'
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat.scale} \tab The scaled test statistic \cr
+#'    \tab \cr
+#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
 #'    \tab \cr
 #'    \code{std} \tab The standard deviation estimate. \cr
 #'    \tab \cr
@@ -224,13 +260,13 @@ argmin.HT.fold <- function(data, r, lambda, alpha=0.05, n.fold=2){
       return (diffs.fold)
     })
     diffs <- do.call(c, diffs)
-    var.smp <- sum((diffs - mean(diffs))^2)/(n-1)
+    sigma <- stats::sd(diffs)
 
     test.stat <- sqrt(n)*mean(diffs)
-    test.stat.scale <- test.stat/sqrt(var.smp)
+    test.stat.scale <- test.stat/sigma
 
     ans <- ifelse(test.stat.scale < val.critical, 'Accept', 'Reject')
-    return (list(test.stat.scale=test.stat.scale, std=sigma, ans=ans))
+    return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans))
   }
 }
 
@@ -298,6 +334,8 @@ argmin.HT.GU <- function(risk.theta, alpha, risk.best.idx.tr, omega, idx=1){
 #' @return A list containing:\tabular{ll}{
 #'    \code{p.val} \tab p value without Bonferroni's correction. \cr
 #'    \tab \cr
+#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
+#'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
 argmin.HT.MT <- function(data, r, test='z', r.min=NULL, r.min.sec=NULL, alpha=0.05){
@@ -332,7 +370,7 @@ argmin.HT.MT <- function(data, r, test='z', r.min=NULL, r.min.sec=NULL, alpha=0.
   }
 
   ans <- ifelse(p.val > val.critical, 'Accept', 'Reject')
-  return (list(p.val=p.val, ans=ans))
+  return (list(p.val=p.val, critical.value=val.critical, ans=ans))
 }
 
 #' Perform argmin hypothesis test.
@@ -347,6 +385,8 @@ argmin.HT.MT <- function(data, r, test='z', r.min=NULL, r.min.sec=NULL, alpha=0.
 #'
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat} \tab The test statistic \cr
+#'    \tab \cr
+#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
 #'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
@@ -379,7 +419,7 @@ argmin.HT.SN <- function(data, r, sample.mean=NULL, alpha=0.05){
   ratios <- mean.diffs/sd.diffs
   test.stat <- sqrt(n)*max(ratios)
   ans <- ifelse(test.stat <= val.critical, 'Accept', 'Reject')
-  return (list(test.stat=test.stat, ans=ans))
+  return (list(test.stat=test.stat, critical.value=val.critical, ans=ans))
 }
 
 #' Perform argmin hypothesis test.

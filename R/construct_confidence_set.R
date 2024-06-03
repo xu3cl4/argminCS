@@ -34,6 +34,37 @@
 #' @export
 #'
 #' @examples
+#' r <- 4
+#' n <- 200
+#' mu <- (1:20)/20
+#' cov <- diag(length(mu))
+#' set.seed(108)
+#' data <- MASS::mvrnorm(n, mu, cov)
+#' sample.mean <- colMeans(data)
+#'
+#' ## softmin.LOO
+#' CS.argmin(data)
+#'
+#' ## argmin.LOO
+#' CS.argmin(data, method='HML')
+#'
+#' ## nonsplit
+#' CS.argmin(data, method='NS', lambda=sqrt(n)/2.5)
+#'
+#' ### fold
+#' ## defaults to 2 fold
+#' CS.argmin(data, method='FD', lambda=sqrt(n)/2.5)
+#' ## 5 fold
+#' CS.argmin(data, method='FD', lambda=sqrt(n)/2.5, n.fold=5)
+#'
+#' ## self-normalization
+#' CS.argmin(data, method='SN')
+#'
+#' ## bootstrap
+#' CS.argmin(data, method='CB')
+#'
+#' ## Bonferroni (choose t test because of normal data)
+#' CS.argmin(data, method='MT', test='t')
 #'
 #' @importFrom Rdpack reprompt
 #' @references{
