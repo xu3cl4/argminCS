@@ -13,7 +13,7 @@ samples with a valid type 1 control, while exhibiting desirable
 statistical power. In particular, the method ‘softmin.LOO’ is the main
 innovative component in the paper by Tianyu Zhang, Hao Lee and Jing
 Lei}. Several other methods are also implemented within the package to
-each method comparison and simulations.
+ease method comparison and simulations.
 
 ## Citation
 
