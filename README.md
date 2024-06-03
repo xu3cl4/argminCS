@@ -18,9 +18,9 @@ within the package to ease method comparison and simulations.
 
 ## Citation
 
-If you use the for your research or any experiment, please cite our
-paper “Winners with Confidence: Argmin Inference over a High-Dimensional
-Discrete Candidate Set”.
+If you use the **argminCS** package for your research or any experiment,
+please cite our paper “Winners with Confidence: Argmin Inference over a
+High-Dimensional Discrete Candidate Set”.
 
 ## Installation
 
