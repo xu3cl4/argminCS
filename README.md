@@ -67,7 +67,8 @@ CS.argmin(data, method='SML')
 
 Regarding the details of methods and their associated tuning parameters,
 we encourage users to install the package and check function
-documentation.
+documentation. Note that the method in the NC state paper is not
+supported for now.
 <!-- What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so: -->
 
 <!-- ```{r cars} -->
@@ -80,7 +81,7 @@ documentation.
 <!-- ``` -->
 <!-- In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN. -->
 
-# Key References
+## Key References
 
 <div id="refs" class="references csl-bib-body hanging-indent">
 
