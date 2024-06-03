@@ -1,5 +1,6 @@
 ---
 output: github_document
+bibliography: inst/REFERENCES.bib
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -50,14 +51,14 @@ data <- MASS::mvrnorm(sample.size, mu, cov)
 sample.mean <- colMeans(data)
 
 ## to test if 'dimension' is likely to be argmin with (default) softmin.LOO
-argmin.HT(data, dimension)
+argmin.HT(data, dimension, method='SML')
 
 ## rather than perform a hypothesis testing for a specific dimension, 
 ## one can directly generate a discrete confidence set by 
-CS.argmin(data)
+CS.argmin(data, method='SML')
 ```
 
-Regarding the details of methods and their associated tuning parameters, we encourage users to install the package and check function documentions. 
+Regarding the details of methods and their associated tuning parameters, we encourage users to install the package and check function documentation. 
 <!-- What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so: -->
 
 <!-- ```{r cars} -->
@@ -74,7 +75,8 @@ Regarding the details of methods and their associated tuning parameters, we enco
 
 <!-- In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN. -->
 
-## Key References 
+# Key References
+
 ---
 nocite: '@*'
 ---

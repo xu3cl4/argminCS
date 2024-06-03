@@ -46,7 +46,7 @@ data <- MASS::mvrnorm(sample.size, mu, cov)
 sample.mean <- colMeans(data)
 
 ## to test if 'dimension' is likely to be argmin with (default) softmin.LOO
-argmin.HT(data, dimension)
+argmin.HT(data, dimension, method='SML')
 #> $test.stat.scale
 #> [1] 0.2384774
 #> 
@@ -61,13 +61,13 @@ argmin.HT(data, dimension)
 
 ## rather than perform a hypothesis testing for a specific dimension, 
 ## one can directly generate a discrete confidence set by 
-CS.argmin(data)
+CS.argmin(data, method='SML')
 #> [1] 1 2 3 4
 ```
 
 Regarding the details of methods and their associated tuning parameters,
 we encourage users to install the package and check function
-documentions.
+documentation.
 <!-- What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so: -->
 
 <!-- ```{r cars} -->
@@ -80,6 +80,31 @@ documentions.
 <!-- ``` -->
 <!-- In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN. -->
 
-## \## Key References
+# Key References
 
-## nocite: ‘@\*’
+<div id="refs" class="references csl-bib-body hanging-indent">
+
+<div id="ref-cck.many.moments" class="csl-entry">
+
+Chernozhukov, V., D. Chetverikov, and K. Kato. 2013. “Testing Many
+Moment Inequalities.” IDEAS Working Paper Series from RePEc.
+
+</div>
+
+<div id="ref-dey.2024" class="csl-entry">
+
+Dey, N., M. Ryan, and J. P. Williams. 2024. “Anytime-Valid Generalized
+Universal Inference on Risk Minimizers.” *arXiv.org*.
+<https://doi.org/10.48550/arxiv.2402.00202>.
+
+</div>
+
+<div id="ref-lei.cvc" class="csl-entry">
+
+Lei, Jing. 2020. “Cross-Validation with Confidence.” *Journal of the
+American Statistical Association* 115 (532): 1978–97.
+<https://doi.org/10.1080/01621459.2019.1672556>.
+
+</div>
+
+</div>
