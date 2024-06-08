@@ -56,7 +56,7 @@ is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05
 
   ## subsample from the given sample
   if (is.null(seed)){
-    seed <- ceiling(abs(data[1,1]*lambda))
+    seed <- ceiling(abs(data[1,1]*sample.mean[1]*lambda))
   }
   withr::with_seed(seed, {
     sample.indices <- sample(n, 2*n.pairs)
@@ -202,7 +202,7 @@ lambda.adaptive <- function(data, r, sample.mean=NULL, const=2.5){
 
     min.indices <- which(mu.hat.noi[-r] == min(mu.hat.noi[-r]))
 
-    seed <- ceiling(abs(i*r*data[1,1]))
+    seed <- ceiling(abs(i*r*data[1,1]*sample.mean[1]))
     withr::with_seed(seed, {
       min.idx <- ifelse(length(min.indices) > 1,
                         sample(c(min.indices), 1), min.indices[1])
