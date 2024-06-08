@@ -38,7 +38,7 @@
 #' n <- 200
 #' mu <- (1:20)/20
 #' cov <- diag(length(mu))
-#' set.seed(31)
+#' set.seed(108)
 #' data <- MASS::mvrnorm(n, mu, cov)
 #' sample.mean <- colMeans(data)
 #'
