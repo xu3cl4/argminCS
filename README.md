@@ -4,7 +4,6 @@
 # argminCS
 
 Welcome! Here we have source code to perform argmin hypothesis test.
-<!-- badges: start --> <!-- badges: end -->
 
 ## Overview
 
@@ -63,7 +62,7 @@ argmin.HT(data, dimension, method='SML')
 ## rather than perform a hypothesis testing for a specific dimension, 
 ## one can directly generate a discrete confidence set by 
 CS.argmin(data, method='SML')
-#> [1] 1 2 3 4
+#> [1] 1 2 3 4 6 8
 ```
 
 Regarding the details of methods and their associated tuning parameters,

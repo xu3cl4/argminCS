@@ -38,7 +38,7 @@
 #' n <- 200
 #' mu <- (1:20)/20
 #' cov <- diag(length(mu))
-#' set.seed(108)
+#' set.seed(31)
 #' data <- MASS::mvrnorm(n, mu, cov)
 #' sample.mean <- colMeans(data)
 #'
@@ -247,9 +247,9 @@ argmin.HT.fold <- function(data, r, lambda, alpha=0.05, n.fold=2){
     return (list(test.stat.scale=test.stat.scale, std=sigma, ans=ans))
   } else{
     ### create folds
-    seed <- ceiling(abs(13*r*data[1,1]))
-    set.seed(seed)
-    flds <- caret::createFolds(1:n, k=n.fold, list=T, returnTrain=F)
+    withr::with_seed(ceiling(abs(13*r*data[1,1])), {
+      flds <- caret::createFolds(1:n, k=n.fold, list=T, returnTrain=F)
+    })
 
     diffs <- lapply(1:n.fold, function(fold) {
       mu.out.fold <- colMeans(data[setdiff(1:n, flds[[fold]]),])
@@ -470,9 +470,9 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
   diffs.centered <- diffs - matrix(rep(mean.diffs, n), nrow=n, byrow=T)
   test.stat.MBs <- sapply(1:B,
                           function(i){
-                            seed <- ceiling(abs(i*r*data[1,1]))
-                            set.seed(seed)
-                            Gaussian.vec <- stats::rnorm(n, 0, 1)
+                            withr::with_seed(ceiling(abs(i*r*data[1,1])), {
+                              Gaussian.vec <- stats::rnorm(n, 0, 1)
+                              })
                             test.stat.MB <- sqrt(n)*max(colMeans(diffs.centered*Gaussian.vec)/sd.diffs)
                             return (test.stat.MB)
                             })

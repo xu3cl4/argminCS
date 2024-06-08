@@ -20,4 +20,5 @@ Imports:
     LDATS,
     MASS,
     Rdpack,
-    stats
+    stats,
+    withr
