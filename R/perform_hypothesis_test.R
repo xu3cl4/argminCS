@@ -470,7 +470,7 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
   diffs.centered <- diffs - matrix(rep(mean.diffs, n), nrow=n, byrow=T)
   test.stat.MBs <- sapply(1:B,
                           function(i){
-                            withr::with_seed(ceiling(abs(i*r*data[1,1]*sample.mean[1])), {
+                            withr::with_seed(ceiling(abs(11*i*r*data[1,1]*sample.mean[1])), {
                               Gaussian.vec <- stats::rnorm(n, 0, 1)
                               })
                             test.stat.MB <- sqrt(n)*max(colMeans(diffs.centered*Gaussian.vec)/sd.diffs)
