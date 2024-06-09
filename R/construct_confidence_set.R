@@ -114,7 +114,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
 
   } else if (method == 'Bonferroni' | method == 'MT') {
     sample.mean <- colMeans(data) # np
-    min.indices <- which.min(sample.mean)
+    min.indices <- which(sample.mean == min(sample.mean))
     r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
     r.min.sec <- find.sub.argmin(sample.mean, r.min)
     res <- sapply(1:p, function(r) {argmin.HT.MT(data, r, r.min=r.min, r.min.sec=r.min.sec, ...)$ans})
@@ -126,38 +126,37 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
   }
 }
 
-# CS.GU <- function(X, alpha, omega=NULL){
+# CS.GU <- function(data, alpha, omega=NULL){
 #
-#   n <- nrow(X)
-#   p <- ncol(X)
-#
-#   if (is.null(omega)){
-#     omega <- omega.bootstrap(X, alpha)
-#   }
+#   n <- nrow(data)
+#   p <- ncol(data)
 #
 #   ## split the data
-#   set.seed(p*n)
-#   idx.tr <- sample(1:n, n/2, replace=F)
-#   X.tr <- X[idx.tr,]
-#   X.tt <- X[-idx.tr,]
+#   withr::with_seed(p*n*data[1,1], {
+#     idx.tr <- sample(1:n, n/2, replace=F)
+#   })
+#   data.tr <- data[idx.tr,]
+#   data.tt <- data[-idx.tr,]
 #
 #   # get the best model over training set
-#   risks.tr <- colMeans(X.tr)
-#   idx.min.tr <- which.min(risks.tr)
+#   sample.mean.tr <- colMeans(data.tr)
+#   min.indices <- which(sample.mean.tr == min(sample.mean.tr))
+#   idx.min.tr <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
 #
 #   # evaluate the best model from the training set over the testing set
-#   risk.idx.min.tr <- mean(X.tt[idx.min.tr,])
+#   sample.mean.tt <- colMeans(data.tt)
+#   risk.idx.min.tr <- sample.mean.tt[idx.min.tr]
 #
 #   # compute the learning rate
 #   if (is.null(omega)){
-#     omega <- omega.bootstrap(X, alpha)
+#     omega <- omega.bootstrap(data, alpha)
 #   }
 #
 #   idx <- 1:p
 #   res <- rep(NA, p)
-#   smp.mean.tt <- colMeans(X.tt)
+#
 #   res.s <- idx[sapply(1:length(idx), function(j) argmin.HT.GU(
-#     smp.mean.tt[j], alpha, risk.idx.min.tr, omega, idx=j))]
+#     sample.mean.tt[j], alpha, risk.idx.min.tr, omega, idx=j))]
 #   res.s <- na.omit(res.s)
 #   res[res.s] <- res.s
 #   return (res)

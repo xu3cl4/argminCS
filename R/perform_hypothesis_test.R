@@ -270,54 +270,54 @@ argmin.HT.fold <- function(data, r, lambda, alpha=0.05, n.fold=2){
   }
 }
 
-## TO DO
-omega.bootstrap <- function(X, alpha, B=100){
-  # data: n by p
-  # alpha: a desired significance level
-  n <- nrow(X)
-  p <- nrow(X)
-
-  risks <- colMeans(X)
-  idx.theta.hat <- which.min(risks)
-
-  omegas <- 1:100
-  coverages <- lapply(1:B, function(i){
-    set.seed(13*i)
-    smp <- sample(1:n, n, replace=T)
-    X.boot <- X[smp,]
-
-    # split the data
-    set.seed(i)
-    idx.tr <- sample(1:n, n/2, replace=F)
-    X.tr <- X.boot[idx.tr,]
-    X.tt <- X.boot[-idx.tr,]
-
-    # get the best model over training set
-    risks.tr <- colMeans(X.tr)
-    idx.min.tr <- which.min(risks.tr)
-
-    # evaluate the best model from the training set over the testing set
-    risk.idx.min.tr <- mean(X.tt[idx.min.tr,])
-
-    # give any idx (it's simply a dummy value)
-    risk.theta.hat <- mean(X.tt[idx.theta.hat,])
-    res <- sapply(omegas, function(omega)
-      argmin.HT.GU(risk.theta.hat, alpha, risk.idx.min.tr, omega, idx=1))
-    res <- ifelse(is.na(res), 0, 1)
-    return (res)
-  })
-
-  coverages <- as.matrix(do.call('rbind', coverages))
-  coverages <- colSums(coverages)
-  return (omegas[which.min(abs(coverages - (1 - alpha)*B))])
-}
-
-argmin.HT.GU <- function(risk.theta, alpha, risk.best.idx.tr, omega, idx=1){
-
-  test.stat <- exp(-omega*(risk.best.idx.tr - risk.theta))
-  # reject the test stat if test >= 1/alpha; otherwise, keep it
-  return (if (test.stat < 1/alpha) idx else NA)
-}
+# ## TO DO
+# omega.bootstrap <- function(X, alpha, B=100){
+#   # data: n by p
+#   # alpha: a desired significance level
+#   n <- nrow(X)
+#   p <- nrow(X)
+#
+#   risks <- colMeans(X)
+#   idx.theta.hat <- which.min(risks)
+#
+#   omegas <- 1:100
+#   coverages <- lapply(1:B, function(i){
+#     set.seed(13*i)
+#     smp <- sample(1:n, n, replace=T)
+#     X.boot <- X[smp,]
+#
+#     # split the data
+#     set.seed(i)
+#     idx.tr <- sample(1:n, n/2, replace=F)
+#     X.tr <- X.boot[idx.tr,]
+#     X.tt <- X.boot[-idx.tr,]
+#
+#     # get the best model over training set
+#     risks.tr <- colMeans(X.tr)
+#     idx.min.tr <- which.min(risks.tr)
+#
+#     # evaluate the best model from the training set over the testing set
+#     risk.idx.min.tr <- mean(X.tt[,idx.min.tr])
+#
+#     # give any idx (it's simply a dummy value)
+#     risk.theta.hat <- mean(X.tt[,idx.theta.hat])
+#     res <- sapply(omegas, function(omega)
+#       argmin.HT.GU(risk.theta.hat, alpha, risk.idx.min.tr, omega, idx=1))
+#     res <- ifelse(is.na(res), 0, 1)
+#     return (res)
+#   })
+#
+#   coverages <- as.matrix(do.call('rbind', coverages))
+#   coverages <- colSums(coverages)
+#   return (omegas[which.min(abs(coverages - (1 - alpha)*B))])
+# }
+#
+# argmin.HT.GU <- function(risk.theta, alpha, risk.best.idx.tr, omega, idx=1){
+#
+#   test.stat <- exp(-omega*(risk.best.idx.tr - risk.theta))
+#   # reject the test stat if test >= 1/alpha; otherwise, keep it
+#   return (if (test.stat < 1/alpha) idx else NA)
+# }
 
 #' Perform argmin hypothesis test.
 #'
@@ -345,7 +345,7 @@ argmin.HT.MT <- function(data, r, test='z', r.min=NULL, r.min.sec=NULL, alpha=0.
 
   if (is.null(r.min) | is.null(r.min.sec)){
     sample.mean <- colMeans(data) # np
-    min.indices <- which.min(sample.mean)
+    min.indices <- which(sample.mean == min(sample.mean))
     r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
     r.min.sec <- find.sub.argmin(sample.mean, r.min)
   }
