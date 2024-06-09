@@ -33,7 +33,8 @@ The supported methods include:\tabular{ll}{
    \code{nonsplit (NS)} \tab  A variant of SML, but no splitting is involved.
    One needs to pass a fixed lambda value as a required additional argument.\cr
    \tab \cr
-   \code{fold (FD)} \tab A n fold version of SML. \cr
+   \code{fold (FD)} \tab A n fold version of SML.
+   lOne needs to pass a fixed lambda value as a required additional argument.\cr
    \tab \cr
    \code{GU} \tab The method in \insertCite{dey.2024}{argminCS}. \cr
    \tab \cr
