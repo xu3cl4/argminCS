@@ -15,17 +15,11 @@
 #' find.sub.argmin(nums,1)
 #' ## return 2
 find.sub.argmin <- function(nums, idx){
-  p <- length(nums)
 
-  min.idx.sec <- -1
-  min.val <- 1e308
-  for (s in 1:p){
-    if (s != idx){
-      if (nums[s] < min.val){
-        min.idx.sec <- s
-        min.val <- nums[s]
-      }
-    }
-  }
+  min.val <- min(nums[-idx])
+  min.indices <- setdiff(which(nums == min.val), c(idx))
+  withr::with_seed(ceiling(abs(idx*7+nums[idx]) + idx), {
+    min.idx.sec <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
+  })
   return (min.idx.sec)
 }

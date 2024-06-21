@@ -247,7 +247,11 @@ argmin.HT.fold <- function(data, r, lambda, alpha=0.05, n.fold=2){
     return (list(test.stat.scale=test.stat.scale, std=sigma, ans=ans))
   } else{
     ### create folds
-    withr::with_seed(ceiling(abs(13*r*data[1,1]*lambda*n.fold)), {
+    seed <- ceiling(abs(13*r*data[r,r]*lambda*n.fold)) + r
+    if (seed >  2^31 - 1){
+      seed <- seed %%  2^31 - 1
+    }
+    withr::with_seed(seed, {
       flds <- caret::createFolds(1:n, k=n.fold, list=T, returnTrain=F)
     })
 
@@ -346,7 +350,13 @@ argmin.HT.MT <- function(data, r, test='z', r.min=NULL, r.min.sec=NULL, alpha=0.
   if (is.null(r.min) | is.null(r.min.sec)){
     sample.mean <- colMeans(data) # np
     min.indices <- which(sample.mean == min(sample.mean))
-    r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
+    seed <- data[r,r]*r*37
+    if (seed >  2^31 - 1){
+      seed <- seed %%  2^31 - 1
+    }
+    withr::with_seed(seed, {
+      r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
+    })
     r.min.sec <- find.sub.argmin(sample.mean, r.min)
   }
 
@@ -470,10 +480,13 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
   diffs.centered <- diffs - matrix(rep(mean.diffs, n), nrow=n, byrow=T)
   test.stat.MBs <- sapply(1:B,
                           function(i){
-                            #withr::with_seed(ceiling(abs(11*i*r*data[1,1]*sample.mean[1]))+i, {
-                            Gaussian.vec <- stats::rnorm(n, 0, 1)
-                              #print(ceiling(abs(11*i*r*data[1,1]*sample.mean[1]))+1)
-                             #})
+                            seed <- ceiling(abs(53*i*r*data[r,r]*sample.mean[r]))+i
+                            if (seed >  2^31 - 1){
+                              seed <- seed %%  2^31 - 1
+                            }
+                            withr::with_seed(seed, {
+                              Gaussian.vec <- stats::rnorm(n, 0, 1)
+                             })
                             test.stat.MB <- sqrt(n)*max(colMeans(diffs.centered*Gaussian.vec)/sd.diffs)
                             return (test.stat.MB)
                             })

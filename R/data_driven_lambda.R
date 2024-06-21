@@ -55,12 +55,15 @@ is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05
   }
 
   ## subsample from the given sample
-  #if (is.null(seed)){
-  #  seed <- ceiling(abs(data[1,1]*sample.mean[1]*lambda))
-  #}
-  #withr::with_seed(seed, {
-  sample.indices <- sample(n, 2*n.pairs)
-  #})
+  if (is.null(seed)){
+   seed <- ceiling(abs(17*data[r,r]*sample.mean[r]*lambda*r + r))
+  }
+  if (seed >  2^31 - 1){
+    seed <- seed %%  2^31 - 1
+  }
+  withr::with_seed(seed, {
+    sample.indices <- sample(n, 2*n.pairs)
+  })
   index.pairs <- cbind(sample.indices[1:n.pairs], sample.indices[(n.pairs+1):(2*n.pairs)])
 
   differences.by.perturbing.one <- sapply(1:n.pairs, function(i){
@@ -73,9 +76,13 @@ is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05
     if (j > n){
       index.candidates <- setdiff(1:3, c(index.first, index.second))
       if (length(index.candidates) > 1){
-        #withr::with_seed(ceiling(i*seed), {
-        j <- sample(index.candidates, 1)
-        #})
+        new.seed <- 37*i*seed + i
+        if (new.seed >  2^31 - 1){
+          new.seed <- new.seed %%  2^31 - 1
+        }
+        withr::with_seed(new.seed, {
+          j <- sample(index.candidates, 1)
+        })
       } else {
         j <- index.candidates[1]
       }
@@ -202,11 +209,14 @@ lambda.adaptive <- function(data, r, sample.mean=NULL, const=2.5){
 
     min.indices <- which(mu.hat.noi[-r] == min(mu.hat.noi[-r]))
 
-    #seed <- ceiling(abs(i*r*data[1,1]*sample.mean[1]))
-    #withr::with_seed(seed, {
-    min.idx <- ifelse(length(min.indices) > 1,
+    seed <- ceiling(abs(19*i*r*data[r,r]*sample.mean[r])+i)
+    if (seed >  2^31 - 1){
+      seed <- seed %%  2^31 - 1
+    }
+    withr::with_seed(seed, {
+      min.idx <- ifelse(length(min.indices) > 1,
                         sample(c(min.indices), 1), min.indices[1])
-    #})
+    })
 
     X.min <- data[i, -r][min.idx]
     return (X.min)

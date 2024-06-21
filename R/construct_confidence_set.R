@@ -115,7 +115,13 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
   } else if (method == 'Bonferroni' | method == 'MT') {
     sample.mean <- colMeans(data) # np
     min.indices <- which(sample.mean == min(sample.mean))
-    r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
+    seed <- 107*sample.mean[1]*data[1,1]
+    if (seed >  2^31-1){
+      seed <- seed %%  2^31-1
+    }
+    withr::with_seed(seed, {
+      r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
+    })
     r.min.sec <- find.sub.argmin(sample.mean, r.min)
     res <- sapply(1:p, function(r) {argmin.HT.MT(data, r, r.min=r.min, r.min.sec=r.min.sec, ...)$ans})
     return (which(res == 'Accept'))

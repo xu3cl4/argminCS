@@ -39,7 +39,7 @@ getMin.softmin.LOO <- function(i, r, data, lambda, sample.mean=NULL, print.weigh
   mu.hat.noi <- (sample.mean*n - data[i,])/(n-1) #3p
   weights <- LDATS::softmax(-lambda*mu.hat.noi[-r]) #4p
   if (print.weights){
-    print(glue::glue('weights are {weights}'))
+    print(glue::glue('weights are {list(weights)}'))
   }
   return (sum(weights*data[i,-r])) #2p
 }
@@ -89,8 +89,12 @@ getMin.argmin.LOO <- function(i, r, data, lambda=NULL, sample.mean=NULL, ties.me
     if (is.null(seed)) {
       seed <- ceiling(abs(i*r*11*data[1,1]*n*p))
     }
-    set.seed(seed)
-    r.i.hat <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
+    if (seed > 2^32){
+      seed <- seed %% 2^32
+    }
+    withr::with_seed(seed, {
+      r.i.hat <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
+    })
     return (data[i,-r][r.i.hat])
   } else if (ties.method == 'average' | ties.method == 'a'){
     # average over all argmins
