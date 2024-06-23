@@ -58,6 +58,9 @@
 #' ## 5 fold
 #' CS.argmin(data, method='FD', lambda=sqrt(n)/2.5, n.fold=5)
 #'
+#' ## GU
+#' CS.argmin(data, method='GU')
+#'
 #' ## self-normalization
 #' CS.argmin(data, method='SN')
 #'
@@ -101,7 +104,43 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     return (which(res == 'Accept'))
 
   } else if (method == 'GU') {
+    omega.provided <- hasArg(omega)
+    if (!omega.provided){
+      omega <- omega.bootstrap(data)
+    }
+    n <- nrow(data)
+    p <- ncol(data)
+    seed <- floor(data[n,p]*p + p)
+    withr::with_seed(seed, {
+      indices.training <- sample(n, floor(n/2), replace=F)
+    })
+    data.training <- data[indices.training,]
+    sample.mean.training <- colMeans(data.training)
+    min.indices <- which(sample.mean.training == min(sample.mean.training))
+    seed.argmin <- 3*seed
+    if (seed.argmin >  (2^31-1)){
+      seed.argmin <- seed.argmin %% (2^31-1)
+    }
+    withr::with_seed(seed.argmin, {
+      idx.min.training <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
+    })
 
+    data.testing <- data[-indices.training,]
+    sample.mean.testing <- colMeans(data.testing)
+
+    res <- NULL
+    if (omega.provided){
+      res <- sapply(1:p, function(r) {
+      argmin.HT.GU(data, r,
+                   estimated.minimum.mean=sample.mean.testing[idx.min.training],
+                   mean.r=sample.mean.testing[r], ...)$ans})
+    } else {
+      res <- sapply(1:p, function(r) {
+        argmin.HT.GU(data, r, omega = omega,
+                     estimated.minimum.mean=sample.mean.testing[idx.min.training],
+                     mean.r=sample.mean.testing[r], ...)$ans})
+    }
+    return (which(res == 'Accept'))
   } else if (method == 'CCK.self.normalization' | method == 'SN'){
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {argmin.HT.SN(data, r, sample.mean=sample.mean, ...)$ans})
@@ -131,41 +170,4 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
          'nonsplit' (NS), 'fold' (FD), 'GU', 'CCK.bootstrap' (CB), 'Bonferroni' (MT)")
   }
 }
-
-# CS.GU <- function(data, alpha, omega=NULL){
-#
-#   n <- nrow(data)
-#   p <- ncol(data)
-#
-#   ## split the data
-#   withr::with_seed(p*n*data[1,1], {
-#     idx.tr <- sample(1:n, n/2, replace=F)
-#   })
-#   data.tr <- data[idx.tr,]
-#   data.tt <- data[-idx.tr,]
-#
-#   # get the best model over training set
-#   sample.mean.tr <- colMeans(data.tr)
-#   min.indices <- which(sample.mean.tr == min(sample.mean.tr))
-#   idx.min.tr <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
-#
-#   # evaluate the best model from the training set over the testing set
-#   sample.mean.tt <- colMeans(data.tt)
-#   risk.idx.min.tr <- sample.mean.tt[idx.min.tr]
-#
-#   # compute the learning rate
-#   if (is.null(omega)){
-#     omega <- omega.bootstrap(data, alpha)
-#   }
-#
-#   idx <- 1:p
-#   res <- rep(NA, p)
-#
-#   res.s <- idx[sapply(1:length(idx), function(j) argmin.HT.GU(
-#     sample.mean.tt[j], alpha, risk.idx.min.tr, omega, idx=j))]
-#   res.s <- na.omit(res.s)
-#   res[res.s] <- res.s
-#   return (res)
-# }
-
 

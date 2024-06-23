@@ -24,7 +24,7 @@ If data are believed to be normally distributed, use 't'; otherwise 'z'.}
 A list containing:\tabular{ll}{
    \code{p.val} \tab p value without Bonferroni's correction. \cr
    \tab \cr
-.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
+.   \code{critical.value} \tab The critical value for the hypothesis test. Being less than it leads to a rejection. \cr
    \tab \cr
    \code{ans} \tab 'Reject' or 'Accept' \cr
 }

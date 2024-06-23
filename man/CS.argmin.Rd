@@ -70,6 +70,9 @@ CS.argmin(data, method='FD', lambda=sqrt(n)/2.5)
 ## 5 fold
 CS.argmin(data, method='FD', lambda=sqrt(n)/2.5, n.fold=5)
 
+## GU
+CS.argmin(data, method='GU')
+
 ## self-normalization
 CS.argmin(data, method='SN')
 

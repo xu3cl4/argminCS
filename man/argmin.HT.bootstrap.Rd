@@ -12,7 +12,7 @@ argmin.HT.bootstrap(data, r, sample.mean = NULL, alpha = 0.05, B = 200)
 \item{r}{The dimension of interest for hypothesis test.}
 
 \item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.}
+If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.}
 
 \item{alpha}{The significance level of the hypothesis test; defaults to 0.05.}
 

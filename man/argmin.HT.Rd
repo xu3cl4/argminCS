@@ -69,6 +69,26 @@ argmin.HT(data, r, method='FD', lambda=sqrt(n)/2.5)
 ## 5 fold
 argmin.HT(data, r, method='FD', lambda=sqrt(n)/2.5, n.fold=5)
 
+### GU
+## calculate omega first
+omega <- omega.bootstrap(data, alpha=0.05)
+omega
+
+## let the function to perform data-splitting
+## and other necessary hypothesis testing preparation
+argmin.HT(data, r, method='GU', omega=omega)
+# one can also let the function to tune omega automatically
+argmin.HT(data, r, method='GU')
+
+## split the data by ourselves
+set.seed(32)
+indices.training <- sample(n, n/2, replace=FALSE)
+data.training <- data[indices.training,]
+data.testing <- data[-indices.training,]
+estimated.minimum.mean <- mean(data.testing[,which.min(colMeans(data.training))])
+argmin.HT(data, 1, method='GU', omega=omega,
+estimated.minimum.mean=estimated.minimum.mean, mean.r=mean(data.testing[,r]))
+
 ## self-normalization
 argmin.HT(data, r, method='SN')
 

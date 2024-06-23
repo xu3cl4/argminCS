@@ -22,7 +22,7 @@ argmin.HT.LOO(
 \item{r}{The dimension of interest for hypothesis test.}
 
 \item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.}
+If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.}
 
 \item{min.algor}{The algorithm to find the minimum excluding the r-th dimension; defaults to \link{getMin.softmin.LOO}. The other option is \link{getMin.argmin.LOO}.}
 
@@ -41,7 +41,7 @@ If lambda=NULL (recommended), the function would determine a lambda value in a d
 A list containing:\tabular{ll}{
    \code{test.stat.scale} \tab The scaled test statistic \cr
    \tab \cr
-.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
+.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejection. \cr
    \tab \cr
    \code{std} \tab The standard deviation estimate. \cr
    \tab \cr

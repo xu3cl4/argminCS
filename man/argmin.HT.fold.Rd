@@ -21,7 +21,7 @@ argmin.HT.fold(data, r, lambda, alpha = 0.05, n.fold = 2)
 A list containing:\tabular{ll}{
    \code{test.stat.scale} \tab The scaled test statistic \cr
    \tab \cr
-.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
+.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejection. \cr
    \tab \cr
    \code{std} \tab The standard deviation estimate. \cr
    \tab \cr

@@ -14,7 +14,7 @@ argmin.HT.nonsplit(data, r, lambda, sample.mean = NULL, alpha = 0.05)
 \item{lambda}{The real-valued tuning parameter for exponential weightings (the calculation of softmin).}
 
 \item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.}
+If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.}
 
 \item{alpha}{The significance level of the hypothesis test; defaults to 0.05.}
 }
@@ -22,7 +22,7 @@ If your experiment involves hypothesis testing over more than one dimension, pas
 A list containing:\tabular{ll}{
    \code{test.stat.scale} \tab The scaled test statistic \cr
    \tab \cr
-.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
+.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejection. \cr
    \tab \cr
    \code{std} \tab The standard deviation estimate. \cr
    \tab \cr

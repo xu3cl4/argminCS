@@ -57,6 +57,26 @@
 #' ## 5 fold
 #' argmin.HT(data, r, method='FD', lambda=sqrt(n)/2.5, n.fold=5)
 #'
+#' ### GU
+#' ## calculate omega first
+#' omega <- omega.bootstrap(data, alpha=0.05)
+#' omega
+#'
+#' ## let the function to perform data-splitting
+#' ## and other necessary hypothesis testing preparation
+#' argmin.HT(data, r, method='GU', omega=omega)
+#' # one can also let the function to tune omega automatically
+#' argmin.HT(data, r, method='GU')
+#'
+#' ## split the data by ourselves
+#' set.seed(32)
+#' indices.training <- sample(n, n/2, replace=FALSE)
+#' data.training <- data[indices.training,]
+#' data.testing <- data[-indices.training,]
+#' estimated.minimum.mean <- mean(data.testing[,which.min(colMeans(data.training))])
+#' argmin.HT(data, 1, method='GU', omega=omega,
+#' estimated.minimum.mean=estimated.minimum.mean, mean.r=mean(data.testing[,r]))
+#'
 #' ## self-normalization
 #' argmin.HT(data, r, method='SN')
 #'
@@ -88,6 +108,7 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
     return (argmin.HT.fold(data, r, ...))
 
   } else if (method == 'GU') {
+    return (argmin.HT.GU(data, r, ...))
 
   } else if (method == 'CCK.self.normalization' | method == 'SN'){
     return (argmin.HT.SN(data, r, ...))
@@ -111,7 +132,7 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimension of interest for hypothesis test.
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-#' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
+#' If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.
 #' @param min.algor The algorithm to find the minimum excluding the r-th dimension; defaults to \link{getMin.softmin.LOO}. The other option is \link{getMin.argmin.LOO}.
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin); defaults to NULL.
 #' If lambda=NULL (recommended), the function would determine a lambda value in a data-driven way.
@@ -123,7 +144,7 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat.scale} \tab The scaled test statistic \cr
 #'    \tab \cr
-#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
+#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejection. \cr
 #'    \tab \cr
 #'    \code{std} \tab The standard deviation estimate. \cr
 #'    \tab \cr
@@ -174,13 +195,13 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
 #' @param r The dimension of interest for hypothesis test.
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-#' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
+#' If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
 #'
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat.scale} \tab The scaled test statistic \cr
 #'    \tab \cr
-#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
+#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejection. \cr
 #'    \tab \cr
 #'    \code{std} \tab The standard deviation estimate. \cr
 #'    \tab \cr
@@ -223,7 +244,7 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat.scale} \tab The scaled test statistic \cr
 #'    \tab \cr
-#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
+#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejection. \cr
 #'    \tab \cr
 #'    \code{std} \tab The standard deviation estimate. \cr
 #'    \tab \cr
@@ -274,54 +295,185 @@ argmin.HT.fold <- function(data, r, lambda, alpha=0.05, n.fold=2){
   }
 }
 
-# ## TO DO
-# omega.bootstrap <- function(X, alpha, B=100){
-#   # data: n by p
-#   # alpha: a desired significance level
-#   n <- nrow(X)
-#   p <- nrow(X)
-#
-#   risks <- colMeans(X)
-#   idx.theta.hat <- which.min(risks)
-#
-#   omegas <- 1:100
-#   coverages <- lapply(1:B, function(i){
-#     set.seed(13*i)
-#     smp <- sample(1:n, n, replace=T)
-#     X.boot <- X[smp,]
-#
-#     # split the data
-#     set.seed(i)
-#     idx.tr <- sample(1:n, n/2, replace=F)
-#     X.tr <- X.boot[idx.tr,]
-#     X.tt <- X.boot[-idx.tr,]
-#
-#     # get the best model over training set
-#     risks.tr <- colMeans(X.tr)
-#     idx.min.tr <- which.min(risks.tr)
-#
-#     # evaluate the best model from the training set over the testing set
-#     risk.idx.min.tr <- mean(X.tt[,idx.min.tr])
-#
-#     # give any idx (it's simply a dummy value)
-#     risk.theta.hat <- mean(X.tt[,idx.theta.hat])
-#     res <- sapply(omegas, function(omega)
-#       argmin.HT.GU(risk.theta.hat, alpha, risk.idx.min.tr, omega, idx=1))
-#     res <- ifelse(is.na(res), 0, 1)
-#     return (res)
-#   })
-#
-#   coverages <- as.matrix(do.call('rbind', coverages))
-#   coverages <- colSums(coverages)
-#   return (omegas[which.min(abs(coverages - (1 - alpha)*B))])
-# }
-#
-# argmin.HT.GU <- function(risk.theta, alpha, risk.best.idx.tr, omega, idx=1){
-#
-#   test.stat <- exp(-omega*(risk.best.idx.tr - risk.theta))
-#   # reject the test stat if test >= 1/alpha; otherwise, keep it
-#   return (if (test.stat < 1/alpha) idx else NA)
-# }
+#' tune the omega used for the universal inference method by \insertCite{dey.2024}{argminCS}.
+#'
+#' tune the omega used for the universal inference method by \insertCite{dey.2024}{argminCS} by bootstrapping.
+#'
+#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
+#' @param alpha The significance level of the hypothesis test; defaults to 0.05.
+#' @param B The number of bootstrap iterations; defaults to 100.
+#' @param omegas A vector including the omegas to perform bootstrapping over; defaults to 1:100.
+#'
+#' @return An omega value for hypothesis testing, using the universal inference algorithm.
+#' @export
+#'
+#' @examples
+#' n <- 200
+#' mu <- (1:20)/20
+#' cov <- diag(length(mu))
+#' set.seed(38)
+#' data <- MASS::mvrnorm(n, mu, cov)
+#' omega <- omega.bootstrap(data)
+#' omega
+#'
+#' @references{
+#'   \insertRef{dey.2024}{argminCS}
+#' }
+omega.bootstrap <- function(data, alpha=0.05, B=100, omegas=1:100){
+  # data: n by p
+  # alpha: a desired significance level
+
+  n <- nrow(data)
+  p <- ncol(data)
+
+  sample.mean <- colMeans(data)
+  min.indices <- which(sample.mean == min(sample.mean))
+  seed.argmin.all <- ceiling(23*data[n,p]*p)
+  if (seed.argmin.all > (2^31-1)){
+    seed.argmin.all <- seed.argmin.all %%  (2^31-1)
+  }
+  withr::with_seed(seed.argmin.all, {
+    idx.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
+  })
+
+  coverages <- lapply(1:B, function(i){
+
+    seed <- ceiling(i*seed.argmin.all + i)
+    if (seed > 2^31 - 1){
+      seed <- seed %% (2^31 - 1)
+    }
+    withr::with_seed(seed, {
+      indices <- sample(1:n, n, replace=T)
+    })
+    data.boot <- data[indices,]
+
+    # split the data
+    seed.splitting <- seed*11+i
+    if (seed.splitting > 2^31 - 1){
+      seed.splitting <- seed.splitting %% (2^31 - 1)
+    }
+    withr::with_seed(seed.splitting, {
+      indices.boot.training <- sample(1:n, floor(n/2), replace=FALSE)
+    })
+    data.boot.training <- data.boot[indices.boot.training,]
+    data.boot.testing <- data.boot[-indices.boot.training,]
+
+    # get the best dimension over the bootstrapped training set
+    sample.mean.boot.training <- colMeans(data.boot.training)
+    min.indices.boot <- which(sample.mean.boot.training == min(sample.mean.boot.training))
+    seed.argmin <- 3*seed+i
+    if (seed.argmin >  2^31-1){
+      seed.argmin <- seed.argmin %%  2^31-1
+    }
+    withr::with_seed(seed.argmin, {
+      idx.min.boot.training <- ifelse((length(min.indices.boot) > 1),
+                                      sample(c(min.indices.boot), 1),
+                                      min.indices.boot[1])
+    })
+
+    estimated.minimum.mean.boot <- mean(data.boot.testing[,idx.min.boot.training])
+    # print(glue('{round(estimated.minimum.mean.boot, 3)}, {idx.min.boot.training}, {round(mean(data.boot.testing[,idx.min]),3)}, {idx.min}'))
+
+    # give any idx (it's simply a dummy value)
+    res <- sapply(omegas, function(omega){
+      argmin.HT.GU(data, 1, omega, estimated.minimum.mean=estimated.minimum.mean.boot,
+                   mean.r=mean(data.boot.testing[,idx.min]), alpha=alpha)$ans} )
+
+    # reward the omegas that fail to reject idx.min
+    res <- ifelse(res=='Reject', 0, 1)
+    return (res)
+  })
+
+  coverages <- as.matrix(do.call('rbind', coverages))
+  coverages <- colSums(coverages)
+  print(coverages)
+
+  distances.from.nominals <- abs(coverages - (1 - alpha)*B)
+  omega.indices.candidates <- which(distances.from.nominals == min(distances.from.nominals))
+  seed.final <- floor(seed.argmin.all*data[n,p])
+  if (seed.final > 2^31 - 1){
+    seed.final <- seed.final %% (2^31 - 1)
+  }
+  withr::with_seed(seed.final, {
+    omega.index <- ifelse((length(omega.indices.candidates) > 1),
+                          sample(c(omega.indices.candidates), 1),
+                          omega.indices.candidates[1])
+  })
+  return (omegas[omega.index])
+}
+
+#' Perform argmin hypothesis test.
+#'
+#' Test if a dimension may be argmin, employing the universal inference framework by \insertCite{dey.2024}{argminCS}.
+#'
+#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
+#' @param r The dimension of interest for hypothesis test.
+#' @param omega The tuning parameter in the statistic; defaults to NULL. Recommend to compute it using \link{omega.bootstrap}.
+#' @param estimated.minimum.mean Upon a splitting over data, the mean of r'-th dimension over the testing set, where r' is the argmin over the training set; defaults to NULL.
+#' Highly recommend to provide a value to improve the computation speed.
+#' @param mean.r Upon a splitting over data, the mean of the r-th dimension over the testing set; defaults to NULL.
+#' Highly recommend to provide a value to improve the computation speed.
+#' @param alpha The significance level of the hypothesis test; defaults to 0.05.
+#' @param ... Additional arguments to \link{omega.bootstrap}.
+#'
+#' @return A list containing:\tabular{ll}{
+#'    \code{test.statistic} \tab The off-line test statistic in \insertCite{dey.2024}{argminCS}. \cr
+#'    \tab \cr
+#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejection. \cr
+#'    \tab \cr
+#'    \code{ans} \tab 'Reject' or 'Accept' \cr
+#' }
+#'
+#' @references{
+#'   \insertRef{dey.2024}{argminCS}
+#' }
+argmin.HT.GU <- function(data, r, omega=NULL, estimated.minimum.mean=NULL, mean.r=NULL, alpha=0.05, ...){
+
+  n <- nrow(data)
+  p <- ncol(data)
+  n.testing <- ceiling(n/2)
+
+  if (is.null(omega)){
+    omega <- omega.bootstrap(data, alpha=alpha, ...)
+  }
+
+  # hypothesis testing preparation
+  if (is.null(estimated.minimum.mean) | is.null(mean.r)){
+    seed <- ceiling(data[n,p]*n*p + p)
+    if (seed > 2^31 - 1){
+      seed <- seed %% 2^31 -1
+    }
+    withr::with_seed(seed, {
+      indices.training <- sample(1:n, floor(n/2), replace=FALSE)
+      })
+
+    data.training <- data[indices.training,]
+    data.testing  <- data[-indices.training,]
+    n.testing <- nrow(data.testing)
+
+    # get the best dimension over training set
+    sample.mean.training <- colMeans(data.training)
+    min.indices <- which(sample.mean.training == min(sample.mean.training))
+    seed.argmin <- 3*seed
+    if (seed.argmin >  (2^31-1)){
+      seed.argmin <- seed.argmin %% (2^31-1)
+    }
+    withr::with_seed(seed.argmin, {
+      idx.min.training <- ifelse((length(min.indices) > 1),
+                                 sample(c(min.indices), 1),
+                                 min.indices[1])
+    })
+
+    estimated.minimum.mean <- mean(data.testing[,idx.min.training])
+    mean.r <- mean(data.testing[,r])
+  }
+
+  # perform hypothesis testing
+  test.statistic <- exp(-omega*n.testing*(estimated.minimum.mean - mean.r))
+  critical.value <- 1/alpha
+  ans <- ifelse(test.statistic >= critical.value, 'Reject', 'Accept')
+  return (list(test.statistic=test.statistic, critical.value=critical.value, ans=ans))
+}
 
 #' Perform argmin hypothesis test.
 #'
@@ -338,7 +490,7 @@ argmin.HT.fold <- function(data, r, lambda, alpha=0.05, n.fold=2){
 #' @return A list containing:\tabular{ll}{
 #'    \code{p.val} \tab p value without Bonferroni's correction. \cr
 #'    \tab \cr
-#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
+#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being less than it leads to a rejection. \cr
 #'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
@@ -390,13 +542,13 @@ argmin.HT.MT <- function(data, r, test='z', r.min=NULL, r.min.sec=NULL, alpha=0.
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimension of interest for hypothesis test.
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-#' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
+#' If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
 #'
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat} \tab The test statistic \cr
 #'    \tab \cr
-#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejction. \cr
+#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejection. \cr
 #'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
@@ -439,7 +591,7 @@ argmin.HT.SN <- function(data, r, sample.mean=NULL, alpha=0.05){
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimension of interest for hypothesis test.
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-#' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
+#' If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
 #' @param B The number of bootstrap samples; defaults to 200.
 #'
