@@ -386,7 +386,7 @@ omega.bootstrap <- function(data, alpha=0.05, B=100, omegas=1:100){
 
   coverages <- as.matrix(do.call('rbind', coverages))
   coverages <- colSums(coverages)
-  print(coverages)
+  # print(coverages)
 
   distances.from.nominals <- abs(coverages - (1 - alpha)*B)
   omega.indices.candidates <- which(distances.from.nominals == min(distances.from.nominals))
@@ -449,7 +449,6 @@ argmin.HT.GU <- function(data, r, omega=NULL, estimated.minimum.mean=NULL, mean.
 
     data.training <- data[indices.training,]
     data.testing  <- data[-indices.training,]
-    n.testing <- nrow(data.testing)
 
     # get the best dimension over training set
     sample.mean.training <- colMeans(data.training)
