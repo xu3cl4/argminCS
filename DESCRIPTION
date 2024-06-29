@@ -19,6 +19,7 @@ Imports:
     glue,
     LDATS,
     MASS,
+    methods,
     Rdpack,
     stats,
     withr

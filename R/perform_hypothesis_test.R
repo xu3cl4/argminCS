@@ -93,7 +93,6 @@
 #'
 #'   \insertRef{dey.2024}{argminCS}
 #' }
-
 argmin.HT <- function(data, r, method='softmin.LOO', ...){
   if (method == 'softmin.LOO' | method == 'SML'){
     return (argmin.HT.LOO(data, r, ...))
@@ -646,3 +645,43 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
   ans <- ifelse(p.val > alpha, 'Accept', 'Reject')
   return (list(p.val=p.val, ans=ans))
 }
+
+#' Generate the quantile used for the selection procedure in \insertCite{gupta.1965}{argminCS}.
+#'
+#' Generate the quantile used for the selection procedure in \insertCite{gupta.1965}{argminCS} by Monte Carlo estimation.
+#'
+#' @param p The number of dimensions in your data matrix
+#' @param alpha The level of the upper quantile; defaults to 0.05 (95 percentile).
+#' @param B The number of Monte Carlo repetitions; defaults to 100000.
+#'
+#' @return A list containing:\tabular{ll}{
+#'    \code{critica.val} \tab The 1 - alpha \cr
+#' }
+#' @export
+#'
+#' @examples
+#' p <- 10
+#' get.quantile.gupta.selection(p, B=10000)
+#'
+#' get.quantile.gupta.selection(p)
+#'
+#' @references{
+#'  \insertRef{gupta.1965}{argminCS}
+#'
+#'  \insertRef{futschik.1995}{argminCS}
+#' }
+get.quantile.gupta.selection <- function(p, alpha=0.05, B=100000){
+  quantile <- quantiles.gupta[quantiles.gupta$p == p, as.character(alpha)]
+
+  if (length(quantile) == 1){
+    return (quantile)
+  } else{
+    mult.normals <- MASS::mvrnorm(n=B, mu=rep(0, p), Sigma=diag(p))
+    diffs.with.max <- apply(mult.normals, 1, function(row) {max(row[-p]) - row[p]})
+    return (stats::quantile(diffs.with.max, 1-alpha))
+  }
+}
+
+#' argmin.HT.gupta(data, r, variances=NULL, critical.val=NULL, alpha=0.5){
+#'
+#' }

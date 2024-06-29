@@ -104,7 +104,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     return (which(res == 'Accept'))
 
   } else if (method == 'GU') {
-    omega.provided <- hasArg(omega)
+    omega.provided <- methods::hasArg(omega)
     if (!omega.provided){
       omega <- omega.bootstrap(data)
     }
