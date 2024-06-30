@@ -688,12 +688,21 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
 get.quantile.gupta.selection <- function(p, alpha=0.05, N=100000){
   quantile <- quantiles.gupta[quantiles.gupta$p == p, as.character(alpha)]
 
-  if (length(quantile) == 1){
-    return (quantile)
-  } else{
-    mult.normals <- MASS::mvrnorm(n=N, mu=rep(0, p), Sigma=diag(p))
-    diffs.with.max <- apply(mult.normals, 1, function(row) {max(row[-p]) - row[p]})
-    return (stats::quantile(diffs.with.max, 1-alpha))
+  if (p == 1){
+    return (stats::qnorm(1-alpha))
+
+  }
+  else if (p == 2){
+    return (stats::qnorm(1-alpha, 0, sqrt(2)))
+
+  } else {
+    if (length(quantile) == 1){
+      return (quantile)
+    } else{
+      mult.normals <- MASS::mvrnorm(n=N, mu=rep(0, p), Sigma=diag(p))
+      diffs.with.max <- apply(mult.normals, 1, function(row) {max(row[-p]) - row[p]})
+      return (stats::quantile(diffs.with.max, 1-alpha))
+    }
   }
 }
 
@@ -731,6 +740,8 @@ get.quantile.gupta.selection <- function(p, alpha=0.05, N=100000){
 #' }
 argmin.HT.gupta <- function(data, r, sample.mean=NULL, stds=NULL, critical.val=NULL, alpha=0.05, ...){
 
+  # note that the implementation can, in turn, asks for scaled.sample.mean, its min and second min
+  # to speed up the computation, in case that there are many dimensions involving.
   n <- nrow(data)
   p <- ncol(data)
 
@@ -751,7 +762,7 @@ argmin.HT.gupta <- function(data, r, sample.mean=NULL, stds=NULL, critical.val=N
   # we thus have to modify the 'data' by -1 if intended to follow their procedure closely
   # note that the above sample mean is calculated without a multiplication of -1
   # the list of standard deviations would not be affected by a multiplication of -1
-  # Gupta's test stat: sqrt(n)*max(-scaled.sample.mean[-r]) - (-scaled.sample.mean[r])
+  # Gupta's test stat: sqrt(n)*(max(-scaled.sample.mean[-r]) - (-scaled.sample.mean[r]))
   # it is equal to the following
   test.stat <- sqrt(n)*(scaled.sample.mean[r] - min(scaled.sample.mean[-r]))
   ans <- ifelse(test.stat <= critical.val, 'Accept', 'Reject')

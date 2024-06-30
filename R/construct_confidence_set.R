@@ -219,12 +219,16 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
 
     # step 2
     p.2 <- sum(res.1 == 'Accept') - 1
-    critical.val.2 <- get.quantile.gupta.selection(p=p.2, alpha=alpha.2)
-    res.2 <- sapply(1:p, function(r) {argmin.HT.gupta(
-      data, r, critical.val=critical.val.2, sample.mean=sample.mean, stds=stds, alpha=alpha.2, ...)$ans})
-    res.2 <- unname(res.2)
+    if (p.2 == 0){
+      return (which(res.1 == 'Accept'))
+    } else {
+      critical.val.2 <- get.quantile.gupta.selection(p=p.2, alpha=alpha.2)
+      res.2 <- sapply(1:p, function(r) {argmin.HT.gupta(
+        data, r, critical.val=critical.val.2, sample.mean=sample.mean, stds=stds, alpha=alpha.2, ...)$ans})
+      res.2 <- unname(res.2)
 
-    return (which(res.1 == 'Accept' & res.2 == 'Accept'))
+      return (which(res.1 == 'Accept' & res.2 == 'Accept'))
+    }
 
   } else {
     stop("'method' should be one of 'softmin.LOO' (SML), 'argmin.LOO' (HML),
