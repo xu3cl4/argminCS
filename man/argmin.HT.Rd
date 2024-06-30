@@ -14,7 +14,7 @@ argmin.HT(data, r, method = "softmin.LOO", ...)
 \item{method}{A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
 For the list of supported methods and their abbreviations, see Details.}
 
-\item{...}{Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible}.
+\item{...}{Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible}, \link{argmin.HT.GU}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
 A correct argument name needs to be specified if it is used.}
 }
 \value{
@@ -42,6 +42,8 @@ The supported methods include:\tabular{ll}{
    \code{CCK.bootstrap (CB)} \tab Modified from the bootstrap method in \insertCite{cck.many.moments}{argminCS}. See also \insertCite{lei.cvc}{argminCS}. \cr
    \tab \cr
    \code{Bonferroni (MT)} \tab Multiple testing with Bonferroni's correction. \cr
+   \tab \cr
+   \code{Gupta (GTA)} \tab Multiple testing with Bonferroni's correction. \cr
 }
 If computation is a concern, use 'MT'. Otherwise, 'SML' is recommended.
 }
@@ -97,6 +99,10 @@ argmin.HT(data, r, method='CB')
 
 ## Bonferroni (choose t test because of normal data)
 argmin.HT(data, r, method='MT', test='t')
+
+## Gupta (choose t test because of normal data)
+critical.val <- get.quantile.gupta.selection(p=length(mu))
+argmin.HT(data, r, method='GTA', critical.val=critical.val)
 }
 \references{
 {
@@ -105,5 +111,9 @@ argmin.HT(data, r, method='MT', test='t')
   \insertRef{lei.cvc}{argminCS}
 
   \insertRef{dey.2024}{argminCS}
+
+  \insertRef{gupta.1965}{argminCS}
+
+  \insertRef{futschik.1995}{argminCS}
 }
 }

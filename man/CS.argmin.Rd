@@ -14,7 +14,7 @@ For the list of supported methods and their abbreviations, see Details.}
 
 \item{alpha}{The significance level; defaults to 0.05. The function produces a (1-alpha) confidence set.}
 
-\item{...}{Additional arguments to \link{argmin.HT.LOO}, \link{argmin.HT.nonsplit}, \link{argmin.HT.fold}, \link{argmin.HT.MT}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}.
+\item{...}{Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible}, \link{argmin.HT.GU}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
 A correct argument name needs to be specified if it is used.}
 }
 \value{
@@ -43,6 +43,10 @@ The supported methods include:\tabular{ll}{
    \code{CCK.bootstrap (CB)} \tab Modified from the bootstrap method in \insertCite{cck.many.moments}{argminCS}. See also \insertCite{lei.cvc}{argminCS}. \cr
    \tab \cr
    \code{Bonferroni (MT)} \tab Multiple testing with Bonferroni's correction. \cr
+   \tab \cr
+   \code{Gupta (GTA)} \tab The method in \insertCite{gupta.1965}{argminCS}. \cr
+   \tab \cr
+   \code{Futschik (FCHK)} \tab The two-step method in \insertCite{futschik.1995}{argminCS} \cr
 }
 If computation is a concern, use 'MT'. Otherwise, 'SML' is recommended.
 }
@@ -82,6 +86,17 @@ CS.argmin(data, method='CB')
 ## Bonferroni (choose t test because of normal data)
 CS.argmin(data, method='MT', test='t')
 
+## Gupta
+CS.argmin(data, method='GTA')
+
+## Futschik two-step method
+# default alpha.1, alpha.2
+CS.argmin(data, method='FCHK')
+
+alpha.1 <- 0.0005
+alpha.2 <- 1 - (0.95/(1 - alpha.1))
+CS.argmin(data, method='FCHK', alpha.1=0.0005, alpha.2=alpha.2)
+
 }
 \references{
 {
@@ -90,5 +105,9 @@ CS.argmin(data, method='MT', test='t')
   \insertRef{lei.cvc}{argminCS}
 
   \insertRef{dey.2024}{argminCS}
+
+ \insertRef{gupta.1965}{argminCS}
+
+ \insertRef{futschik.1995}{argminCS}
 }
 }

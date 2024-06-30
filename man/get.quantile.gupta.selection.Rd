@@ -4,28 +4,30 @@
 \alias{get.quantile.gupta.selection}
 \title{Generate the quantile used for the selection procedure in \insertCite{gupta.1965}{argminCS}.}
 \usage{
-get.quantile.gupta.selection(p, alpha = 0.05, B = 1e+05)
+get.quantile.gupta.selection(p, alpha = 0.05, N = 1e+05)
 }
 \arguments{
-\item{p}{The number of dimensions in your data matrix}
+\item{p}{The number of dimensions in your data matrix.}
 
-\item{alpha}{The level of the upper quantile; defaults to 0.05 (95 percentile).}
+\item{alpha}{The level of the upper quantile; defaults to 0.05 (95\% percentile).}
 
-\item{B}{The number of Monte Carlo repetitions; defaults to 100000.}
+\item{N}{The number of Monte Carlo repetitions; defaults to 100000.}
 }
 \value{
 A list containing:\tabular{ll}{
-   \code{critica.val} \tab The 1 - alpha \cr
+   \code{critica.val} \tab The 1 - alpha upper quantile. \cr
 }
 }
 \description{
 Generate the quantile used for the selection procedure in \insertCite{gupta.1965}{argminCS} by Monte Carlo estimation.
 }
+\note{
+The quantile is pre-calculated for some common configurations of (p, alpha)
+}
 \examples{
-p <- 10
-get.quantile.gupta.selection(p, B=10000)
+get.quantile.gupta.selection(p=10)
 
-get.quantile.gupta.selection(p)
+get.quantile.gupta.selection(p=100)
 
 }
 \references{

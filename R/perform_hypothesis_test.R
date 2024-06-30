@@ -20,6 +20,8 @@
 #'    \code{CCK.bootstrap (CB)} \tab Modified from the bootstrap method in \insertCite{cck.many.moments}{argminCS}. See also \insertCite{lei.cvc}{argminCS}. \cr
 #'    \tab \cr
 #'    \code{Bonferroni (MT)} \tab Multiple testing with Bonferroni's correction. \cr
+#'    \tab \cr
+#'    \code{Gupta (GTA)} \tab Multiple testing with Bonferroni's correction. \cr
 #' }
 #' If computation is a concern, use 'MT'. Otherwise, 'SML' is recommended.
 #'
@@ -27,7 +29,7 @@
 #' @param r The dimension of interest for hypothesis test.
 #' @param method A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
 #' For the list of supported methods and their abbreviations, see Details.
-#' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible}.
+#' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible}, \link{argmin.HT.GU}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
 #' A correct argument name needs to be specified if it is used.
 #'
 #' @return 'Accept' or 'Reject'. A string indicating whether the given dimension could be an argmin (Accept) or not (Reject).
@@ -85,6 +87,10 @@
 #'
 #' ## Bonferroni (choose t test because of normal data)
 #' argmin.HT(data, r, method='MT', test='t')
+#'
+#' ## Gupta (choose t test because of normal data)
+#' critical.val <- get.quantile.gupta.selection(p=length(mu))
+#' argmin.HT(data, r, method='GTA', critical.val=critical.val)
 #' @importFrom Rdpack reprompt
 #' @references{
 #'   \insertRef{cck.many.moments}{argminCS}
@@ -92,6 +98,10 @@
 #'   \insertRef{lei.cvc}{argminCS}
 #'
 #'   \insertRef{dey.2024}{argminCS}
+#'
+#'   \insertRef{gupta.1965}{argminCS}
+#'
+#'   \insertRef{futschik.1995}{argminCS}
 #' }
 argmin.HT <- function(data, r, method='softmin.LOO', ...){
   if (method == 'softmin.LOO' | method == 'SML'){
@@ -117,6 +127,9 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
 
   } else if (method == 'Bonferroni' | method == 'MT') {
     return (argmin.HT.MT(data, r, ...))
+
+  } else if (method == 'Gupta' | method == 'GTA' | method=='gupta') {
+    return (argmin.HT.gupta(data, r, ...))
 
   } else {
     stop("'method' should be one of 'softmin.LOO' (SML), 'argmin.LOO' (HML),
@@ -646,42 +659,101 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
   return (list(p.val=p.val, ans=ans))
 }
 
-#' Generate the quantile used for the selection procedure in \insertCite{gupta.1965}{argminCS}.
+#' @title Generate the quantile used for the selection procedure in \insertCite{gupta.1965}{argminCS}.
 #'
-#' Generate the quantile used for the selection procedure in \insertCite{gupta.1965}{argminCS} by Monte Carlo estimation.
+#' @description Generate the quantile used for the selection procedure in \insertCite{gupta.1965}{argminCS} by Monte Carlo estimation.
 #'
-#' @param p The number of dimensions in your data matrix
-#' @param alpha The level of the upper quantile; defaults to 0.05 (95 percentile).
-#' @param B The number of Monte Carlo repetitions; defaults to 100000.
+#' @note The quantile is pre-calculated for some common configurations of (p, alpha)
+#'
+#' @param p The number of dimensions in your data matrix.
+#' @param alpha The level of the upper quantile; defaults to 0.05 (95\% percentile).
+#' @param N The number of Monte Carlo repetitions; defaults to 100000.
 #'
 #' @return A list containing:\tabular{ll}{
-#'    \code{critica.val} \tab The 1 - alpha \cr
+#'    \code{critica.val} \tab The 1 - alpha upper quantile. \cr
 #' }
 #' @export
 #'
 #' @examples
-#' p <- 10
-#' get.quantile.gupta.selection(p, B=10000)
+#' get.quantile.gupta.selection(p=10)
 #'
-#' get.quantile.gupta.selection(p)
+#' get.quantile.gupta.selection(p=100)
 #'
+#' @importFrom Rdpack reprompt
 #' @references{
 #'  \insertRef{gupta.1965}{argminCS}
 #'
 #'  \insertRef{futschik.1995}{argminCS}
 #' }
-get.quantile.gupta.selection <- function(p, alpha=0.05, B=100000){
+get.quantile.gupta.selection <- function(p, alpha=0.05, N=100000){
   quantile <- quantiles.gupta[quantiles.gupta$p == p, as.character(alpha)]
 
   if (length(quantile) == 1){
     return (quantile)
   } else{
-    mult.normals <- MASS::mvrnorm(n=B, mu=rep(0, p), Sigma=diag(p))
+    mult.normals <- MASS::mvrnorm(n=N, mu=rep(0, p), Sigma=diag(p))
     diffs.with.max <- apply(mult.normals, 1, function(row) {max(row[-p]) - row[p]})
     return (stats::quantile(diffs.with.max, 1-alpha))
   }
 }
 
-#' argmin.HT.gupta(data, r, variances=NULL, critical.val=NULL, alpha=0.5){
+#' @title Perform argmin hypothesis test.
 #'
+#' @description Test if a dimension may be argmin, using the method in \insertCite{gupta.1965}{argminCS}.
+#'
+#' @note This method requires independence among the dimensions.
+#'
+#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
+#' @param r The dimension of interest for hypothesis test.
+#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
+#' If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.
+#' @param stds The dimension-wise standard deviations of the n samples in data; defaults to NULL. It can be calculated via apply(data, 2, stats:sd).
+#' If your experiment involves hypothesis testing over more than one dimension, compute apply(data, 2, stats::sd) and pass it to stds to speed up computation.
+#' @param critical.val The quantile for the hypothesis test; defaults to NULL. It can be calculated via \link{get.quantile.gupta.selection}.
+#' If your experiment involves hypothesis testing over more than one dimension, pass a quantile to speed up computation.
+#' @param alpha The significance level of the hypothesis test; defaults to 0.05.
+#' @param ... Additional argument to \link{get.quantile.gupta.selection}.
+#' A correct argument name needs to be specified if it is used.
+#'
+#' @return A list containing:\tabular{ll}{
+#'    \code{test.stat} \tab The test statistic \cr
+#'    \tab \cr
+#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejection. \cr
+#'    \tab \cr
+#'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
+#'
+#' @importFrom Rdpack reprompt
+#' @references{
+#'  \insertRef{gupta.1965}{argminCS}
+#'
+#'  \insertRef{futschik.1995}{argminCS}
+#' }
+argmin.HT.gupta <- function(data, r, sample.mean=NULL, stds=NULL, critical.val=NULL, alpha=0.05, ...){
+
+  n <- nrow(data)
+  p <- ncol(data)
+
+  if (is.null(critical.val)){
+    critical.val <- get.quantile.gupta.selection(p=p, alpha=alpha, ...)
+  }
+
+  scaled.sample.mean <- sample.mean
+  if (is.null(scaled.sample.mean)){
+    scaled.sample.mean <- colMeans(data)
+  }
+  if (is.null(stds)){
+    stds <- apply(data,2,stats::sd)
+  }
+  scaled.sample.mean <- scaled.sample.mean/stds
+
+  # Gupta's paper sets up the selection rule to find argmax
+  # we thus have to modify the 'data' by -1 if intended to follow their procedure closely
+  # note that the above sample mean is calculated without a multiplication of -1
+  # the list of standard deviations would not be affected by a multiplication of -1
+  # Gupta's test stat: sqrt(n)*max(-scaled.sample.mean[-r]) - (-scaled.sample.mean[r])
+  # it is equal to the following
+  test.stat <- sqrt(n)*(scaled.sample.mean[r] - min(scaled.sample.mean[-r]))
+  ans <- ifelse(test.stat <= critical.val, 'Accept', 'Reject')
+  return (list(test.stat=test.stat, critical.val=critical.val, ans=ans))
+}
