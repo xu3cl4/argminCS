@@ -190,7 +190,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     sample.mean <- colMeans(data)
     stds <- NULL
     if (methods::hasArg(std)){
-      addiitonal.arguments <- list(...)
+      additional.arguments <- list(...)
       std <- additional.arguments$std
       stds <- rep(std, p)
     } else {
@@ -204,8 +204,8 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     alpha.1 <- NULL
     alpha.2 <- NULL
     stds <- NULL
+    additional.arguments <- list(...)
     if (methods::hasArg(alpha.1) & methods::hasArg(alpha.2)){
-      additional.arguments <- list(...)
       alpha.1 <- additional.arguments$alpha.1
       alpha.2 <- additional.arguments$alpha.2
       if (alpha.1 < 0 | alpha.1 > 1 | alpha.2 < 0 | alpha.2 > 1){
@@ -217,7 +217,6 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     }
 
     if (methods::hasArg(std)){
-      addiitonal.arguments <- list(...)
       std <- additional.arguments$std
       stds <- rep(std, p)
     } else {

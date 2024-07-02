@@ -714,8 +714,7 @@ get.quantile.gupta.selection <- function(p, alpha=0.05, N=100000){
 #' @param r The dimension of interest for hypothesis test.
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 #' If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.
-#' @param stds The dimension-wise standard deviations of the n samples in data; defaults to NULL. It can be calculated via apply(data, 2, stats:sd).
-#' If your experiment involves hypothesis testing over more than one dimension, compute apply(data, 2, stats::sd) and pass it to stds to speed up computation.
+#' @param stds The equal dimension-wise ( population) standard deviations of the n samples in data; defaults a vector of 1's.
 #' @param critical.val The quantile for the hypothesis test; defaults to NULL. It can be calculated via \link{get.quantile.gupta.selection}.
 #' If your experiment involves hypothesis testing over more than one dimension, pass a quantile to speed up computation.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
@@ -752,7 +751,7 @@ argmin.HT.gupta <- function(data, r, sample.mean=NULL, stds=NULL, critical.val=N
     scaled.sample.mean <- colMeans(data)
   }
   if (is.null(stds)){
-    stds <- apply(data,2,stats::sd)
+    stds <- rep(1, p)
   }
   scaled.sample.mean <- scaled.sample.mean/stds
 

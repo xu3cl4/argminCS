@@ -22,8 +22,7 @@ argmin.HT.gupta(
 \item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.}
 
-\item{stds}{The dimension-wise standard deviations of the n samples in data; defaults to NULL. It can be calculated via apply(data, 2, stats:sd).
-If your experiment involves hypothesis testing over more than one dimension, compute apply(data, 2, stats::sd) and pass it to stds to speed up computation.}
+\item{stds}{The equal dimension-wise ( population) standard deviations of the n samples in data; defaults a vector of 1's.}
 
 \item{critical.val}{The quantile for the hypothesis test; defaults to NULL. It can be calculated via \link{get.quantile.gupta.selection}.
 If your experiment involves hypothesis testing over more than one dimension, pass a quantile to speed up computation.}
