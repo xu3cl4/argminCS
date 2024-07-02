@@ -384,7 +384,6 @@ omega.bootstrap <- function(data, alpha=0.05, B=100, omegas=1:100){
     })
 
     estimated.minimum.mean.boot <- mean(data.boot.testing[,idx.min.boot.training])
-    # print(glue('{round(estimated.minimum.mean.boot, 3)}, {idx.min.boot.training}, {round(mean(data.boot.testing[,idx.min]),3)}, {idx.min}'))
 
     # give any idx (it's simply a dummy value)
     res <- sapply(omegas, function(omega){
@@ -398,7 +397,6 @@ omega.bootstrap <- function(data, alpha=0.05, B=100, omegas=1:100){
 
   coverages <- as.matrix(do.call('rbind', coverages))
   coverages <- colSums(coverages)
-  # print(coverages)
 
   distances.from.nominals <- abs(coverages - (1 - alpha)*B)
   omega.indices.candidates <- which(distances.from.nominals == min(distances.from.nominals))

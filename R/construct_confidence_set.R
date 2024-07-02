@@ -188,7 +188,14 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     p <- ncol(data)
     critical.val <- get.quantile.gupta.selection(p=p, alpha=alpha)
     sample.mean <- colMeans(data)
-    stds <- apply(data, 2, stats::sd)
+    stds <- NULL
+    if (methods::hasArg(std)){
+      addiitonal.arguments <- list(...)
+      std <- additional.arguments$std
+      stds <- rep(std, p)
+    } else {
+      stds <- rep(1, p)
+    }
     res <- sapply(1:p, function(r) {argmin.HT.gupta(
       data, r, critical.val=critical.val, sample.mean=sample.mean, stds=stds, alpha=alpha, ...)$ans})
     return (which(res == 'Accept'))
@@ -196,10 +203,11 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
   } else if (method == 'futschik' | method == 'Futschik' | method == 'FCHK'){
     alpha.1 <- NULL
     alpha.2 <- NULL
+    stds <- NULL
     if (methods::hasArg(alpha.1) & methods::hasArg(alpha.2)){
-      arguments <- list(...)
-      alpha.1 <- arguments$alpha.1
-      alpha.2 <- arguments$alpha.2
+      additional.arguments <- list(...)
+      alpha.1 <- additional.arguments$alpha.1
+      alpha.2 <- additional.arguments$alpha.2
       if (alpha.1 < 0 | alpha.1 > 1 | alpha.2 < 0 | alpha.2 > 1){
         stop('invalid configurations of (alpha.1, alpha.2)')
       }
@@ -208,8 +216,15 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
       alpha.2 <- 1 - (1 - alpha)/(1 - alpha.1)
     }
 
+    if (methods::hasArg(std)){
+      addiitonal.arguments <- list(...)
+      std <- additional.arguments$std
+      stds <- rep(std, p)
+    } else {
+      stds <- rep(1, p)
+    }
+
     sample.mean <- colMeans(data)
-    stds <- apply(data, 2, stats::sd)
     # step 1
     p.1 <- ncol(data)
     critical.val.1 <- get.quantile.gupta.selection(p=p.1, alpha=alpha.1)
