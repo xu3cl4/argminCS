@@ -132,7 +132,8 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     withr::with_seed(seed, {
       flds <- caret::createFolds(1:n, k=n.fold, list=TRUE, returnTrain=FALSE)
     })
-    res <- sapply(1:p, function(r) {argmin.HT.fold(data, r, alpha=alpha, flds=flds, ...)$ans})
+    sample.mean <- colMeans(data)
+    res <- sapply(1:p, function(r) {argmin.HT.fold(data, r, alpha=alpha, flds=flds, sample.mean=sample.mean,...)$ans})
     return (which(res == 'Accept'))
 
   } else if (method == 'GU') {

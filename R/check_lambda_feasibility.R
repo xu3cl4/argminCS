@@ -181,10 +181,11 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL, thr
   diffs <- c()
   for (fold in 1:n.fold){
     out.fold.sample <- data[setdiff(1:n, flds[[fold]]),]
-    in.fold <- data[flds[[fold]],]
+    in.fold.sample <- data[flds[[fold]],]
     n.out.fold <- nrow(out.fold.sample)
-    n.in.fold <- nrow(in.fold)
+    n.in.fold <- nrow(in.fold.sample)
     mu.out.fold <- colMeans(out.fold.sample)
+    n.pairs <- n.pairs.per.fold
 
     # subsample pairs of indices from the out.fold.sample for leave two out estimates
     # subsample indices from in fold sample
@@ -192,14 +193,18 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL, thr
     if (seed.fold >  2^31 - 1){
       seed.fold <- seed.fold %% (2^31 - 1)
     }
+    if (2*n.pairs > n.out.fold){
+      n.pairs <- n.out.fold %/% 2
+      # in case that createFolds does not split the data evenly (which may be often the case)
+    }
     withr::with_seed(seed.fold, {
-      sample.indices <- sample(n.out.fold , 2*n.pairs.per.fold)
-      in.fold.indices <- sample(n.in.fold, n.pairs.per.fold)
+      sample.indices <- sample(n.out.fold , 2*n.pairs)
+      in.fold.indices <- sample(n.in.fold, n.pairs)
     })
-    index.pairs <- cbind(sample.indices[1:n.pairs.per.fold],
-                         sample.indices[(n.pairs.per.fold+1):(2*n.pairs.per.fold)])
+    index.pairs <- cbind(sample.indices[1:n.pairs],
+                         sample.indices[(n.pairs+1):(2*n.pairs)])
 
-    differences.by.perturbing.one.fold <- sapply(1:n.pairs.per.fold, function(i){
+    differences.by.perturbing.one.fold <- sapply(1:n.pairs, function(i){
       # i is the perturbed index
       index.first <- index.pairs[i,1]
       index.second <- index.pairs[i,2]
@@ -213,15 +218,15 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL, thr
       weights.1 <- LDATS::softmax(-lambda*mu.i[-r])
       weights.2 <- LDATS::softmax(-lambda*mu.i.perturbed[-r])
 
-      difference <- sum((weights.1 - weights.2)*(in.fold[index.in.fold, -r] - sample.mean[-r]))
+      difference <- sum((weights.1 - weights.2)*(in.fold.sample[index.in.fold, -r] - sample.mean[-r]))
       return (difference)
     })
     differences.by.perturbing.one <- c(differences.by.perturbing.one, differences.by.perturbing.one.fold)
 
     # estimate differences for variance
     weights <- LDATS::softmax(-lambda*mu.out.fold[-r])
-    Qs <- in.fold[,-r] %*% weights
-    diffs.fold <- in.fold[,r] - Qs
+    Qs <- in.fold.sample[,-r] %*% weights
+    diffs.fold <- in.fold.sample[,r] - Qs
     diffs <- c(diffs, diffs.fold)
   }
 

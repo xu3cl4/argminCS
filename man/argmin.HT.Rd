@@ -67,9 +67,9 @@ argmin.HT(data, r, method='NS', lambda=sqrt(n)/2.5)
 
 ### fold
 ## defaults to 2 fold
-argmin.HT(data, r, method='FD', lambda=sqrt(n)/2.5)
+argmin.HT(data, r, method='FD')
 ## 5 fold
-argmin.HT(data, r, method='FD', lambda=sqrt(n)/2.5, n.fold=5)
+argmin.HT(data, r, method='FD', n.fold=5)
 
 ### GU
 ## calculate omega first

@@ -55,9 +55,9 @@
 #'
 #' ### fold
 #' ## defaults to 2 fold
-#' argmin.HT(data, r, method='FD', lambda=sqrt(n)/2.5)
+#' argmin.HT(data, r, method='FD')
 #' ## 5 fold
-#' argmin.HT(data, r, method='FD', lambda=sqrt(n)/2.5, n.fold=5)
+#' argmin.HT(data, r, method='FD', n.fold=5)
 #'
 #' ### GU
 #' ## calculate omega first
@@ -295,7 +295,7 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
   } else{
     ### create folds if not given
     if (is.null(flds)){
-      seed <- ceiling(abs(13*r*data[1,r]*lambda*n.fold)) + r
+      seed <- ceiling(abs(13*r*data[1,r]*n.fold)) + r
       if (seed >  2^31 - 1){
         seed <- seed %% (2^31 - 1)
       }
