@@ -14,7 +14,7 @@ For the list of supported methods and their abbreviations, see Details.}
 
 \item{alpha}{The significance level; defaults to 0.05. The function produces a (1-alpha) confidence set.}
 
-\item{...}{Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible}, \link{argmin.HT.GU}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
+\item{...}{Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}, \link{argmin.HT.fold}, \link{is.lambda.feasible.fold}, \link{argmin.HT.GU}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
 A correct argument name needs to be specified if it is used.}
 }
 \value{
@@ -33,8 +33,7 @@ The supported methods include:\tabular{ll}{
    \code{nonsplit (NS)} \tab  A variant of SML, but no splitting is involved.
    One needs to pass a fixed lambda value as a required additional argument.\cr
    \tab \cr
-   \code{fold (FD)} \tab A n fold version of SML.
-   One needs to pass a fixed lambda value as a required additional argument.\cr
+   \code{fold (FD)} \tab A n fold version of SML; defaults to two folds. \cr
    \tab \cr
    \code{GU} \tab The method in \insertCite{dey.2024}{argminCS}. \cr
    \tab \cr
@@ -70,9 +69,9 @@ CS.argmin(data, method='NS', lambda=sqrt(n)/2.5)
 
 ### fold
 ## defaults to 2 fold
-CS.argmin(data, method='FD', lambda=sqrt(n)/2.5)
+CS.argmin(data, method='FD')
 ## 5 fold
-CS.argmin(data, method='FD', lambda=sqrt(n)/2.5, n.fold=5)
+CS.argmin(data, method='FD', n.fold=5)
 
 ## GU
 CS.argmin(data, method='GU')

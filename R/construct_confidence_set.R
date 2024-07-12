@@ -11,8 +11,7 @@
 #'    \code{nonsplit (NS)} \tab  A variant of SML, but no splitting is involved.
 #'    One needs to pass a fixed lambda value as a required additional argument.\cr
 #'    \tab \cr
-#'    \code{fold (FD)} \tab A n fold version of SML.
-#'    One needs to pass a fixed lambda value as a required additional argument.\cr
+#'    \code{fold (FD)} \tab A n fold version of SML; defaults to two folds. \cr
 #'    \tab \cr
 #'    \code{GU} \tab The method in \insertCite{dey.2024}{argminCS}. \cr
 #'    \tab \cr
@@ -32,7 +31,7 @@
 #' @param method A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
 #' For the list of supported methods and their abbreviations, see Details.
 #' @param alpha The significance level; defaults to 0.05. The function produces a (1-alpha) confidence set.
-#' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible}, \link{argmin.HT.GU}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
+#' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}, \link{argmin.HT.fold}, \link{is.lambda.feasible.fold}, \link{argmin.HT.GU}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
 #' A correct argument name needs to be specified if it is used.
 #'
 #' @return A vector of indices (0-based) representing the (1 - alpha) confidence set.
@@ -58,9 +57,9 @@
 #'
 #' ### fold
 #' ## defaults to 2 fold
-#' CS.argmin(data, method='FD', lambda=sqrt(n)/2.5)
+#' CS.argmin(data, method='FD')
 #' ## 5 fold
-#' CS.argmin(data, method='FD', lambda=sqrt(n)/2.5, n.fold=5)
+#' CS.argmin(data, method='FD', n.fold=5)
 #'
 #' ## GU
 #' CS.argmin(data, method='GU')
@@ -100,6 +99,7 @@
 #'
 CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
 
+  n <- nrow(data)
   p <- ncol(data)
 
   if (method == 'softmin.LOO' | method == 'SML'){
@@ -119,7 +119,20 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     return (which(res == 'Accept'))
 
   } else if (method == 'fold' | method == 'FD') {
-    res <- sapply(1:p, function(r) {argmin.HT.fold(data, r, alpha=alpha, ...)$ans})
+    additional.arguments <- list(...)
+    if (methods::hasArg(n.fold)){
+      n.fold <- additional.arguments$n.fold
+    } else{
+      n.fold <- 2 # defaults
+    }
+    seed <- ceiling(abs(13*data[n,p]*n.fold)) + p
+    if (seed >  2^31 - 1){
+      seed <- seed %%  2^31 - 1
+    }
+    withr::with_seed(seed, {
+      flds <- caret::createFolds(1:n, k=n.fold, list=TRUE, returnTrain=FALSE)
+    })
+    res <- sapply(1:p, function(r) {argmin.HT.fold(data, r, alpha=alpha, flds=flds, ...)$ans})
     return (which(res == 'Accept'))
 
   } else if (method == 'GU') {
@@ -127,8 +140,6 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     if (!omega.provided){
       omega <- omega.bootstrap(data)
     }
-    n <- nrow(data)
-    p <- ncol(data)
     seed <- floor(data[n,p]*p + p)
     withr::with_seed(seed, {
       indices.training <- sample(n, floor(n/2), replace=F)
@@ -173,7 +184,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
   } else if (method == 'Bonferroni' | method == 'MT') {
     sample.mean <- colMeans(data) # np
     min.indices <- which(sample.mean == min(sample.mean))
-    seed <- 107*sample.mean[1]*data[1,1]
+    seed <- ceiling(107*sample.mean[1]*data[n,p])
     if (seed >  2^31-1){
       seed <- seed %%  2^31-1
     }
@@ -201,9 +212,9 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     return (which(res == 'Accept'))
 
   } else if (method == 'futschik' | method == 'Futschik' | method == 'FCHK'){
-    alpha.1 <- NULL
-    alpha.2 <- NULL
-    stds <- NULL
+    # alpha.1 <- NULL
+    # alpha.2 <- NULL
+    # stds <- NULL
     additional.arguments <- list(...)
     if (methods::hasArg(alpha.1) & methods::hasArg(alpha.2)){
       alpha.1 <- additional.arguments$alpha.1

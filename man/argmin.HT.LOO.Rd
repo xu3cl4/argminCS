@@ -35,7 +35,7 @@ If lambda=NULL (recommended), the function would determine a lambda value in a d
 
 \item{alpha}{The significance level of the hypothesis test; defaults to 0.05.}
 
-\item{...}{Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible}.}
+\item{...}{Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}.}
 }
 \value{
 A list containing:\tabular{ll}{

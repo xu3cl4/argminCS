@@ -8,7 +8,9 @@ lambda.adaptive.enlarge(
   lambda,
   data,
   r,
+  algorithm,
   sample.mean = NULL,
+  flds = NULL,
   mult.factor = 2,
   verbose = FALSE,
   ...
@@ -21,14 +23,18 @@ lambda.adaptive.enlarge(
 
 \item{r}{The dimension of interest for hypothesis test.}
 
+\item{algorithm}{'LOO' or 'fold'.}
+
 \item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.}
+
+\item{flds}{A list of row position integers corresponding to folds. It is for the fixed fold algorithm.}
 
 \item{mult.factor}{In each iteration, \eqn{\lambda} would be multiplied by mult.factor to yield an enlarged \eqn{\lambda}; defaults to 2.}
 
 \item{verbose}{A boolean value indicating if the number of iterations should be printed to console; defaults to FALSE.}
 
-\item{...}{Additional arguments to \link{is.lambda.feasible}.}
+\item{...}{Additional arguments to \link{is.lambda.feasible.LOO}.}
 }
 \value{
 An (potentially) enlarged \eqn{\lambda}.
@@ -45,16 +51,33 @@ set.seed(31)
 data <- MASS::mvrnorm(n, mu, cov)
 sample.mean <- colMeans(data)
 
-## compute a data-driven lambda, and check its feasibility
+## compute a data-driven lambda, and check its feasibility (LOO algorithm)
 lambda <- lambda.adaptive(data, 1, sample.mean=sample.mean)
-lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean)
+lambda.adaptive.enlarge(lambda, data, 1, algorithm='LOO',
+        sample.mean=sample.mean)
 
 ## want to ensure a greater stability
-lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean, threshold=0.001)
+lambda.adaptive.enlarge(lambda, data, 1, algorithm='LOO',
+        sample.mean=sample.mean, threshold=0.001)
 
 ## print out the number of iterations
-lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean, verbose=TRUE)
+lambda.adaptive.enlarge(lambda, data, 1, algorithm='LOO',
+        sample.mean=sample.mean, verbose=TRUE)
+
+## compute a data-driven lambda, and check its feasibility (fold algorithm)
+flds <- caret::createFolds(1:n, k=2, list=TRUE, returnTrain=FALSE)
+lambda <- lambda.adaptive(data, 1, sample.mean=sample.mean)
+lambda.adaptive.enlarge(lambda, data, 1, algorithm='fold',
+          sample.mean=sample.mean, flds=flds)
+
+## want to ensure a greater stability
+lambda.adaptive.enlarge(lambda, data, 1, algorithm='fold',
+          sample.mean=sample.mean, flds=flds, threshold=0.001)
+
+## print out the number of iterations
+lambda.adaptive.enlarge(lambda, data, 1, algorithm='fold',
+          sample.mean=sample.mean, flds=flds, verbose=TRUE)
 }
 \seealso{
-\link{is.lambda.feasible}
+\link{is.lambda.feasible.LOO}
 }

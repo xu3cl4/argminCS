@@ -1,114 +1,3 @@
-#' Check the feasibility of a tuning parameter \eqn{\lambda}
-#'
-#' Check the feasibility of a tuning parameter \eqn{\lambda} by examining
-#' whether its resulting \eqn{\nabla_i K_j} is less than a threshold value,
-#' i.e., the first order stability is likely achieved.
-#' For further details, we refer to the paper Zhang et al 2024.
-#'
-#' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
-#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
-#' @param r The dimension of interest for hypothesis test.
-#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-#' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
-#' @param threshold A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.
-#' @param n.pairs The number of \eqn{(i,j)} pairs for estimation; defaults to 100.
-#' @param seed An integer-valued seed for subsampling. If no value is given, the seed would be set, using the value of other arguments.
-#'
-#' @return A boolean value indicating if the given \eqn{\lambda} likely gives the first order stability.
-#' @export
-#'
-#' @importFrom MASS mvrnorm
-#' @examples
-#' n <- 300
-#' mu <- (1:10)/10
-#' cov <- diag(length(mu))
-#' set.seed(31)
-#' data <- MASS::mvrnorm(n, mu, cov)
-#' sample.mean <- colMeans(data)
-#'
-#' ## compute a data-driven lambda, and check its feasibility
-#' lambda <- lambda.adaptive(data, 1, sample.mean=sample.mean)
-#' is.lambda.feasible(lambda, data, 1, sample.mean=sample.mean)
-#'
-#' ## want to ensure a greater stability
-#' is.lambda.feasible(lambda, data, 1, sample.mean=sample.mean, threshold=0.01)
-#'
-#' ## smaller n.pairs to speed up computation
-#' is.lambda.feasible(lambda, data, 1, sample.mean=sample.mean, n.pairs=50)
-is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05, n.pairs=100, seed=NULL){
-
-  n <- nrow(data)
-  p <- ncol(data)
-
-  if (is.null(sample.mean)){
-    sample.mean <- colMeans(data)
-  }
-
-  ## use at most 100 pairs of samples for estimation
-  n.pairs <- 100
-  if (n < 200){
-    if (n %% 2 == 0){
-      n.pairs <- as.integer(n/2)
-    } else {
-      n.pairs <- as.integer((n - 1)/2)
-    }
-  }
-
-  ## subsample from the given sample
-  if (is.null(seed)){
-   seed <- ceiling(abs(17*data[r,r]*sample.mean[r]*lambda*r + r))
-  }
-  if (seed >  2^31 - 1){
-    seed <- seed %%  2^31 - 1
-  }
-  withr::with_seed(seed, {
-    sample.indices <- sample(n, 2*n.pairs)
-  })
-  index.pairs <- cbind(sample.indices[1:n.pairs], sample.indices[(n.pairs+1):(2*n.pairs)])
-
-  differences.by.perturbing.one <- sapply(1:n.pairs, function(i){
-    # i is the perturbed index
-    index.first <- index.pairs[i,1]
-    index.second <- index.pairs[i,2]
-
-    # get an index different from index.first and index.second
-    j <- max(index.first, index.second)+1
-    if (j > n){
-      index.candidates <- setdiff(1:3, c(index.first, index.second))
-      if (length(index.candidates) > 1){
-        new.seed <- 37*i*seed + i
-        if (new.seed >  2^31 - 1){
-          new.seed <- new.seed %%  2^31 - 1
-        }
-        withr::with_seed(new.seed, {
-          j <- sample(index.candidates, 1)
-        })
-      } else {
-        j <- index.candidates[1]
-      }
-    }
-
-    mu.no.j.i <- (sample.mean*n - data[j,] - data[index.second,])/(n-2)
-    mu.no.j.i.perturbed <- (sample.mean*n - data[j,] - data[index.first,])/(n-2)
-
-    weights.1 <- LDATS::softmax(-lambda*mu.no.j.i[-r])
-    weights.2 <- LDATS::softmax(-lambda*mu.no.j.i.perturbed[-r])
-
-    difference <- sum((weights.1 - weights.2)*(data[j, -r] - sample.mean[-r]))
-    return (difference)
-  })
-
-  difference.by.perturbing.one.squared <- mean(differences.by.perturbing.one^2)
-
-  # estimate variance by leaving one out
-  Qs <- sapply(index.pairs[,1], function(x) return (getMin.softmin.LOO(x, r, data, lambda, sample.mean)))
-  diffs <- data[index.pairs[,1],r] - Qs
-  variance <- stats::var(diffs)
-
-  scaled.difference.by.perturbing.one.squared <- difference.by.perturbing.one.squared/variance
-  return (ifelse(n*scaled.difference.by.perturbing.one.squared < threshold, T, F))
-}
-
 #' Iteratively enlarge a tuning parameter \eqn{\lambda} in a data-driven way.
 #'
 #' Iteratively enlarge a tuning parameter \eqn{\lambda} to enhance the power of hypothesis testing.
@@ -117,18 +6,21 @@ is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimension of interest for hypothesis test.
+#' @param algorithm 'LOO' or 'fold'.
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 #' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
+#' @param flds A list of row position integers corresponding to folds. It is for the fixed fold algorithm.
 #' @param mult.factor In each iteration, \eqn{\lambda} would be multiplied by mult.factor to yield an enlarged \eqn{\lambda}; defaults to 2.
 #' @param verbose A boolean value indicating if the number of iterations should be printed to console; defaults to FALSE.
-#' @param ... Additional arguments to \link{is.lambda.feasible}.
+#' @param ... Additional arguments to \link{is.lambda.feasible.LOO}.
 #'
 #' @return An (potentially) enlarged \eqn{\lambda}.
 #' @export
 #'
-#' @seealso \link{is.lambda.feasible}
+#' @seealso \link{is.lambda.feasible.LOO}
 #'
 #' @importFrom MASS mvrnorm
+#' @importFrom caret createFolds
 #' @examples
 #' n <- 300
 #' mu <- (1:10)/5
@@ -137,31 +29,65 @@ is.lambda.feasible <- function(lambda, data, r, sample.mean=NULL, threshold=0.05
 #' data <- MASS::mvrnorm(n, mu, cov)
 #' sample.mean <- colMeans(data)
 #'
-#' ## compute a data-driven lambda, and check its feasibility
+#' ## compute a data-driven lambda, and check its feasibility (LOO algorithm)
 #' lambda <- lambda.adaptive(data, 1, sample.mean=sample.mean)
-#' lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean)
+#' lambda.adaptive.enlarge(lambda, data, 1, algorithm='LOO',
+#'         sample.mean=sample.mean)
 #'
 #' ## want to ensure a greater stability
-#' lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean, threshold=0.001)
+#' lambda.adaptive.enlarge(lambda, data, 1, algorithm='LOO',
+#'         sample.mean=sample.mean, threshold=0.001)
 #'
 #' ## print out the number of iterations
-#' lambda.adaptive.enlarge(lambda, data, 1, sample.mean=sample.mean, verbose=TRUE)
-lambda.adaptive.enlarge <- function(lambda, data, r, sample.mean=NULL, mult.factor=2, verbose=FALSE, ...){
+#' lambda.adaptive.enlarge(lambda, data, 1, algorithm='LOO',
+#'         sample.mean=sample.mean, verbose=TRUE)
+#'
+#' ## compute a data-driven lambda, and check its feasibility (fold algorithm)
+#' flds <- caret::createFolds(1:n, k=2, list=TRUE, returnTrain=FALSE)
+#' lambda <- lambda.adaptive(data, 1, sample.mean=sample.mean)
+#' lambda.adaptive.enlarge(lambda, data, 1, algorithm='fold',
+#'           sample.mean=sample.mean, flds=flds)
+#'
+#' ## want to ensure a greater stability
+#' lambda.adaptive.enlarge(lambda, data, 1, algorithm='fold',
+#'           sample.mean=sample.mean, flds=flds, threshold=0.001)
+#'
+#' ## print out the number of iterations
+#' lambda.adaptive.enlarge(lambda, data, 1, algorithm='fold',
+#'           sample.mean=sample.mean, flds=flds, verbose=TRUE)
+lambda.adaptive.enlarge <- function(lambda, data, r, algorithm, sample.mean=NULL, flds=NULL,
+                                    mult.factor=2, verbose=FALSE, ...){
 
   n <- nrow(data)
 
-  if (is.null(sample.mean)){
+  if (is.null(sample.mean) & algorithm=='LOO'){
     sample.mean <- colMeans(data)
+  }
+
+  if (is.null(flds) & algorithm=='fold'){
+    stop("lambda.adaptive.enlarge: needs to provide 'flds' when tuning the parameter for fixed fold algorithm")
   }
 
   lambda.curr <- lambda
   lambda.next <- mult.factor*lambda
-  feasible <- is.lambda.feasible(lambda.next, data, r, sample.mean=sample.mean, ...)
+  if (algorithm == 'LOO'){
+    feasible <- is.lambda.feasible.LOO(lambda.next, data, r, sample.mean=sample.mean, ...)
+    threshold <- n
+  } else if (algorithm == 'fold'){
+    feasible <- is.lambda.feasible.fold(lambda.next, data, r, sample.mean=sample.mean, flds=flds, ...)
+    threshold <- n^2
+  } else {
+    stop("'algorithm' should be either 'LOO' or 'fold'")
+  }
   count <- 1
-  while (feasible & lambda.next < n){
+  while (feasible & lambda.next < threshold){
     lambda.curr <- lambda.next
     lambda.next <- mult.factor*lambda.next
-    feasible <- is.lambda.feasible(lambda.next, data, r, sample.mean=sample.mean, ...)
+    if (algorithm == 'LOO'){
+      feasible <- is.lambda.feasible.LOO(lambda.next, data, r, sample.mean=sample.mean, ...)
+    } else {
+      feasible <- is.lambda.feasible.fold(lambda.next, data, r, sample.mean=sample.mean, flds=flds, ...)
+    }
     count <- count + 1
   }
   if (verbose){
@@ -170,9 +96,9 @@ lambda.adaptive.enlarge <- function(lambda, data, r, sample.mean=NULL, mult.fact
   return (lambda.curr)
 }
 
-#' Generate a data-driven \eqn{\lambda}.
+#' Generate a data-driven \eqn{\lambda} for LOO algorithm.
 #'
-#' Generate a data-driven \eqn{\lambda} motivated by the derivation of the first order stability.
+#' Generate a data-driven \eqn{\lambda} for LOO algorithm motivated by the derivation of the first order stability.
 #' For its precise definition, we refer to the paper Zhang et al 2024.
 #'
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
@@ -180,7 +106,7 @@ lambda.adaptive.enlarge <- function(lambda, data, r, sample.mean=NULL, mult.fact
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 #' @param const A scaling constant for the data driven \eqn{\lambda}; defaults to 2.5. As its value gets larger, the first order stability tends to increase while power might decrease.
 #'
-#' @return A data-driven \eqn{\lambda}.
+#' @return A data-driven \eqn{\lambda} for LOO algorithm.
 #' @export
 #'
 #' @importFrom MASS mvrnorm
@@ -221,5 +147,47 @@ lambda.adaptive <- function(data, r, sample.mean=NULL, const=2.5){
     X.min <- data[i, -r][min.idx]
     return (X.min)
   })
+  return (sqrt(n)/(const*stats::sd(Xs.min)))
+}
+
+#' Generate a data-driven \eqn{\lambda} for fixed fold algorithm.
+#'
+#' Generate a data-driven \eqn{\lambda} for fixed fold algorithm motivated by the derivation of the first order stability.
+#'
+#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
+#' @param r The dimension of interest for hypothesis test.
+#' @param flds A list of row position integers corresponding to folds.
+#' @param const A scaling constant for the data driven \eqn{\lambda}; defaults to 2.5. As its value gets larger, the first order stability tends to increase while power might decrease.
+#'
+#' @return A data-driven \eqn{\lambda} for fixed fold algorithm.
+#' @export
+#'
+#' @importFrom caret createFolds
+#' @importFrom MASS mvrnorm
+#' @examples
+#' n <- 300
+#' mu <- (1:10)/10
+#' cov <- diag(length(mu))
+#' set.seed(31)
+#' data <- MASS::mvrnorm(n, mu, cov)
+#' flds <- caret::createFolds(1:n, k=2, list=TRUE, returnTrain=FALSE)
+#'
+#' ## compute a data-driven lambda, and check its feasibility
+#' lambda.adaptive.fold(data, 1, flds)
+#'
+#' ## want to ensure a greater stability
+#' lambda.adaptive.fold(data, 1, flds, const=3)
+lambda.adaptive.fold <- function(data, r, flds, const=2.5){
+  n <- nrow(data)
+  n.fold <- length(flds)
+
+  Xs.min <- lapply(1:n.fold, function(fold){
+    mu.out.fold <- colMeans(data[setdiff(1:n, flds[[fold]]),])
+    min.idx <- find.sub.argmin(mu.out.fold, r)
+    Xs.min.fold <- data[flds[[fold]], min.idx]
+    return (Xs.min.fold)
+  })
+  Xs.min <- do.call(c, Xs.min)
+
   return (sqrt(n)/(const*stats::sd(Xs.min)))
 }

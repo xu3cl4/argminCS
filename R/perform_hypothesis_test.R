@@ -29,7 +29,7 @@
 #' @param r The dimension of interest for hypothesis test.
 #' @param method A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
 #' For the list of supported methods and their abbreviations, see Details.
-#' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible}, \link{argmin.HT.GU}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
+#' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}, \link{argmin.HT.GU}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
 #' A correct argument name needs to be specified if it is used.
 #'
 #' @return 'Accept' or 'Reject'. A string indicating whether the given dimension could be an argmin (Accept) or not (Reject).
@@ -151,7 +151,7 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
 #' @inheritParams lambda.adaptive
 #' @param enlarge A boolean value indicating if the data-driven lambda should be determined via an iterative enlarging algorithm; defaults to TRUE.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
-#' @param ... Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible}.
+#' @param ... Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}.
 #'
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat.scale} \tab The scaled test statistic \cr
@@ -177,7 +177,7 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
     lambda <- lambda.adaptive(data, r, sample.mean=sample.mean, const=const)
     if (enlarge) {
       lambda <- lambda.adaptive.enlarge(
-        lambda, data, r, sample.mean=sample.mean, ...)
+        lambda, data, r, algorithm='LOO', sample.mean=sample.mean, ...)
     }
   }
 
@@ -249,9 +249,17 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #'
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimension of interest for hypothesis test.
-#' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
 #' @param n.fold The number of folds.
+#' @param flds A list of row position integers corresponding to folds; defaults to NULL.
+#' @param min.algor The algorithm to compute the minimum: 'softmin' or 'argmin'; defaults to 'softmin'
+#' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin); defaults to NULL.
+#' If lambda=NULL (recommended), the function would determine a lambda value in a data-driven way.
+#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
+#' It is used to tune lambda in a data-driven way.
+#' @inheritParams lambda.adaptive.fold
+#' @param enlarge A boolean value indicating if the data-driven lambda should be determined via an iterative enlarging algorithm; defaults to TRUE.
+#' @param ... Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.fold}.
 #'
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat.scale} \tab The scaled test statistic \cr
@@ -262,13 +270,19 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
-argmin.HT.fold <- function(data, r, lambda, alpha=0.05, n.fold=2){
+argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean=NULL,
+                           min.algor='softmin', lambda=NULL, const=2.5, enlarge=TRUE, ...){
   n <- nrow(data)
   p <- ncol(data)
   val.critical <- stats::qnorm(1-alpha, 0, 1)
 
+  if (is.null(sample.mean)){
+    sample.mean <- colMeans(data)
+  }
+
   if (n.fold == n){
-    return (argmin.HT.LOO(data, r, sample.mean=colMeans(data), lambda=lambda))
+    # use the LOO method
+    return (argmin.HT.LOO(data, r, sample.mean=sample.mean, lambda=lambda))
   }
 
   if (p == 2){
@@ -279,21 +293,44 @@ argmin.HT.fold <- function(data, r, lambda, alpha=0.05, n.fold=2){
     ans <- ifelse(test.stat.scale < val.critical, 'Accept', 'Reject')
     return (list(test.stat.scale=test.stat.scale, std=sigma, ans=ans))
   } else{
-    ### create folds
-    seed <- ceiling(abs(13*r*data[r,r]*lambda*n.fold)) + r
-    if (seed >  2^31 - 1){
-      seed <- seed %%  2^31 - 1
+    ### create folds if not given
+    if (is.null(flds)){
+      seed <- ceiling(abs(13*r*data[1,r]*lambda*n.fold)) + r
+      if (seed >  2^31 - 1){
+        seed <- seed %% (2^31 - 1)
+      }
+      withr::with_seed(seed, {
+        flds <- caret::createFolds(1:n, k=n.fold, list=TRUE, returnTrain=FALSE)
+      })
     }
-    withr::with_seed(seed, {
-      flds <- caret::createFolds(1:n, k=n.fold, list=T, returnTrain=F)
-    })
+
+    if (is.null(lambda)){
+      lambda <- lambda.adaptive.fold(data, r, flds, const=const)
+
+      if (enlarge) {
+        lambda <- lambda.adaptive.enlarge(
+          lambda, data, r, algorithm='fold', sample.mean=sample.mean, flds=flds, ...)
+      }
+    }
 
     diffs <- lapply(1:n.fold, function(fold) {
       mu.out.fold <- colMeans(data[setdiff(1:n, flds[[fold]]),])
       in.fold <- data[flds[[fold]],]
-      weights <- LDATS::softmax(-lambda*mu.out.fold[-r])
-      Qs <- in.fold[,-r] %*% weights
-      diffs.fold <- in.fold[,r] - Qs
+      if (min.algor == 'softmin'){
+        # try softmin
+        weights <- LDATS::softmax(-lambda*mu.out.fold[-r])
+        Qs <- in.fold[,-r] %*% weights
+        diffs.fold <- in.fold[,r] - Qs
+
+      } else if (min.algor == 'argmin'){
+        # try argmin
+        idx.min <- find.sub.argmin(mu.out.fold, r)
+        diffs.fold <- in.fold[,r] - in.fold[,idx.min]
+
+      } else {
+        # error
+        stop("'min.algor' should be either 'softmin' or 'argmin'")
+      }
       return (diffs.fold)
     })
     diffs <- do.call(c, diffs)
@@ -511,7 +548,7 @@ argmin.HT.MT <- function(data, r, test='z', r.min=NULL, r.min.sec=NULL, alpha=0.
   if (is.null(r.min) | is.null(r.min.sec)){
     sample.mean <- colMeans(data) # np
     min.indices <- which(sample.mean == min(sample.mean))
-    seed <- data[r,r]*r*37
+    seed <- data[1,r]*r*37
     if (seed >  2^31 - 1){
       seed <- seed %%  2^31 - 1
     }
@@ -641,7 +678,7 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
   diffs.centered <- diffs - matrix(rep(mean.diffs, n), nrow=n, byrow=T)
   test.stat.MBs <- sapply(1:B,
                           function(i){
-                            seed <- ceiling(abs(53*i*r*data[r,r]*sample.mean[r]))+i
+                            seed <- ceiling(abs(53*i*r*data[1,r]*sample.mean[r]))+i
                             if (seed >  2^31 - 1){
                               seed <- seed %%  2^31 - 1
                             }

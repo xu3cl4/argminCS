@@ -4,18 +4,44 @@
 \alias{argmin.HT.fold}
 \title{Perform argmin hypothesis test.}
 \usage{
-argmin.HT.fold(data, r, lambda, alpha = 0.05, n.fold = 2)
+argmin.HT.fold(
+  data,
+  r,
+  alpha = 0.05,
+  n.fold = 2,
+  flds = NULL,
+  sample.mean = NULL,
+  min.algor = "softmin",
+  lambda = NULL,
+  const = 2.5,
+  enlarge = TRUE,
+  ...
+)
 }
 \arguments{
 \item{data}{A n by p data matrix; each of its row is a p-dimensional sample.}
 
 \item{r}{The dimension of interest for hypothesis test.}
 
-\item{lambda}{The real-valued tuning parameter for exponential weightings (the calculation of softmin).}
-
 \item{alpha}{The significance level of the hypothesis test; defaults to 0.05.}
 
 \item{n.fold}{The number of folds.}
+
+\item{flds}{A list of row position integers corresponding to folds; defaults to NULL.}
+
+\item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
+It is used to tune lambda in a data-driven way.}
+
+\item{min.algor}{The algorithm to compute the minimum: 'softmin' or 'argmin'; defaults to 'softmin'}
+
+\item{lambda}{The real-valued tuning parameter for exponential weightings (the calculation of softmin); defaults to NULL.
+If lambda=NULL (recommended), the function would determine a lambda value in a data-driven way.}
+
+\item{const}{A scaling constant for the data driven \eqn{\lambda}; defaults to 2.5. As its value gets larger, the first order stability tends to increase while power might decrease.}
+
+\item{enlarge}{A boolean value indicating if the data-driven lambda should be determined via an iterative enlarging algorithm; defaults to TRUE.}
+
+\item{...}{Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.fold}.}
 }
 \value{
 A list containing:\tabular{ll}{
