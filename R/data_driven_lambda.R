@@ -76,7 +76,7 @@ lambda.adaptive.enlarge <- function(lambda, data, r, algorithm, sample.mean=NULL
   } else if (algorithm == 'fold'){
     feasible <- is.lambda.feasible.fold(lambda.next, data, r, sample.mean=sample.mean, flds=flds, ...)
     ## experiments over the threshold
-    threshold <- n^4
+    threshold <- n^2
   } else {
     stop("'algorithm' should be either 'LOO' or 'fold'")
   }
