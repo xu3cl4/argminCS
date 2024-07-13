@@ -56,6 +56,7 @@
 #' ### fold
 #' ## defaults to 2 fold
 #' argmin.HT(data, r, method='FD')
+#' argmin.HT(data, r, method='FD', min.algor='argmin')
 #' ## 5 fold
 #' argmin.HT(data, r, method='FD', n.fold=5)
 #'
