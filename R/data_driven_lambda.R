@@ -76,7 +76,14 @@ lambda.adaptive.enlarge <- function(lambda, data, r, algorithm, sample.mean=NULL
   } else if (algorithm == 'fold'){
     feasible <- is.lambda.feasible.fold(lambda.next, data, r, sample.mean=sample.mean, flds=flds, ...)
     ## experiments over the threshold
-    threshold <- n^2
+    n.fold <- length(flds)
+    if (n.fold == 2){
+      threshold <- n^2
+    } else if (n.fold == 5){
+      threshold <- n^(3/2)
+    } else{
+      stop("lambda.adaptive.enlarge: only supports LOO, 2-fold and 5-fold algorithms for now")
+    }
   } else {
     stop("'algorithm' should be either 'LOO' or 'fold'")
   }
@@ -140,10 +147,10 @@ lambda.adaptive <- function(data, r, sample.mean=NULL, const=2.5){
     if (seed >  2^31 - 1){
       seed <- seed %%  2^31 - 1
     }
-    withr::with_seed(seed, {
+    # withr::with_seed(seed, {
       min.idx <- ifelse(length(min.indices) > 1,
                         sample(c(min.indices), 1), min.indices[1])
-    })
+    # })
 
     X.min <- data[i, -r][min.idx]
     return (X.min)
