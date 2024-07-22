@@ -385,6 +385,7 @@ omega.bootstrap <- function(data, alpha=0.05, B=100, omegas=1:100){
   withr::with_seed(seed.argmin.all, {
     idx.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
   })
+  print(idx.min)
 
   coverages <- lapply(1:B, function(i){
 
@@ -692,7 +693,7 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
 
   p.val <- mean(test.stat.MBs > test.stat)
   ans <- ifelse(p.val > alpha, 'Accept', 'Reject')
-  return (list(p.val=p.val, ans=ans))
+  return (list(p.val=p.val, test.stat=test.stat, ans=ans))
 }
 
 #' @title Generate the quantile used for the selection procedure in \insertCite{gupta.1965}{argminCS}.
