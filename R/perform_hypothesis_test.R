@@ -300,9 +300,9 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
       if (seed >  2^31 - 1){
         seed <- seed %% (2^31 - 1)
       }
-      withr::with_seed(seed, {
+      # withr::with_seed(seed, {
         flds <- caret::createFolds(1:n, k=n.fold, list=TRUE, returnTrain=FALSE)
-      })
+      # })
     }
 
     if (is.null(lambda)){
@@ -320,6 +320,7 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
       if (min.algor == 'softmin'){
         # try softmin
         weights <- LDATS::softmax(-lambda*mu.out.fold[-r])
+        # testing
         Qs <- in.fold[,-r] %*% weights
         diffs.fold <- in.fold[,r] - Qs
 
@@ -385,7 +386,6 @@ omega.bootstrap <- function(data, alpha=0.05, B=100, omegas=1:100){
   withr::with_seed(seed.argmin.all, {
     idx.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
   })
-  print(idx.min)
 
   coverages <- lapply(1:B, function(i){
 

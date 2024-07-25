@@ -125,13 +125,13 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     } else{
       n.fold <- 2 # defaults
     }
-    seed <- ceiling(abs(13*data[n,p]*n.fold)) + p
-    if (seed >  2^31 - 1){
-      seed <- seed %%  2^31 - 1
-    }
-    withr::with_seed(seed, {
+    # seed <- ceiling(abs(13*data[n,p]*n.fold)) + p
+    # if (seed >  2^31 - 1){
+    #   seed <- seed %%  2^31 - 1
+    # }
+    # withr::with_seed(seed, {
       flds <- caret::createFolds(1:n, k=n.fold, list=TRUE, returnTrain=FALSE)
-    })
+    # })
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {argmin.HT.fold(data, r, alpha=alpha, flds=flds, sample.mean=sample.mean,...)$ans})
     return (which(res == 'Accept'))
@@ -201,15 +201,22 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     critical.val <- get.quantile.gupta.selection(p=p, alpha=alpha)
     sample.mean <- colMeans(data)
     stds <- NULL
-    if (methods::hasArg(std)){
+    # if (methods::hasArg(std)){
+    #   additional.arguments <- list(...)
+    #   std <- additional.arguments$std
+    #   stds <- rep(std, p)
+    ## testing
+    if (methods::hasArg(stds)){
       additional.arguments <- list(...)
-      std <- additional.arguments$std
-      stds <- rep(std, p)
+      stds <- additional.arguments$stds
+      res <- sapply(1:p, function(r) {argmin.HT.gupta(
+        data, r, critical.val=critical.val, sample.mean=sample.mean, alpha=alpha, ...)$ans})
     } else {
       stds <- rep(1, p)
     }
-    res <- sapply(1:p, function(r) {argmin.HT.gupta(
-      data, r, critical.val=critical.val, sample.mean=sample.mean, stds=stds, alpha=alpha, ...)$ans})
+    # res <- sapply(1:p, function(r) {argmin.HT.gupta(
+    #   data, r, critical.val=critical.val, sample.mean=sample.mean, stds=stds, alpha=alpha, ...)$ans})
+
     return (which(res == 'Accept'))
 
   } else if (method == 'futschik' | method == 'Futschik' | method == 'FCHK'){
