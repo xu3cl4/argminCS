@@ -193,7 +193,8 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
   test.stat <- sqrt(n)*(sample.mean[r] - mean(Qs))
   test.stat.scale <- test.stat/sigma
   ans <- ifelse(test.stat.scale <= val.critical, 'Accept', 'Reject')
-  return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans))
+  return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans,
+               lambda=lambda))
 }
 
 
@@ -342,7 +343,7 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
     test.stat.scale <- test.stat/sigma
 
     ans <- ifelse(test.stat.scale < val.critical, 'Accept', 'Reject')
-    return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans))
+    return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans,
   }
 }
 
