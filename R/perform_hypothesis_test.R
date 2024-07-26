@@ -162,6 +162,8 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
 #'    \code{std} \tab The standard deviation estimate. \cr
 #'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
+#'    \tab \cr
+#'    \code{lambda} \tab The lambda used in the hypothesis testing. \cr
 #' }
 argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LOO,
                           lambda=NULL, const=2.5, enlarge=TRUE, alpha=0.05, ...){
@@ -271,6 +273,8 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #'    \code{std} \tab The standard deviation estimate. \cr
 #'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
+#'    \tab \cr
+#'    \code{lambda} \tab The lambda used in the hypothesis testing. \cr
 #' }
 argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean=NULL,
                            min.algor='softmin', lambda=NULL, const=2.5, enlarge=TRUE, ...){

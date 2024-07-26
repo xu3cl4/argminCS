@@ -79,8 +79,8 @@ lambda.adaptive.enlarge <- function(lambda, data, r, algorithm, sample.mean=NULL
     n.fold <- length(flds)
     if (n.fold == 2){
       threshold <- n^2
-    } else if (n.fold == 5){
-      threshold <- n
+    } else if (n.fold== 5){
+      threshold <- n^(3/2)
     } else{
       stop("lambda.adaptive.enlarge: only supports LOO, 2-fold and 5-fold algorithms for now")
     }
