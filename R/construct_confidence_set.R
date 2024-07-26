@@ -240,7 +240,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     # } else {
     #   stds <- rep(1, p)
     # }
-    stds <- apply(data, 2, sd)
+    stds <- apply(data, 2, stats::sd)
 
     sample.mean <- colMeans(data)
     # step 1
