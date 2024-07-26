@@ -147,10 +147,10 @@ lambda.adaptive <- function(data, r, sample.mean=NULL, const=2.5){
     if (seed >  2^31 - 1){
       seed <- seed %%  2^31 - 1
     }
-    # withr::with_seed(seed, {
+    withr::with_seed(seed, {
       min.idx <- ifelse(length(min.indices) > 1,
                         sample(c(min.indices), 1), min.indices[1])
-    # })
+    })
 
     X.min <- data[i, -r][min.idx]
     return (X.min)

@@ -300,9 +300,9 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
       if (seed >  2^31 - 1){
         seed <- seed %% (2^31 - 1)
       }
-      # withr::with_seed(seed, {
+      withr::with_seed(seed, {
         flds <- caret::createFolds(1:n, k=n.fold, list=TRUE, returnTrain=FALSE)
-      # })
+      })
     }
 
     if (is.null(lambda)){

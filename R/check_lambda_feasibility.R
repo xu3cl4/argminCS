@@ -197,10 +197,10 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL, thr
       n.pairs <- n.out.fold %/% 2
       # in case that createFolds does not split the data evenly (which may be often the case)
     }
-    # withr::with_seed(seed.fold, {
+    withr::with_seed(seed.fold, {
       sample.indices <- sample(n.out.fold , 2*n.pairs)
       in.fold.indices <- sample(n.in.fold, n.pairs)
-    # })
+    })
     index.pairs <- cbind(sample.indices[1:n.pairs],
                          sample.indices[(n.pairs+1):(2*n.pairs)])
 

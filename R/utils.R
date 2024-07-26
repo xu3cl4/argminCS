@@ -18,8 +18,8 @@ find.sub.argmin <- function(nums, idx){
 
   min.val <- min(nums[-idx])
   min.indices <- setdiff(which(nums == min.val), c(idx))
-  # withr::with_seed(ceiling(abs(idx*7+nums[idx]) + idx), {
+  withr::with_seed(ceiling(abs(idx*7+nums[idx]) + idx), {
     min.idx.sec <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
-  # })
+  })
   return (min.idx.sec)
 }
