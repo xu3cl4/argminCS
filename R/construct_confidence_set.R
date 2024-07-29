@@ -212,7 +212,8 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     #   res <- sapply(1:p, function(r) {argmin.HT.gupta(
     #     data, r, critical.val=critical.val, sample.mean=sample.mean, alpha=alpha, ...)$ans})
     } else {
-      stds <- rep(1, p)
+      #stds <- rep(1, p)
+      stds <- apply(data, 2, stats::sd)
     }
     res <- sapply(1:p, function(r) {argmin.HT.gupta(
       data, r, critical.val=critical.val, sample.mean=sample.mean, stds=stds, alpha=alpha, ...)$ans})
