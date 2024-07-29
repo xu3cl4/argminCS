@@ -101,7 +101,8 @@ lambda.adaptive.enlarge <- function(lambda, data, r, algorithm, sample.mean=NULL
   if (verbose){
     print(glue::glue('before: {lambda}, after: {lambda.curr}, iteration: {count}'))
   }
-  return (lambda.curr)
+  #return (lambda.curr)
+  return (lambda.next)
 }
 
 #' Generate a data-driven \eqn{\lambda} for LOO algorithm.
