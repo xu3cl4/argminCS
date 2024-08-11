@@ -52,6 +52,8 @@ A list containing:\tabular{ll}{
    \code{std} \tab The standard deviation estimate. \cr
    \tab \cr
    \code{ans} \tab 'Reject' or 'Accept' \cr
+   \tab \cr
+   \code{lambda} \tab The lambda used in the hypothesis testing. \cr
 }
 }
 \description{

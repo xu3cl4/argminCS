@@ -56,7 +56,7 @@ is.lambda.feasible.LOO <- function(lambda, data, r, sample.mean=NULL, threshold=
     }
   }
 
-  ## subsample from the given sample
+  # subsample from the given sample
   if (is.null(seed)){
     seed <- ceiling(abs(17*data[1,r]*sample.mean[r]*lambda*r + r))
   }
