@@ -15,6 +15,7 @@ argmin.HT.fold(
   lambda = NULL,
   const = 2.5,
   enlarge = TRUE,
+  true.mean = NULL,
   ...
 )
 }
@@ -41,6 +42,9 @@ If lambda=NULL (recommended), the function would determine a lambda value in a d
 
 \item{enlarge}{A boolean value indicating if the data-driven lambda should be determined via an iterative enlarging algorithm; defaults to TRUE.}
 
+\item{true.mean}{The population mean landscape; defaults to NULL. If a vector were provided, the centered test statistic would be outputted.
+It is only useful for a simulation purpose.}
+
 \item{...}{Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.fold}.}
 }
 \value{
@@ -54,6 +58,8 @@ A list containing:\tabular{ll}{
    \code{ans} \tab 'Reject' or 'Accept' \cr
    \tab \cr
    \code{lambda} \tab The lambda used in the hypothesis testing. \cr
+   \tab \cr
+   \code{test.stat.centered} \tab (Optional) The centered test statistic. Outputted only when true.mean is not NULL. \cr
 }
 }
 \description{

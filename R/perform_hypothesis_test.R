@@ -182,7 +182,7 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
     sample.mean <- colMeans(data)
   }
 
-  if (is.null(lambda)){
+  if (is.null(lambda) & identical(deparse(min.algor), deparse(getMin.softmin.LOO))){
     lambda <- lambda.adaptive(data, r, sample.mean=sample.mean, const=const)
     if (enlarge) {
       lambda <- lambda.adaptive.enlarge(
@@ -217,7 +217,8 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
                  lambda=lambda))
   } else {
     ## provide test.stat.centered
-    test.stat.centered <- test.stat.scale - (sqrt(n)*(true.mean[r] - mean(Qs.true.mean)))/sigma
+    random.center <- (sqrt(n)*(true.mean[r] - mean(Qs.true.mean)))/sigma
+    test.stat.centered <- test.stat.scale - random.center
     return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans,
                  lambda=lambda, test.stat.centered=test.stat.centered))
   }
@@ -287,6 +288,8 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #' It is used to tune lambda in a data-driven way.
 #' @inheritParams lambda.adaptive.fold
 #' @param enlarge A boolean value indicating if the data-driven lambda should be determined via an iterative enlarging algorithm; defaults to TRUE.
+#' @param true.mean The population mean landscape; defaults to NULL. If a vector were provided, the centered test statistic would be outputted.
+#' It is only useful for a simulation purpose.
 #' @param ... Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.fold}.
 #'
 #' @return A list containing:\tabular{ll}{
@@ -299,9 +302,11 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #'    \tab \cr
 #'    \code{lambda} \tab The lambda used in the hypothesis testing. \cr
+#'    \tab \cr
+#'    \code{test.stat.centered} \tab (Optional) The centered test statistic. Outputted only when true.mean is not NULL. \cr
 #' }
 argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean=NULL,
-                           min.algor='softmin', lambda=NULL, const=2.5, enlarge=TRUE, ...){
+                           min.algor='softmin', lambda=NULL, const=2.5, enlarge=TRUE, true.mean=NULL, ...){
   n <- nrow(data)
   p <- ncol(data)
   val.critical <- stats::qnorm(1-alpha, 0, 1)
@@ -312,16 +317,22 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
 
   if (n.fold == n){
     # use the LOO method
-    return (argmin.HT.LOO(data, r, sample.mean=sample.mean, lambda=lambda))
+    return (argmin.HT.LOO(data, r, sample.mean=sample.mean, lambda=lambda, true.mean=true.mean))
   }
 
+  test.stat.centered <- NULL
   if (p == 2){
     diffs <- data[,r] - data[,-r]
     sigma <- stats::sd(diffs)
     test.stat <- sqrt(n)*mean(diffs)
     test.stat.scale <- test.stat/sigma
     ans <- ifelse(test.stat.scale < val.critical, 'Accept', 'Reject')
-    return (list(test.stat.scale=test.stat.scale, std=sigma, ans=ans))
+    ## ouptput centered test statistic
+    if (!is.null(true.mean)){
+      test.stat.centered <- test.stat.scale - sqrt(n)*(true.mean[r] - true.mean[-r])/sigma
+    }
+    return (list(test.stat.scale=test.stat.scale,
+                 std=sigma, ans=ans, test.stat.centered=test.stat.centered))
   } else{
     ### create folds if not given
     if (is.null(flds)){
@@ -353,26 +364,41 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
         Qs <- in.fold[,-r] %*% weights
         diffs.fold <- in.fold[,r] - Qs
 
+        ## output centered test statistic
+        Q.true.mean <- sum(true.mean[-r]*weights)
+        diffs.fold.centered <- diffs.fold - rep(true.mean[r] - Q.true.mean, nrow(in.fold))
+
       } else if (min.algor == 'argmin'){
         # try argmin
         idx.min <- find.sub.argmin(mu.out.fold, r)
         diffs.fold <- in.fold[,r] - in.fold[,idx.min]
 
+        ## output centered test statistic
+        diffs.fold.centered <- diffs.fold - rep(true.mean[r] - true.mean[idx.min], nrow(in.folds))
       } else {
         # error
         stop("'min.algor' should be either 'softmin' or 'argmin'")
       }
-      return (diffs.fold)
+      #return (diffs.fold)
+      return (data.frame(diffs.fold=diffs.fold, diffs.fold.centered=diffs.fold.centered))
     })
-    diffs <- do.call(c, diffs)
+    #diffs <- do.call(c, diffs)
+    res <- do.call(rbind,diffs)
+    diffs <- res[,1]
     sigma <- stats::sd(diffs)
 
     test.stat <- sqrt(n)*mean(diffs)
     test.stat.scale <- test.stat/sigma
 
     ans <- ifelse(test.stat.scale < val.critical, 'Accept', 'Reject')
+
+    test.stat.centered <- NULL
+    if (!is.null(true.mean)) {
+      diffs.centered <- res[,2]
+      test.stat.centered <- test.stat.scale - sqrt(n)*mean(diffs.centered)/sigma
+    }
     return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans,
-                 lambda=lambda))
+                 lambda=lambda, test.stat.centered=test.stat.centered))
   }
 }
 

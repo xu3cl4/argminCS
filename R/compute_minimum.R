@@ -101,7 +101,7 @@ getMin.argmin.LOO <- function(i, r, data, lambda=NULL, sample.mean=NULL, ties.me
   if (ties.method == 'random' | ties.method == 'r'){
     #randomly select an argmin
     if (is.null(seed)) {
-      seed <- ceiling(abs(i*r*11*data[1,1]*n*p))
+      seed <- ceiling(abs(i*r*11*n*p))
     }
     if (seed > 2^32){
       seed <- seed %% 2^32
