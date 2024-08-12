@@ -13,6 +13,7 @@ argmin.HT.LOO(
   const = 2.5,
   enlarge = TRUE,
   alpha = 0.05,
+  true.mean = NULL,
   ...
 )
 }
@@ -35,6 +36,9 @@ If lambda=NULL (recommended), the function would determine a lambda value in a d
 
 \item{alpha}{The significance level of the hypothesis test; defaults to 0.05.}
 
+\item{true.mean}{The population mean landscape; defaults to NULL. If a vector were provided, the centered test statistic would be outputted.
+It is only useful for a simulation purpose.}
+
 \item{...}{Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}.}
 }
 \value{
@@ -48,6 +52,8 @@ A list containing:\tabular{ll}{
    \code{ans} \tab 'Reject' or 'Accept' \cr
    \tab \cr
    \code{lambda} \tab The lambda used in the hypothesis testing. \cr
+   \tab \cr
+   \code{test.stat.centered} \tab (Optional) The centered test statistic. Outputted only when true.mean is not NULL. \cr
 }
 }
 \description{

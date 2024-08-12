@@ -103,7 +103,10 @@ is.lambda.feasible.LOO <- function(lambda, data, r, sample.mean=NULL, threshold=
   difference.by.perturbing.one.squared <- mean(differences.by.perturbing.one^2)
 
   # estimate variance by leaving one out
-  Qs <- sapply(index.pairs[,1], function(x) return (getMin.softmin.LOO(x, r, data, lambda, sample.mean)))
+  # Qs <- sapply(1:n, function(i) return (getMin.softmin.LOO(i, r, data, lambda, sample.mean)))
+  res <- lapply(1:n, function(i) return (getMin.softmin.LOO(i, r, data, lambda, sample.mean)))
+  res <- do.call(rbind, res)
+  Qs <- unlist(res[,1])
   diffs <- data[index.pairs[,1],r] - Qs
   variance <- stats::var(diffs)
 

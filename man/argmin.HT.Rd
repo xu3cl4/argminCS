@@ -58,6 +58,8 @@ sample.mean <- colMeans(data)
 
 ## softmin.LOO
 argmin.HT(data, r)
+# provide centered test statistic
+argmin.HT(data, r, true.mean=mu)
 
 ## argmin.LOO
 argmin.HT(data, r, method='HML')

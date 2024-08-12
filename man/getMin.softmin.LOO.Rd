@@ -10,7 +10,8 @@ getMin.softmin.LOO(
   data,
   lambda,
   sample.mean = NULL,
-  print.weights = FALSE
+  print.weights = FALSE,
+  true.mean = NULL
 )
 }
 \arguments{
@@ -26,6 +27,9 @@ getMin.softmin.LOO(
 If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.}
 
 \item{print.weights}{A boolean specifying if the exponential weightings are printed to the console; defaults to False.}
+
+\item{true.mean}{The population mean landscape; defaults to NULL. If a vector were provided, the random center of weighted sum would be outputted.
+It is only useful for a simulation purpose.}
 }
 \value{
 The minimum calculated from softmin under the leave-one-out scheme with the r-th dimension excluded (The quantity Q in Zhang et al).

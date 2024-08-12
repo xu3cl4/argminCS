@@ -10,8 +10,9 @@ getMin.argmin.LOO(
   data,
   lambda = NULL,
   sample.mean = NULL,
-  ties.method = "average",
-  seed = NULL
+  ties.method = "random",
+  seed = NULL,
+  true.mean = NULL
 )
 }
 \arguments{
@@ -26,12 +27,19 @@ getMin.argmin.LOO(
 \item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.}
 
-\item{ties.method}{A string indicating the method to tackle with ties: 'average' (or simply 'a'), 'random' (or simple 'r); defaults to average.}
+\item{ties.method}{A string indicating the method to tackle with ties: 'average' (or simply 'a'), 'random' (or simple 'r); defaults to random.}
 
 \item{seed}{An integer seed in case that 'random' is chosen to tackle with ties. If no value is given, the seed would be set to \eqn{i*r + 11}.}
+
+\item{true.mean}{The population mean landscape; defaults to NULL. If a vector were provided, the random center of weighted sum would be outputted.
+It is only useful for a simulation purpose.}
 }
 \value{
-The minimum calculated from argmin under the leave-one-out scheme with the r-th dimension excluded (The quantity Q in Zhang et al).
+A list containing:\tabular{ll}{
+   \code{Q} \tab The minimum calculated from argmin under the leave-one-out scheme with the r-th dimension excluded (The quantity Q in Zhang et al) \cr
+   \tab \cr
+   \code{Q.true.mean} \tab (Optional) The Q computed with the given true mean. Outputted only when true.mean is not NULL. \cr
+}
 }
 \description{
 Compute the minimum, using (hard)argmin, under the leave-one-out (LOO) scheme;

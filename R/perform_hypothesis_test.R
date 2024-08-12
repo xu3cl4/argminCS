@@ -46,6 +46,8 @@
 #'
 #' ## softmin.LOO
 #' argmin.HT(data, r)
+#' # provide centered test statistic
+#' argmin.HT(data, r, true.mean=mu)
 #'
 #' ## argmin.LOO
 #' argmin.HT(data, r, method='HML')
@@ -152,6 +154,8 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
 #' @inheritParams lambda.adaptive
 #' @param enlarge A boolean value indicating if the data-driven lambda should be determined via an iterative enlarging algorithm; defaults to TRUE.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
+#' @param true.mean The population mean landscape; defaults to NULL. If a vector were provided, the centered test statistic would be outputted.
+#' It is only useful for a simulation purpose.
 #' @param ... Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}.
 #'
 #' @return A list containing:\tabular{ll}{
@@ -164,9 +168,11 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #'    \tab \cr
 #'    \code{lambda} \tab The lambda used in the hypothesis testing. \cr
+#'    \tab \cr
+#'    \code{test.stat.centered} \tab (Optional) The centered test statistic. Outputted only when true.mean is not NULL. \cr
 #' }
 argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LOO,
-                          lambda=NULL, const=2.5, enlarge=TRUE, alpha=0.05, ...){
+                          lambda=NULL, const=2.5, enlarge=TRUE, alpha=0.05, true.mean=NULL, ...){
 
   n <- nrow(data)
   p <- ncol(data)
@@ -187,16 +193,34 @@ argmin.HT.LOO <- function(data, r, sample.mean=NULL, min.algor=getMin.softmin.LO
   Qs <- NULL
   if (p == 2){
     Qs <- data[,-r]
+    ## centered test statistic
+    Qs.true.mean <- NULL
+    if (!is.null(true.mean)){
+      Qs.true.mean <- true.mean[1] - true.mean[2]
+    }
   } else {
-    Qs <- sapply(1:n, function(i) return (min.algor(i, r, data, lambda, sample.mean=sample.mean))) # 4np
+    #Qs <- sapply(1:n, function(i) return (min.algor(i, r, data, lambda, sample.mean=sample.mean))) # 4np
+    ## centered test statistic
+    res <- lapply(1:n, function(i) return (min.algor(i, r, data, lambda, sample.mean=sample.mean, true.mean=true.mean))) # 4np
+    res <- do.call(rbind, res)
+    Qs <- unlist(res[,1])
+    Qs.true.mean <- unlist(res[,2])
   }
   diffs <- data[,r] - Qs # n
   sigma <- stats::sd(diffs) # 2n
   test.stat <- sqrt(n)*(sample.mean[r] - mean(Qs))
   test.stat.scale <- test.stat/sigma
   ans <- ifelse(test.stat.scale <= val.critical, 'Accept', 'Reject')
-  return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans,
-               lambda=lambda))
+
+  if (is.null(true.mean)) {
+    return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans,
+                 lambda=lambda))
+  } else {
+    ## provide test.stat.centered
+    test.stat.centered <- test.stat.scale - (sqrt(n)*(true.mean[r] - mean(Qs.true.mean)))/sigma
+    return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans,
+                 lambda=lambda, test.stat.centered=test.stat.centered))
+  }
 }
 
 
