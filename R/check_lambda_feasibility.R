@@ -107,7 +107,7 @@ is.lambda.feasible.LOO <- function(lambda, data, r, sample.mean=NULL, threshold=
   res <- lapply(1:n, function(i) return (getMin.softmin.LOO(i, r, data, lambda, sample.mean)))
   res <- do.call(rbind, res)
   Qs <- unlist(res[,1])
-  diffs <- data[index.pairs[,1],r] - Qs
+  diffs <- data[,r] - Qs
   variance <- stats::var(diffs)
 
   scaled.difference.by.perturbing.one.squared <- difference.by.perturbing.one.squared/variance
