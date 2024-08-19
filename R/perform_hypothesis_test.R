@@ -336,10 +336,7 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
   } else{
     ### create folds if not given
     if (is.null(flds)){
-      seed <- ceiling(abs(13*r*data[1,r]*n.fold)) + r
-      if (seed >  2^31 - 1){
-        seed <- seed %% (2^31 - 1)
-      }
+      seed <- (ceiling(abs(13*r*data[1,r]*n.fold)) + r) %% (2^31 - 1)
       withr::with_seed(seed, {
         flds <- caret::createFolds(1:n, k=n.fold, list=TRUE, returnTrain=FALSE)
       })
@@ -365,8 +362,12 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
         diffs.fold <- in.fold[,r] - Qs
 
         ## output centered test statistic
-        Q.true.mean <- sum(true.mean[-r]*weights)
-        diffs.fold.centered <- diffs.fold - rep(true.mean[r] - Q.true.mean, nrow(in.fold))
+        if (!is.null(true.mean)){
+          Q.true.mean <- sum(true.mean[-r]*weights)
+          diffs.fold.centered <- diffs.fold - rep(true.mean[r] - Q.true.mean, nrow(in.fold))
+        } else {
+          diffs.fold.centered <- rep(NA, nrow(in.fold))
+        }
 
       } else if (min.algor == 'argmin'){
         # try argmin
@@ -374,7 +375,11 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
         diffs.fold <- in.fold[,r] - in.fold[,idx.min]
 
         ## output centered test statistic
-        diffs.fold.centered <- diffs.fold - rep(true.mean[r] - true.mean[idx.min], nrow(in.folds))
+        if (!is.null(true.mean)){
+          diffs.fold.centered <- diffs.fold - rep(true.mean[r] - true.mean[idx.min], nrow(in.fold))
+        } else {
+          diffs.fold.centered <- rep(NA, nrow(in.fold))
+        }
       } else {
         # error
         stop("'min.algor' should be either 'softmin' or 'argmin'")
@@ -435,30 +440,21 @@ omega.bootstrap <- function(data, alpha=0.05, B=100, omegas=1:100){
 
   sample.mean <- colMeans(data)
   min.indices <- which(sample.mean == min(sample.mean))
-  seed.argmin.all <- ceiling(23*data[n,p]*p)
-  if (seed.argmin.all > (2^31-1)){
-    seed.argmin.all <- seed.argmin.all %%  (2^31-1)
-  }
+  seed.argmin.all <- ceiling(23*data[n,p]*p) %% (2^31-1)
   withr::with_seed(seed.argmin.all, {
     idx.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
   })
 
   coverages <- lapply(1:B, function(i){
 
-    seed <- ceiling(i*seed.argmin.all + i)
-    if (seed > 2^31 - 1){
-      seed <- seed %% (2^31 - 1)
-    }
+    seed <- ceiling(i*seed.argmin.all + i) %% (2^31 - 1)
     withr::with_seed(seed, {
       indices <- sample(1:n, n, replace=T)
     })
     data.boot <- data[indices,]
 
     # split the data
-    seed.splitting <- seed*11+i
-    if (seed.splitting > 2^31 - 1){
-      seed.splitting <- seed.splitting %% (2^31 - 1)
-    }
+    seed.splitting <- (seed*11+i) %% (2^31 - 1)
     withr::with_seed(seed.splitting, {
       indices.boot.training <- sample(1:n, floor(n/2), replace=FALSE)
     })
@@ -468,10 +464,7 @@ omega.bootstrap <- function(data, alpha=0.05, B=100, omegas=1:100){
     # get the best dimension over the bootstrapped training set
     sample.mean.boot.training <- colMeans(data.boot.training)
     min.indices.boot <- which(sample.mean.boot.training == min(sample.mean.boot.training))
-    seed.argmin <- 3*seed+i
-    if (seed.argmin >  2^31-1){
-      seed.argmin <- seed.argmin %%  2^31-1
-    }
+    seed.argmin <- (3*seed+i) %% (2^31-1)
     withr::with_seed(seed.argmin, {
       idx.min.boot.training <- ifelse((length(min.indices.boot) > 1),
                                       sample(c(min.indices.boot), 1),
@@ -495,10 +488,7 @@ omega.bootstrap <- function(data, alpha=0.05, B=100, omegas=1:100){
 
   distances.from.nominals <- abs(coverages - (1 - alpha)*B)
   omega.indices.candidates <- which(distances.from.nominals == min(distances.from.nominals))
-  seed.final <- floor(seed.argmin.all*data[n,p])
-  if (seed.final > 2^31 - 1){
-    seed.final <- seed.final %% (2^31 - 1)
-  }
+  seed.final <- floor(seed.argmin.all*data[n,p]) %% (2^31 - 1)
   withr::with_seed(seed.final, {
     omega.index <- ifelse((length(omega.indices.candidates) > 1),
                           sample(c(omega.indices.candidates), 1),
@@ -544,10 +534,7 @@ argmin.HT.GU <- function(data, r, omega=NULL, estimated.minimum.mean=NULL, mean.
 
   # hypothesis testing preparation
   if (is.null(estimated.minimum.mean) | is.null(mean.r)){
-    seed <- ceiling(data[n,p]*n*p + p)
-    if (seed > 2^31 - 1){
-      seed <- seed %% 2^31 -1
-    }
+    seed <- ceiling(data[n,p]*n*p + p) %% (2^31 -1)
     withr::with_seed(seed, {
       indices.training <- sample(1:n, floor(n/2), replace=FALSE)
       })
@@ -558,10 +545,7 @@ argmin.HT.GU <- function(data, r, omega=NULL, estimated.minimum.mean=NULL, mean.
     # get the best dimension over training set
     sample.mean.training <- colMeans(data.training)
     min.indices <- which(sample.mean.training == min(sample.mean.training))
-    seed.argmin <- 3*seed
-    if (seed.argmin >  (2^31-1)){
-      seed.argmin <- seed.argmin %% (2^31-1)
-    }
+    seed.argmin <- (3*seed) %% (2^31-1)
     withr::with_seed(seed.argmin, {
       idx.min.training <- ifelse((length(min.indices) > 1),
                                  sample(c(min.indices), 1),
@@ -606,10 +590,7 @@ argmin.HT.MT <- function(data, r, test='z', r.min=NULL, r.min.sec=NULL, alpha=0.
   if (is.null(r.min) | is.null(r.min.sec)){
     sample.mean <- colMeans(data) # np
     min.indices <- which(sample.mean == min(sample.mean))
-    seed <- data[1,r]*r*37
-    if (seed >  2^31 - 1){
-      seed <- seed %%  2^31 - 1
-    }
+    seed <- (data[1,r]*r*37) %% (2^31 - 1)
     withr::with_seed(seed, {
       r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
     })
@@ -736,10 +717,7 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
   diffs.centered <- diffs - matrix(rep(mean.diffs, n), nrow=n, byrow=T)
   test.stat.MBs <- sapply(1:B,
                           function(i){
-                            seed <- ceiling(abs(53*i*r*data[1,r]*sample.mean[r]))+i
-                            if (seed >  2^31 - 1){
-                              seed <- seed %%  2^31 - 1
-                            }
+                            seed <- (ceiling(abs(53*i*r*data[1,r]*sample.mean[r]))+i) %% (2^31 - 1)
                             withr::with_seed(seed, {
                               Gaussian.vec <- stats::rnorm(n, 0, 1)
                              })

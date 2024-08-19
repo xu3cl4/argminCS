@@ -11,6 +11,7 @@
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 #' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
 #' @param threshold A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.
+#' @param threshold.2 A threshold value to check if the residual term in the Slepian interpolation is bounded by the mean shift.
 #' @param n.pairs The number of \eqn{(i,j)} pairs for estimation; defaults to 100.
 #' @param seed An integer-valued seed for subsampling. If no value is given, the seed would be set, using the value of other arguments.
 #'
@@ -35,7 +36,10 @@
 #'
 #' ## smaller n.pairs to speed up computation
 #' is.lambda.feasible.LOO(lambda, data, 1, sample.mean=sample.mean, n.pairs=50)
-is.lambda.feasible.LOO <- function(lambda, data, r, sample.mean=NULL, threshold=0.05, n.pairs=100, seed=NULL){
+is.lambda.feasible.LOO <- function(lambda, data, r,
+                                   sample.mean=NULL,
+                                   threshold=0.05, threshold.2=1,
+                                   n.pairs=100, seed=NULL){
 
   n <- nrow(data)
   p <- ncol(data)
@@ -58,10 +62,7 @@ is.lambda.feasible.LOO <- function(lambda, data, r, sample.mean=NULL, threshold=
 
   # subsample from the given sample
   if (is.null(seed)){
-    seed <- ceiling(abs(17*data[1,r]*sample.mean[r]*lambda*r + r))
-  }
-  if (seed >  2^31 - 1){
-    seed <- seed %%  2^31 - 1
+    seed <- ceiling(abs(17*data[n,r]*lambda*r + r)) %% (2^31 - 1)
   }
   withr::with_seed(seed, {
     sample.indices <- sample(n, 2*n.pairs)
@@ -78,10 +79,7 @@ is.lambda.feasible.LOO <- function(lambda, data, r, sample.mean=NULL, threshold=
     if (j > n){
       index.candidates <- setdiff(1:3, c(index.first, index.second))
       if (length(index.candidates) > 1){
-        new.seed <- 37*i*seed + i
-        if (new.seed >  2^31 - 1){
-          new.seed <- new.seed %%  2^31 - 1
-        }
+        new.seed <- (37*i*seed + i) %% (2^31 - 1)
         withr::with_seed(new.seed, {
           j <- sample(index.candidates, 1)
         })
@@ -101,17 +99,26 @@ is.lambda.feasible.LOO <- function(lambda, data, r, sample.mean=NULL, threshold=
   })
 
   difference.by.perturbing.one.squared <- mean(differences.by.perturbing.one^2)
+  residual.slepian <- n*difference.by.perturbing.one.squared
 
   # estimate variance by leaving one out
   # Qs <- sapply(1:n, function(i) return (getMin.softmin.LOO(i, r, data, lambda, sample.mean)))
-  res <- lapply(1:n, function(i) return (getMin.softmin.LOO(i, r, data, lambda, sample.mean)))
+  res <- lapply(1:n, function(i) return (getMin.softmin.LOO(i, r, data, lambda, sample.mean, true.mean=sample.mean)))
   res <- do.call(rbind, res)
   Qs <- unlist(res[,1])
   diffs <- data[,r] - Qs
   variance <- stats::var(diffs)
 
-  scaled.difference.by.perturbing.one.squared <- difference.by.perturbing.one.squared/variance
-  return (ifelse(n*scaled.difference.by.perturbing.one.squared < threshold, T, F))
+  # scaled.difference.by.perturbing.one.squared <- difference.by.perturbing.one.squared/variance
+  # print(glue::glue('r = {r}, lambda = {lambda}, residual.slepian = {residual.slepian}, variance = {variance}'))
+  # return (ifelse(n*scaled.difference.by.perturbing.one.squared < threshold, TRUE, FALSE))
+
+  # take the mean shift into account
+  Qs.true.mean <- unlist(res[,2])
+  diffs.true.mean <- sample.mean[r] - Qs.true.mean # true mean is estimated by sample mean
+  mean.shift <- mean(diffs.true.mean)
+  # print(glue::glue('r = {r}, lambda = {lambda}, residual.slepian = {residual.slepian}, variance = {variance}, mean.shift = {mean.shift}'))
+  return (ifelse(residual.slepian < max(threshold*variance, threshold.2*abs(mean.shift)), TRUE, FALSE))
 }
 
 
@@ -192,10 +199,7 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL, thr
 
     # subsample pairs of indices from the out.fold.sample for leave two out estimates
     # subsample indices from in fold sample
-    seed.fold <- n.fold*(seed) + n.fold
-    if (seed.fold >  2^31 - 1){
-      seed.fold <- seed.fold %% (2^31 - 1)
-    }
+    seed.fold <- (n.fold*(seed) + n.fold) %% (2^31 - 1)
     if (2*n.pairs > n.out.fold){
       n.pairs <- n.out.fold %/% 2
       # in case that createFolds does not split the data evenly (which may be often the case)

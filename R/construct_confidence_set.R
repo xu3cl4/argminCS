@@ -125,10 +125,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     } else{
       n.fold <- 2 # defaults
     }
-    seed <- ceiling(abs(13*data[n,p]*n.fold)) + p
-    if (seed >  2^31 - 1){
-      seed <- seed %%  2^31 - 1
-    }
+    seed <- (ceiling(abs(13*data[n,p]*n.fold)) + p) %% (2^31 - 1)
     withr::with_seed(seed, {
       flds <- caret::createFolds(1:n, k=n.fold, list=TRUE, returnTrain=FALSE)
     })
@@ -141,7 +138,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     if (!omega.provided){
       omega <- omega.bootstrap(data)
     }
-    seed <- floor(data[n,p]*p + p)
+    seed <- floor(data[n,p]*p + p) %% (2^31 - 1)
     withr::with_seed(seed, {
       indices.training <- sample(n, floor(n/2), replace=F)
     })
@@ -185,10 +182,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
   } else if (method == 'Bonferroni' | method == 'MT') {
     sample.mean <- colMeans(data) # np
     min.indices <- which(sample.mean == min(sample.mean))
-    seed <- ceiling(107*sample.mean[1]*data[n,p])
-    if (seed >  2^31-1){
-      seed <- seed %%  2^31-1
-    }
+    seed <- ceiling(107*sample.mean[1]*data[n,p]) %% (2^31-1)
     withr::with_seed(seed, {
       r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
     })

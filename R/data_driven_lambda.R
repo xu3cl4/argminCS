@@ -73,6 +73,7 @@ lambda.adaptive.enlarge <- function(lambda, data, r, algorithm, sample.mean=NULL
   if (algorithm == 'LOO'){
     feasible <- is.lambda.feasible.LOO(lambda.next, data, r, sample.mean=sample.mean, ...)
     threshold <- n
+    # threshold <- n^2
   } else if (algorithm == 'fold'){
     feasible <- is.lambda.feasible.fold(lambda.next, data, r, sample.mean=sample.mean, flds=flds, ...)
     ## experiments over the threshold
@@ -144,19 +145,17 @@ lambda.adaptive <- function(data, r, sample.mean=NULL, const=2.5){
 
     min.indices <- which(mu.hat.noi[-r] == min(mu.hat.noi[-r]))
 
-    seed <- ceiling(abs(19*i*r*data[r,r]*sample.mean[r])+i)
-    if (seed >  2^31 - 1){
-      seed <- seed %%  2^31 - 1
-    }
+    seed <- ceiling(abs(19*i*r*data[r,r]*sample.mean[r])+i) %% (2^31 - 1)
     withr::with_seed(seed, {
       min.idx <- ifelse(length(min.indices) > 1,
                         sample(c(min.indices), 1), min.indices[1])
     })
 
-    X.min <- data[i, -r][min.idx]
+    X.min <- data[i,-r][min.idx]
     return (X.min)
   })
-  return (sqrt(n)/(const*stats::sd(Xs.min)))
+  lambda.suggested <- sqrt(n)/(const*stats::sd(Xs.min))
+  return (lambda.suggested)
 }
 
 #' Generate a data-driven \eqn{\lambda} for fixed fold algorithm.
