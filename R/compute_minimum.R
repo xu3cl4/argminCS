@@ -49,7 +49,8 @@ getMin.softmin.LOO <- function(i, r, data, lambda, sample.mean=NULL, print.weigh
   if (!is.null(true.mean)){
     Q.true.mean <- sum(weights*true.mean[-r])
   }
-  return (list(Q=Q, Q.true.mean=Q.true.mean))
+  res <- list(Q=Q, Q.true.mean=Q.true.mean)
+  return (res)
 }
 
 #' Compute the minimum, using argmin.
