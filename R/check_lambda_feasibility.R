@@ -102,7 +102,6 @@ is.lambda.feasible.LOO <- function(lambda, data, r,
   residual.slepian <- n*difference.by.perturbing.one.squared
 
   # estimate variance by leaving one out
-  # Qs <- sapply(1:n, function(i) return (getMin.softmin.LOO(i, r, data, lambda, sample.mean)))
   res <- lapply(1:n, function(i) return (getMin.softmin.LOO(i, r, data, lambda, sample.mean, true.mean=sample.mean)))
   res <- do.call(rbind, res)
   Qs <- unlist(res[,1])
@@ -136,6 +135,7 @@ is.lambda.feasible.LOO <- function(lambda, data, r,
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 #' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
 #' @param threshold A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.
+#' @param threshold.2 A threshold value to check if the residual term in the Slepian interpolation is bounded by the mean shift.
 #' @param n.pairs The number of \eqn{(i,j)} pairs for estimation; defaults to 100.
 #' @param seed An integer-valued seed for subsampling. If no value is given, the seed would be set, using the value of other arguments.
 #'
@@ -162,7 +162,9 @@ is.lambda.feasible.LOO <- function(lambda, data, r,
 #'
 #' ## smaller n.pairs to speed up computation
 #' is.lambda.feasible.fold(lambda, data, 1, sample.mean=sample.mean, flds=flds, n.pairs=50)
-is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL, threshold=0.05, n.pairs=100, seed=NULL){
+is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL,
+                                    threshold=0.05, threshold.2=1,
+                                    n.pairs=100, seed=NULL){
 
   n <- nrow(data)
   p <- ncol(data)
@@ -189,6 +191,7 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL, thr
 
   differences.by.perturbing.one <- c()
   diffs <- c()
+  diffs.true.mean <- c()
   for (fold in 1:n.fold){
     out.fold.sample <- data[setdiff(1:n, flds[[fold]]),]
     in.fold.sample <- data[flds[[fold]],]
@@ -233,13 +236,20 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL, thr
     # estimate differences for variance
     weights <- LDATS::softmax(-lambda*mu.out.fold[-r])
     Qs <- in.fold.sample[,-r] %*% weights
+    Qs.true.mean <- sum(sample.mean[-r]*weights)
     diffs.fold <- in.fold.sample[,r] - Qs
     diffs <- c(diffs, diffs.fold)
+    diffs.true.mean <- rep(sample.mean[r] - Qs.true.mean, nrow(in.fold.sample))
+    # true mean is estimated by sample mean
   }
 
   difference.by.perturbing.one.squared <- mean(differences.by.perturbing.one^2)
+  residual.slepian <- n*difference.by.perturbing.one.squared
   variance <- stats::var(diffs)
 
-  scaled.difference.by.perturbing.one.squared <- difference.by.perturbing.one.squared/variance
-  return (ifelse(n*scaled.difference.by.perturbing.one.squared < threshold, T, F))
+  # scaled.difference.by.perturbing.one.squared <- difference.by.perturbing.one.squared/variance
+  # return (ifelse(n*scaled.difference.by.perturbing.one.squared < threshold, T, F))
+
+  mean.shift <- mean(diffs.true.mean)
+  return (ifelse(residual.slepian < max(threshold*variance, threshold.2*abs(mean.shift)), TRUE, FALSE))
 }

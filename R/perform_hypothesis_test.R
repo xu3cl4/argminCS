@@ -400,7 +400,7 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
     test.stat.centered <- NULL
     if (!is.null(true.mean)) {
       diffs.centered <- res[,2]
-      test.stat.centered <- test.stat.scale - sqrt(n)*mean(diffs.centered)/sigma
+      test.stat.centered <- sqrt(n)*mean(diffs.centered)/sigma
     }
     return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans,
                  lambda=lambda, test.stat.centered=test.stat.centered))

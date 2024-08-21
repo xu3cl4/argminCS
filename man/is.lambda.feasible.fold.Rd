@@ -11,6 +11,7 @@ is.lambda.feasible.fold(
   flds,
   sample.mean = NULL,
   threshold = 0.05,
+  threshold.2 = 1,
   n.pairs = 100,
   seed = NULL
 )
@@ -28,6 +29,8 @@ is.lambda.feasible.fold(
 If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.}
 
 \item{threshold}{A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.}
+
+\item{threshold.2}{A threshold value to check if the residual term in the Slepian interpolation is bounded by the mean shift.}
 
 \item{n.pairs}{The number of \eqn{(i,j)} pairs for estimation; defaults to 100.}
 
