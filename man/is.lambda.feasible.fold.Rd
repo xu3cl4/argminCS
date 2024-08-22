@@ -10,7 +10,7 @@ is.lambda.feasible.fold(
   r,
   flds,
   sample.mean = NULL,
-  threshold = 0.05,
+  threshold = 0.3,
   threshold.2 = 1,
   n.pairs = 100,
   seed = NULL

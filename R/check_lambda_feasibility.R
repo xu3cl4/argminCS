@@ -163,7 +163,7 @@ is.lambda.feasible.LOO <- function(lambda, data, r,
 #' ## smaller n.pairs to speed up computation
 #' is.lambda.feasible.fold(lambda, data, 1, sample.mean=sample.mean, flds=flds, n.pairs=50)
 is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL,
-                                    threshold=0.05, threshold.2=1,
+                                    threshold=0.3, threshold.2=1,
                                     n.pairs=100, seed=NULL){
 
   n <- nrow(data)
