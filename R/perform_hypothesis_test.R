@@ -290,6 +290,7 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #' @param enlarge A boolean value indicating if the data-driven lambda should be determined via an iterative enlarging algorithm; defaults to TRUE.
 #' @param true.mean The population mean landscape; defaults to NULL. If a vector were provided, the centered test statistic would be outputted.
 #' It is only useful for a simulation purpose.
+#' @param output.weights A boolean variable specifying whether the exponential weights should be outputted; defaults to NULL.
 #' @param ... Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.fold}.
 #'
 #' @return A list containing:\tabular{ll}{
@@ -304,9 +305,12 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #'    \code{lambda} \tab The lambda used in the hypothesis testing. \cr
 #'    \tab \cr
 #'    \code{test.stat.centered} \tab (Optional) The centered test statistic. Outputted only when true.mean is not NULL. \cr
+#'    \tab \cr
+#'    \code{exponential.weights} \tab (Optional) A (n.fold by p) matrix storing the exponential weightings in the test statistic. \cr
 #' }
 argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean=NULL,
-                           min.algor='softmin', lambda=NULL, const=2.5, enlarge=TRUE, true.mean=NULL, ...){
+                           min.algor='softmin', lambda=NULL, const=2.5, enlarge=TRUE, true.mean=NULL,
+                           output.weights=FALSE, ...){
   n <- nrow(data)
   p <- ncol(data)
   val.critical <- stats::qnorm(1-alpha, 0, 1)
@@ -351,13 +355,21 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
       }
     }
 
-    diffs <- lapply(1:n.fold, function(fold) {
+    if (output.weights){
+      # n.fold by (p-1)
+      exponential.weights <- matrix(0, n.fold, p - 1)
+    }
+    diffs <- rep(0, n)
+    diffs.centered <- rep(0, n)
+    for (fold in 1:n.fold) {
       mu.out.fold <- colMeans(data[setdiff(1:n, flds[[fold]]),])
       in.fold <- data[flds[[fold]],]
       if (min.algor == 'softmin'){
-        # try softmin
+        # softmin
         weights <- LDATS::softmax(-lambda*mu.out.fold[-r])
-        # testing
+        if (output.weights){
+          exponential.weights[fold,] <- weights
+        }
         Qs <- in.fold[,-r] %*% weights
         diffs.fold <- in.fold[,r] - Qs
 
@@ -368,7 +380,6 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
         } else {
           diffs.fold.centered <- rep(NA, nrow(in.fold))
         }
-
       } else if (min.algor == 'argmin'){
         # try argmin
         idx.min <- find.sub.argmin(mu.out.fold, r)
@@ -384,12 +395,9 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
         # error
         stop("'min.algor' should be either 'softmin' or 'argmin'")
       }
-      #return (diffs.fold)
-      return (data.frame(diffs.fold=diffs.fold, diffs.fold.centered=diffs.fold.centered))
-    })
-    #diffs <- do.call(c, diffs)
-    res <- do.call(rbind,diffs)
-    diffs <- res[,1]
+      diffs[flds[[fold]]] <- diffs.fold
+      diffs.centered[flds[[fold]]] <- diffs.fold.centered
+    }
     sigma <- stats::sd(diffs)
 
     test.stat <- sqrt(n)*mean(diffs)
@@ -399,11 +407,16 @@ argmin.HT.fold <- function(data, r, alpha=0.05, n.fold=2, flds=NULL, sample.mean
 
     test.stat.centered <- NULL
     if (!is.null(true.mean)) {
-      diffs.centered <- res[,2]
       test.stat.centered <- sqrt(n)*mean(diffs.centered)/sigma
     }
-    return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans,
-                 lambda=lambda, test.stat.centered=test.stat.centered))
+
+    if(output.weights){
+      return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans,
+                   lambda=lambda, test.stat.centered=test.stat.centered, exponential.weights=exponential.weights))
+    } else {
+      return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans,
+                   lambda=lambda, test.stat.centered=test.stat.centered))
+    }
   }
 }
 

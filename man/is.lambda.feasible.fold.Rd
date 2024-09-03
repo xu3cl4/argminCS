@@ -11,7 +11,7 @@ is.lambda.feasible.fold(
   flds,
   sample.mean = NULL,
   threshold = 0.3,
-  threshold.2 = 1,
+  threshold.2 = 0.8,
   n.pairs = 100,
   seed = NULL
 )

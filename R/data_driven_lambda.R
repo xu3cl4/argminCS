@@ -72,16 +72,18 @@ lambda.adaptive.enlarge <- function(lambda, data, r, algorithm, sample.mean=NULL
   lambda.next <- mult.factor*lambda
   if (algorithm == 'LOO'){
     feasible <- is.lambda.feasible.LOO(lambda.next, data, r, sample.mean=sample.mean, ...)
-    threshold <- n
-    # threshold <- n^2
+    #threshold <- n
+    threshold <- n^5
   } else if (algorithm == 'fold'){
     feasible <- is.lambda.feasible.fold(lambda.next, data, r, sample.mean=sample.mean, flds=flds, ...)
     ## experiments over the threshold
     n.fold <- length(flds)
     if (n.fold == 2){
-      threshold <- n^2
+      # threshold <- n^2
+      threshold <- n^5
     } else if (n.fold== 5){
-      threshold <- n^(3/2)
+      # threshold <- n^(3/2)
+      threshold <- n^5
     } else{
       stop("lambda.adaptive.enlarge: only supports LOO, 2-fold and 5-fold algorithms for now")
     }

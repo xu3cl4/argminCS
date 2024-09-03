@@ -16,6 +16,7 @@ argmin.HT.fold(
   const = 2.5,
   enlarge = TRUE,
   true.mean = NULL,
+  output.weights = FALSE,
   ...
 )
 }
@@ -45,6 +46,8 @@ If lambda=NULL (recommended), the function would determine a lambda value in a d
 \item{true.mean}{The population mean landscape; defaults to NULL. If a vector were provided, the centered test statistic would be outputted.
 It is only useful for a simulation purpose.}
 
+\item{output.weights}{A boolean variable specifying whether the exponential weights should be outputted; defaults to NULL.}
+
 \item{...}{Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.fold}.}
 }
 \value{
@@ -60,6 +63,8 @@ A list containing:\tabular{ll}{
    \code{lambda} \tab The lambda used in the hypothesis testing. \cr
    \tab \cr
    \code{test.stat.centered} \tab (Optional) The centered test statistic. Outputted only when true.mean is not NULL. \cr
+   \tab \cr
+   \code{exponential.weights} \tab (Optional) A (n.fold by p) matrix storing the exponential weightings in the test statistic. \cr
 }
 }
 \description{

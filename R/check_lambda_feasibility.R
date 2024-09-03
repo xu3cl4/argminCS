@@ -38,7 +38,7 @@
 #' is.lambda.feasible.LOO(lambda, data, 1, sample.mean=sample.mean, n.pairs=50)
 is.lambda.feasible.LOO <- function(lambda, data, r,
                                    sample.mean=NULL,
-                                   threshold=0.05, threshold.2=1,
+                                   threshold=0.05, threshold.2=0.1,
                                    n.pairs=100, seed=NULL){
 
   n <- nrow(data)
@@ -108,16 +108,19 @@ is.lambda.feasible.LOO <- function(lambda, data, r,
   diffs <- data[,r] - Qs
   variance <- stats::var(diffs)
 
-  scaled.difference.by.perturbing.one.squared <- difference.by.perturbing.one.squared/variance
+  # scaled.difference.by.perturbing.one.squared <- difference.by.perturbing.one.squared/variance
   # print(glue::glue('r = {r}, lambda = {lambda}, residual.slepian = {residual.slepian}, variance = {variance}'))
-  return (ifelse(n*scaled.difference.by.perturbing.one.squared < threshold, TRUE, FALSE))
+  # return (ifelse(n*scaled.difference.by.perturbing.one.squared < threshold, TRUE, FALSE))
 
   # take the mean shift into account
-  # Qs.true.mean <- unlist(res[,2])
-  # diffs.true.mean <- sample.mean[r] - Qs.true.mean # true mean is estimated by sample mean
-  # mean.shift <- mean(diffs.true.mean)
-  # print(glue::glue('r = {r}, lambda = {lambda}, residual.slepian = {residual.slepian}, variance = {variance}, mean.shift = {mean.shift}'))
-  # return (ifelse(residual.slepian < max(threshold*variance, threshold.2*abs(mean.shift)), TRUE, FALSE))
+  Qs.true.mean <- unlist(res[,2])
+  diffs.true.mean <- sample.mean[r] - Qs.true.mean # true mean is estimated by sample mean
+  mean.shift <- mean(diffs.true.mean)
+  #print(glue::glue('r = {r}, lambda = {lambda}, residual.slepian = {residual.slepian}, variance = {variance}, mean.shift = {mean.shift}'))
+  upper.bound.1 <- threshold*variance
+  upper.bound.2 <- threshold.2*abs(mean.shift)
+  # print(glue::glue('r = {r}, upper.bound.1 = {upper.bound.1}, upper.bound.2 = {upper.bound.2}'))
+  return (ifelse(residual.slepian < max(upper.bound.1, upper.bound.2), TRUE, FALSE))
 }
 
 
@@ -163,7 +166,7 @@ is.lambda.feasible.LOO <- function(lambda, data, r,
 #' ## smaller n.pairs to speed up computation
 #' is.lambda.feasible.fold(lambda, data, 1, sample.mean=sample.mean, flds=flds, n.pairs=50)
 is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL,
-                                    threshold=0.3, threshold.2=1,
+                                    threshold=0.3, threshold.2=0.8,
                                     n.pairs=100, seed=NULL){
 
   n <- nrow(data)
@@ -247,9 +250,12 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL,
   residual.slepian <- n*difference.by.perturbing.one.squared
   variance <- stats::var(diffs)
 
-  scaled.difference.by.perturbing.one.squared <- difference.by.perturbing.one.squared/variance
-  return (ifelse(n*scaled.difference.by.perturbing.one.squared < threshold, T, F))
+  # scaled.difference.by.perturbing.one.squared <- difference.by.perturbing.one.squared/variance
+  # return (ifelse(n*scaled.difference.by.perturbing.one.squared < threshold, T, F))
 
-  # mean.shift <- mean(diffs.true.mean)
-  # return (ifelse(residual.slepian < max(threshold*variance, threshold.2*abs(mean.shift)), TRUE, FALSE))
+  mean.shift <- mean(diffs.true.mean)
+  upper.bound.1 <- threshold*variance
+  upper.bound.2 <- threshold.2*abs(mean.shift)
+  # print(glue::glue('r = {r}, SB bound = {upper.bound.1}, AN bound = {upper.bound.2}'))
+  return (ifelse(residual.slepian < max(upper.bound.1, upper.bound.2), TRUE, FALSE))
 }

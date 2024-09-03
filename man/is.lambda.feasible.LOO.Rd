@@ -10,7 +10,7 @@ is.lambda.feasible.LOO(
   r,
   sample.mean = NULL,
   threshold = 0.05,
-  threshold.2 = 1,
+  threshold.2 = 0.1,
   n.pairs = 100,
   seed = NULL
 )
