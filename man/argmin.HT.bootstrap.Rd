@@ -22,6 +22,10 @@ If your experiment involves hypothesis testing over more than one dimension, com
 A list containing:\tabular{ll}{
    \code{p.val} \tab p value of the test \cr
    \tab \cr
+   \code{test.stat} \tab max statistic \cr
+   \tab \cr
+   \code{quantile} \tab (1-alpha) quantile of the bootstrap samples \cr
+   \tab \cr
    \code{ans} \tab 'Reject' or 'Accept' \cr
 }
 }

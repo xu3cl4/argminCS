@@ -696,6 +696,10 @@ argmin.HT.SN <- function(data, r, sample.mean=NULL, alpha=0.05){
 #' @return A list containing:\tabular{ll}{
 #'    \code{p.val} \tab p value of the test \cr
 #'    \tab \cr
+#'    \code{test.stat} \tab max statistic \cr
+#'    \tab \cr
+#'    \code{quantile} \tab (1-alpha) quantile of the bootstrap samples \cr
+#'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
 #'
@@ -739,8 +743,9 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
                             })
 
   p.val <- mean(test.stat.MBs > test.stat)
+  quantile.boot <- unname(stats::quantile(test.stat.MBs, 1-alpha))
   ans <- ifelse(p.val > alpha, 'Accept', 'Reject')
-  return (list(p.val=p.val, test.stat=test.stat, ans=ans))
+  return (list(p.val=p.val, test.stat=test.stat, quantile=quantile.boot, ans=ans))
 }
 
 #' @title Generate the quantile used for the selection procedure in \insertCite{gupta.1965}{argminCS}.
