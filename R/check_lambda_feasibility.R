@@ -242,7 +242,7 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL,
     Qs.true.mean <- sum(sample.mean[-r]*weights)
     diffs.fold <- in.fold.sample[,r] - Qs
     diffs <- c(diffs, diffs.fold)
-    diffs.true.mean <- rep(sample.mean[r] - Qs.true.mean, nrow(in.fold.sample))
+    diffs.true.mean <- c(diffs.true.mean, rep(sample.mean[r] - Qs.true.mean, nrow(in.fold.sample)))
     # true mean is estimated by sample mean
   }
 

@@ -269,12 +269,9 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 }
 
 
-#' Perform argmin hypothesis test.
+#' Perform arfgmin hypothesis test.
 #'
 #' Test if a dimension may be argmin by splitting into folds.
-#'
-#' @details
-#' This method does not support any data-driven way to tune lambda for now. Try to use argmin.HT.LOO instead.
 #'
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimension of interest for hypothesis test.
