@@ -124,9 +124,9 @@ is.lambda.feasible.LOO <- function(lambda, data, r,
 }
 
 
-#' Check the feasibility of a tuning parameter \eqn{\lambda} for LOO algorithm.
+#' Check the feasibility of a tuning parameter \eqn{\lambda} for fold algorithm.
 #'
-#' Check the feasibility of a tuning parameter \eqn{\lambda} for LOO algorithm by examining
+#' Check the feasibility of a tuning parameter \eqn{\lambda} for fold algorithm by examining
 #' whether its resulting \eqn{\nabla_i K_j} is less than a threshold value,
 #' i.e., the first order stability is likely achieved.
 #' For further details, we refer to the paper Zhang et al 2024.
