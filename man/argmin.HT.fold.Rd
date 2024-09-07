@@ -2,7 +2,7 @@
 % Please edit documentation in R/perform_hypothesis_test.R
 \name{argmin.HT.fold}
 \alias{argmin.HT.fold}
-\title{Perform argmin hypothesis test.}
+\title{Perform arfgmin hypothesis test.}
 \usage{
 argmin.HT.fold(
   data,
@@ -69,7 +69,4 @@ A list containing:\tabular{ll}{
 }
 \description{
 Test if a dimension may be argmin by splitting into folds.
-}
-\details{
-This method does not support any data-driven way to tune lambda for now. Try to use argmin.HT.LOO instead.
 }

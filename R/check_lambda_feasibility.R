@@ -186,7 +186,7 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL,
       n.pairs <- as.integer((n - 1)/2)
     }
   }
-  n.pairs.per.fold <- floor(n.pairs/n.fold)
+  n.indices.per.fold <- floor(n.pairs/n.fold)
 
   if (is.null(seed)){
     seed <- ceiling(abs(17*data[1,r]*lambda*r + r))
@@ -201,35 +201,38 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL,
     n.out.fold <- nrow(out.fold.sample)
     n.in.fold <- nrow(in.fold.sample)
     mu.out.fold <- colMeans(out.fold.sample)
-    n.pairs <- n.pairs.per.fold
 
-    # subsample pairs of indices from the out.fold.sample for leave two out estimates
-    # subsample indices from in fold sample
+    # following the notation in the paper,
+    # we subsample "n.indices.per.fold" indices (j) from in-fold sample
+    # subsample "n.indices.per.fold" pairs (i,k) of indices from the out-fold sample for leave-two-out estimates
     seed.fold <- (n.fold*(seed) + n.fold) %% (2^31 - 1)
-    if (2*n.pairs > n.out.fold){
-      n.pairs <- n.out.fold %/% 2
-      # in case that createFolds does not split the data evenly (which may be often the case)
+    all.pairs <- t(utils::combn(n.out.fold, 2))
+    if (n.in.fold < n.indices.per.fold){
+      n.indices.per.fold <- n.in.fold
+      # this can occur because createFolds may not evenly split the data into folds
+      # For example, n = 100, n.fold = 2, n.indices.per.fold = 100/2 = 50
+      # ideally, we want 2 folds with the number of samples (50, 50), but caret::createFolds may result in (49, 51) or (48, 52)
     }
     withr::with_seed(seed.fold, {
-      sample.indices <- sample(n.out.fold , 2*n.pairs)
-      in.fold.indices <- sample(n.in.fold, n.pairs)
+      ## (i, k) pair
+      index.pairs <- all.pairs[sample(nrow(all.pairs), n.indices.per.fold),]
+      ## j
+      in.fold.indices <- sample(n.in.fold, n.indices.per.fold)
     })
-    index.pairs <- cbind(sample.indices[1:n.pairs],
-                         sample.indices[(n.pairs+1):(2*n.pairs)])
 
-    differences.by.perturbing.one.fold <- sapply(1:n.pairs, function(i){
-      # i is the perturbed index
-      index.first <- index.pairs[i,1]
-      index.second <- index.pairs[i,2]
+    differences.by.perturbing.one.fold <- sapply(1:n.indices.per.fold, function(index){
+
+      index.first <- index.pairs[index,1]
+      index.second <- index.pairs[index,2]
 
       # get an index in fold
-      index.in.fold <- in.fold.indices[i]
+      index.in.fold <- in.fold.indices[index]
 
-      mu.i <- (mu.out.fold*n.out.fold - out.fold.sample[index.second,])/(n.out.fold-1)
-      mu.i.perturbed <- (mu.out.fold*n.out.fold - out.fold.sample[index.first,])/(n.out.fold-1)
+      mu.out.fold.no.k <- (mu.out.fold*n.out.fold - out.fold.sample[index.second,])/(n.out.fold-1)
+      mu.out.fold.no.i <- (mu.out.fold*n.out.fold - out.fold.sample[index.first,])/(n.out.fold-1)
 
-      weights.1 <- LDATS::softmax(-lambda*mu.i[-r])
-      weights.2 <- LDATS::softmax(-lambda*mu.i.perturbed[-r])
+      weights.1 <- LDATS::softmax(-lambda*mu.out.fold.no.k[-r])
+      weights.2 <- LDATS::softmax(-lambda*mu.out.fold.no.i[-r])
 
       difference <- sum((weights.1 - weights.2)*(in.fold.sample[index.in.fold, -r] - sample.mean[-r]))
       return (difference)
@@ -238,11 +241,11 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL,
 
     # estimate differences for variance
     weights <- LDATS::softmax(-lambda*mu.out.fold[-r])
-    Qs <- in.fold.sample[,-r] %*% weights
+    Qs <- in.fold.sample[in.fold.indices, -r] %*% weights
     Qs.true.mean <- sum(sample.mean[-r]*weights)
-    diffs.fold <- in.fold.sample[,r] - Qs
+    diffs.fold <- in.fold.sample[in.fold.indices, r] - Qs
     diffs <- c(diffs, diffs.fold)
-    diffs.true.mean <- c(diffs.true.mean, rep(sample.mean[r] - Qs.true.mean, nrow(in.fold.sample)))
+    diffs.true.mean <- c(diffs.true.mean, rep(sample.mean[r] - Qs.true.mean, length(in.fold.indices)))
     # true mean is estimated by sample mean
   }
 
