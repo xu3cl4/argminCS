@@ -2,13 +2,14 @@
 % Please edit documentation in R/check_lambda_feasibility.R
 \name{is.lambda.feasible.fold}
 \alias{is.lambda.feasible.fold}
-\title{Check the feasibility of a tuning parameter \eqn{\lambda} for LOO algorithm.}
+\title{Check the feasibility of a tuning parameter \eqn{\lambda} for fold algorithm.}
 \usage{
 is.lambda.feasible.fold(
   lambda,
   data,
   r,
   flds,
+  all.pairs = NULL,
   sample.mean = NULL,
   threshold = 0.3,
   threshold.2 = 0.8,
@@ -25,6 +26,8 @@ is.lambda.feasible.fold(
 
 \item{flds}{A list of row position integers corresponding to folds.}
 
+\item{all.pairs}{The pairs (i, k) for subsampling}
+
 \item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.}
 
@@ -40,7 +43,7 @@ If your experiment involves hypothesis testing over more than one dimension, pas
 A boolean value indicating if the given \eqn{\lambda} likely gives the first order stability.
 }
 \description{
-Check the feasibility of a tuning parameter \eqn{\lambda} for LOO algorithm by examining
+Check the feasibility of a tuning parameter \eqn{\lambda} for fold algorithm by examining
 whether its resulting \eqn{\nabla_i K_j} is less than a threshold value,
 i.e., the first order stability is likely achieved.
 For further details, we refer to the paper Zhang et al 2024.

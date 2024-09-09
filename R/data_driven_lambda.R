@@ -75,10 +75,13 @@ lambda.adaptive.enlarge <- function(lambda, data, r, algorithm, sample.mean=NULL
     #threshold <- n
     threshold <- n^5
   } else if (algorithm == 'fold'){
-    feasible <- is.lambda.feasible.fold(lambda.next, data, r, sample.mean=sample.mean, flds=flds, ...)
-    ## experiments over the threshold
     n.fold <- length(flds)
-    if (n.fold == 2){
+    n.out.fold <- n - ( max(sapply(1:n.fold, function(i) {length(flds[[i]])})) )
+    all.pairs <- t(utils::combn(n.out.fold, 2))
+
+    feasible <- is.lambda.feasible.fold(lambda.next, data, r, flds=flds,
+                                        all.pairs=all.pairs, sample.mean=sample.mean, ...)
+    if (n.fold == 2){ ## may need some experiments over threshold
       # threshold <- n^2
       threshold <- n^5
     } else if (n.fold== 5){
@@ -97,7 +100,8 @@ lambda.adaptive.enlarge <- function(lambda, data, r, algorithm, sample.mean=NULL
     if (algorithm == 'LOO'){
       feasible <- is.lambda.feasible.LOO(lambda.next, data, r, sample.mean=sample.mean, ...)
     } else {
-      feasible <- is.lambda.feasible.fold(lambda.next, data, r, sample.mean=sample.mean, flds=flds, ...)
+      feasible <- is.lambda.feasible.fold(lambda.next, data, r, flds=flds, all.pairs=all.pairs,
+                                          sample.mean=sample.mean, ...)
     }
     count <- count + 1
   }

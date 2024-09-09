@@ -287,7 +287,7 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #' @param enlarge A boolean value indicating if the data-driven lambda should be determined via an iterative enlarging algorithm; defaults to TRUE.
 #' @param true.mean The population mean landscape; defaults to NULL. If a vector were provided, the centered test statistic would be outputted.
 #' It is only useful for a simulation purpose.
-#' @param output.weights A boolean variable specifying whether the exponential weights should be outputted; defaults to NULL.
+#' @param output.weights A boolean variable specifying whether the exponential weights should be outputted; defaults to FALSE.
 #' @param ... Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.fold}.
 #'
 #' @return A list containing:\tabular{ll}{

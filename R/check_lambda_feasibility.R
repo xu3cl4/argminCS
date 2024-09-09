@@ -135,6 +135,7 @@ is.lambda.feasible.LOO <- function(lambda, data, r,
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimension of interest for hypothesis test.
 #' @param flds A list of row position integers corresponding to folds.
+#' @param all.pairs The pairs (i, k) for subsampling
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 #' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
 #' @param threshold A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.
@@ -165,7 +166,7 @@ is.lambda.feasible.LOO <- function(lambda, data, r,
 #'
 #' ## smaller n.pairs to speed up computation
 #' is.lambda.feasible.fold(lambda, data, 1, sample.mean=sample.mean, flds=flds, n.pairs=50)
-is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL,
+is.lambda.feasible.fold <- function(lambda, data, r, flds, all.pairs=NULL, sample.mean=NULL,
                                     threshold=0.3, threshold.2=0.8,
                                     n.pairs=100, seed=NULL){
 
@@ -178,14 +179,15 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL,
   }
 
   ## use at most 100 pairs of samples for estimation
-  n.pairs <- 100
-  if (n < 200){
-    if (n %% 2 == 0){
-      n.pairs <- as.integer(n/2)
-    } else {
-      n.pairs <- as.integer((n - 1)/2)
-    }
-  }
+  # n.pairs <- 100
+  # if (n < 200){
+  #   if (n %% 2 == 0){
+  #     n.pairs <- as.integer(n/2)
+  #   } else {
+  #     n.pairs <- as.integer((n - 1)/2)
+  #   }
+  # }
+  n.pairs <- min(100, n)
   n.indices.per.fold <- floor(n.pairs/n.fold)
 
   if (is.null(seed)){
@@ -206,7 +208,10 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL,
     # we subsample "n.indices.per.fold" indices (j) from in-fold sample
     # subsample "n.indices.per.fold" pairs (i,k) of indices from the out-fold sample for leave-two-out estimates
     seed.fold <- (n.fold*(seed) + n.fold) %% (2^31 - 1)
-    all.pairs <- t(utils::combn(n.out.fold, 2))
+    if (is.null(all.pairs)){
+      all.pairs <- t(utils::combn(n.out.fold, 2))
+    }
+
     if (n.in.fold < n.indices.per.fold){
       n.indices.per.fold <- n.in.fold
       # this can occur because createFolds may not evenly split the data into folds
@@ -215,9 +220,9 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL,
     }
     withr::with_seed(seed.fold, {
       ## (i, k) pair
-      index.pairs <- all.pairs[sample(nrow(all.pairs), n.indices.per.fold),]
+      index.pairs <- all.pairs[sample(nrow(all.pairs), n.indices.per.fold, replace=FALSE),]
       ## j
-      in.fold.indices <- sample(n.in.fold, n.indices.per.fold)
+      in.fold.indices <- sample(n.in.fold, n.indices.per.fold, replace=FALSE)
     })
 
     differences.by.perturbing.one.fold <- sapply(1:n.indices.per.fold, function(index){
