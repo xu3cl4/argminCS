@@ -9,7 +9,6 @@ is.lambda.feasible.fold(
   data,
   r,
   flds,
-  all.pairs = NULL,
   sample.mean = NULL,
   threshold = 0.3,
   threshold.2 = 0.8,
@@ -25,8 +24,6 @@ is.lambda.feasible.fold(
 \item{r}{The dimension of interest for hypothesis test.}
 
 \item{flds}{A list of row position integers corresponding to folds.}
-
-\item{all.pairs}{The pairs (i, k) for subsampling}
 
 \item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.}

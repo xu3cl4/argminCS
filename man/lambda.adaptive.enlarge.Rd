@@ -34,7 +34,7 @@ If your experiment involves hypothesis testing over more than one dimension, pas
 
 \item{verbose}{A boolean value indicating if the number of iterations should be printed to console; defaults to FALSE.}
 
-\item{...}{Additional arguments to \link{is.lambda.feasible.LOO}.}
+\item{...}{Additional arguments to \link{is.lambda.feasible.LOO}, \link{is.lambda.feasible.fold}.}
 }
 \value{
 An (potentially) enlarged \eqn{\lambda}.

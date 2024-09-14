@@ -12,7 +12,7 @@
 #' @param flds A list of row position integers corresponding to folds. It is for the fixed fold algorithm.
 #' @param mult.factor In each iteration, \eqn{\lambda} would be multiplied by mult.factor to yield an enlarged \eqn{\lambda}; defaults to 2.
 #' @param verbose A boolean value indicating if the number of iterations should be printed to console; defaults to FALSE.
-#' @param ... Additional arguments to \link{is.lambda.feasible.LOO}.
+#' @param ... Additional arguments to \link{is.lambda.feasible.LOO}, \link{is.lambda.feasible.fold}.
 #'
 #' @return An (potentially) enlarged \eqn{\lambda}.
 #' @export
@@ -76,11 +76,8 @@ lambda.adaptive.enlarge <- function(lambda, data, r, algorithm, sample.mean=NULL
     threshold <- n^5
   } else if (algorithm == 'fold'){
     n.fold <- length(flds)
-    n.out.fold <- n - ( max(sapply(1:n.fold, function(i) {length(flds[[i]])})) )
-    all.pairs <- t(utils::combn(n.out.fold, 2))
-
     feasible <- is.lambda.feasible.fold(lambda.next, data, r, flds=flds,
-                                        all.pairs=all.pairs, sample.mean=sample.mean, ...)
+                                        sample.mean=sample.mean, ...)
     if (n.fold == 2){ ## may need some experiments over threshold
       # threshold <- n^2
       threshold <- n^5
@@ -100,7 +97,7 @@ lambda.adaptive.enlarge <- function(lambda, data, r, algorithm, sample.mean=NULL
     if (algorithm == 'LOO'){
       feasible <- is.lambda.feasible.LOO(lambda.next, data, r, sample.mean=sample.mean, ...)
     } else {
-      feasible <- is.lambda.feasible.fold(lambda.next, data, r, flds=flds, all.pairs=all.pairs,
+      feasible <- is.lambda.feasible.fold(lambda.next, data, r, flds=flds,
                                           sample.mean=sample.mean, ...)
     }
     count <- count + 1

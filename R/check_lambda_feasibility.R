@@ -135,7 +135,6 @@ is.lambda.feasible.LOO <- function(lambda, data, r,
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimension of interest for hypothesis test.
 #' @param flds A list of row position integers corresponding to folds.
-#' @param all.pairs The pairs (i, k) for subsampling
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 #' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
 #' @param threshold A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.
@@ -166,7 +165,7 @@ is.lambda.feasible.LOO <- function(lambda, data, r,
 #'
 #' ## smaller n.pairs to speed up computation
 #' is.lambda.feasible.fold(lambda, data, 1, sample.mean=sample.mean, flds=flds, n.pairs=50)
-is.lambda.feasible.fold <- function(lambda, data, r, flds, all.pairs=NULL, sample.mean=NULL,
+is.lambda.feasible.fold <- function(lambda, data, r, flds, sample.mean=NULL,
                                     threshold=0.3, threshold.2=0.8,
                                     n.pairs=100, seed=NULL){
 
@@ -208,9 +207,6 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, all.pairs=NULL, sampl
     # we subsample "n.indices.per.fold" indices (j) from in-fold sample
     # subsample "n.indices.per.fold" pairs (i,k) of indices from the out-fold sample for leave-two-out estimates
     seed.fold <- (n.fold*(seed) + n.fold) %% (2^31 - 1)
-    if (is.null(all.pairs)){
-      all.pairs <- t(utils::combn(n.out.fold, 2))
-    }
 
     if (n.in.fold < n.indices.per.fold){
       n.indices.per.fold <- n.in.fold
@@ -219,16 +215,27 @@ is.lambda.feasible.fold <- function(lambda, data, r, flds, all.pairs=NULL, sampl
       # ideally, we want 2 folds with the number of samples (50, 50), but caret::createFolds may result in (49, 51) or (48, 52)
     }
     withr::with_seed(seed.fold, {
-      ## (i, k) pair
-      index.pairs <- all.pairs[sample(nrow(all.pairs), n.indices.per.fold, replace=FALSE),]
-      ## j
-      in.fold.indices <- sample(n.in.fold, n.indices.per.fold, replace=FALSE)
+    ## i
+    indices.first <- sample(n.out.fold, n.indices.per.fold, replace=FALSE)
+    })
+    withr::with_seed(seed.fold+3, {
+    ## k
+    indices.second <- sample(n.out.fold, n.indices.per.fold, replace=FALSE)
+    })
+    withr::with_seed(seed.fold+7,  {
+    ## j
+    in.fold.indices <- sample(n.in.fold, n.indices.per.fold, replace=FALSE)
     })
 
     differences.by.perturbing.one.fold <- sapply(1:n.indices.per.fold, function(index){
 
-      index.first <- index.pairs[index,1]
-      index.second <- index.pairs[index,2]
+      index.first <- indices.first[index]
+      index.second <- indices.second[index]
+      if (index.first == index.second){
+        # withr::with_seed(seed.fold+3+index.first, {
+        index.second <- sample((1:n.out.fold)[-index.first], 1)
+        # })
+      }
 
       # get an index in fold
       index.in.fold <- in.fold.indices[index]

@@ -717,6 +717,7 @@ argmin.HT.bootstrap <- function(data, r, sample.mean=NULL, alpha=0.05, B=200){
 
   diffs <- matrix(rep(data[,r], p-1), nrow=n, byrow=F) - data[,-r] # np
   sd.diffs <- apply(diffs, 2, stats::sd) # 3np
+  print(sd.diffs)
   mean.diffs <- NULL
   if (is.null(sample.mean)){
     # even without this step, the algorithm still requires np operations
