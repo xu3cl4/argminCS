@@ -11,7 +11,6 @@
 #' @param sample.mean The sample mean of the n samples in scaled.difference.matrix; defaults to NULL. It can be calculated via colMeans(scaled.difference.matrix).
 #' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(scaled.difference.matrix) to speed up computation.
 #' @param threshold.1 A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.
-#' @param threshold.2 A threshold value to check if the residual term in the Slepian interpolation is bounded by the mean shift.
 #' @param n.pairs The number of \eqn{(i,j)} pairs for estimation; defaults to 100.
 #' @param seed An integer-valued seed for subsampling. If no value is given, the seed would be set, using the value of other arguments.
 #'
@@ -19,9 +18,8 @@
 #' @export
 #'
 #' @importFrom MASS mvrnorm
-#' @examples
 is.lambda.feasible.LOO <- function(lambda, scaled.difference.matrix, sample.mean=NULL,
-                                   threshold.1=0.05, threshold.2=0.1,
+                                   threshold.1=0.05,
                                    n.pairs=100, seed=NULL){
 
   n <- nrow(scaled.difference.matrix)

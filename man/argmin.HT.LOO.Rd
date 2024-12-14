@@ -21,8 +21,7 @@ argmin.HT.LOO(
 \item{difference.matrix}{A n by (p-1) difference data matrix (reference dimension - the rest);
 each of its row is a (p-1)-dimensional vector of differences.}
 
-\item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(difference.matrix).
-If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.}
+\item{sample.mean}{The sample mean of differences; defaults to NULL. It can be calculated via colMeans(difference.matrix).}
 
 \item{min.algor}{The algorithm to find the minimum excluding the r-th dimension; defaults to 'softmin'. The other option is 'argmin'.}
 

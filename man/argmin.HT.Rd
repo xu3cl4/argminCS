@@ -42,7 +42,8 @@ The supported methods include:\tabular{ll}{
 \examples{
 r <- 4
 n <- 200
-mu <- (1:20)/20
+p <- 20
+mu <- (1:p)/p
 cov <- diag(length(mu))
 set.seed(108)
 data <- MASS::mvrnorm(n, mu, cov)

@@ -30,7 +30,8 @@
 #' @examples
 #' r <- 4
 #' n <- 200
-#' mu <- (1:20)/20
+#' p <- 20
+#' mu <- (1:p)/p
 #' cov <- diag(length(mu))
 #' set.seed(108)
 #' data <- MASS::mvrnorm(n, mu, cov)
@@ -91,8 +92,7 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
 #'
 #' @param difference.matrix A n by (p-1) difference data matrix (reference dimension - the rest);
 #' each of its row is a (p-1)-dimensional vector of differences.
-#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(difference.matrix).
-#' If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.
+#' @param sample.mean The sample mean of differences; defaults to NULL. It can be calculated via colMeans(difference.matrix).
 #' @param min.algor The algorithm to find the minimum excluding the r-th dimension; defaults to 'softmin'. The other option is 'argmin'.
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin); defaults to NULL.
 #' If lambda=NULL (recommended), the function would determine a lambda value in a data-driven way.
@@ -136,7 +136,11 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
                                     2, sd.difference.matrix[non.identical.columns], FUN='/')
 
   ## sample mean
-  sample.mean <- colMeans(scaled.difference.matrix)
+  if (is.null(sample.mean)){
+    sample.mean <- colMeans(scaled.difference.matrix)
+  } else {
+    sample.mean <- sample.mean[non.identical.columns]/sd.difference.matrix[non.identical.columns]
+  }
 
   if (!is.null(true.mean.difference)){
     scaled.true.mean.difference <- true.mean.difference/sd.difference.matrix
@@ -288,10 +292,9 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #'
 #' Test if a dimension may be argmin, using multiple testing with Bonferroni's correction.
 #'
-#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
-#' @param r The dimension of interest for hypothesis test.
-#' @param r.min The sample argmin of the sample mean of data; defaults to NULL.
-#' @param r.min.sec The index of the second smallest dimension of the sample mean of the data; defaults to NULL.
+#' @param difference.matrix A n by (p-1) difference data matrix (reference dimension - the rest);
+#' each of its row is a (p-1)-dimensional vector of differences.
+#' @param sample.mean The sample mean of differences; defaults to NULL. It can be calculated via colMeans(difference.matrix).
 #' @param test The test to perform: 't' or 'z' test; defaults to 'z'.
 #' If data are believed to be normally distributed, use 't'; otherwise 'z'.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
@@ -303,39 +306,30 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 #'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
-argmin.HT.MT <- function(data, r, test='z', r.min=NULL, r.min.sec=NULL, alpha=0.05){
+argmin.HT.MT <- function(difference.matrix, sample.mean=NULL, test='z', alpha=0.05){
 
-  p <- ncol(data)
-  val.critical <- alpha/(p-1)
+  p <- ncol(difference.matrix) + 1
 
-  if (is.null(r.min) | is.null(r.min.sec)){
-    sample.mean <- colMeans(data) # np
-    min.indices <- which(sample.mean == min(sample.mean))
-    seed <- (data[1,r]*r*37) %% (2^31 - 1)
-    withr::with_seed(seed, {
-      r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
-    })
-    r.min.sec <- find.sub.argmin(sample.mean, r.min)
+  sd.difference.matrix <- apply(difference.matrix, 2, stats::sd)
+  non.identical.columns <- which(!(sd.difference.matrix == 0 & difference.matrix[1,] == 0))
+
+  if (is.null(sample.mean)){
+    mean.difference <- colMeans(difference.matrix[,non.identical.columns])
+  } else {
+    mean.difference <- sample.mean[non.identical.columns]
   }
 
-  p.val <- NULL
-  if (test == 't'){
-    # t test
-    if (r == r.min){
-      p.val <- stats::t.test(data[,r]-data[,r.min.sec], alternative='greater')$p.value
-    } else {
-      p.val <- stats::t.test(data[,r]-data[,r.min], alternative='greater')$p.value
-    }
-  } else{
-    # z.test
-    if (r == r.min){
-      diffs <- data[,r] - data[,r.min.sec]
-      p.val <- BSDA::z.test(diffs, sigma.x=stats::sd(diffs), alternative='greater')$p.value
-    } else {
-      diffs <- data[,r] - data[,r.min]
-      p.val <- BSDA::z.test(diffs, sigma.x=stats::sd(diffs), alternative='greater')$p.value
-    }
+  scaled.mean.differences <- mean.difference/sd.difference.matrix[non.identical.columns]
+  argmax <- which.max(scaled.mean.differences)
+
+  difference.matrix.non.identical <- difference.matrix[,non.identical.columns]
+  if (test == 't') {
+    res <- t.test(difference.matrix.non.identical[,argmax], alternative='greater')
+  } else {
+    ## z test
+    res <- BSDA::z.test(difference.matrix.non.identical[,argmax], alternative='greater')
   }
+  p.val <- res$p.value
 
   ans <- ifelse(p.val > val.critical, 'Accept', 'Reject')
   return (list(p.val=p.val, critical.value=val.critical, ans=ans))

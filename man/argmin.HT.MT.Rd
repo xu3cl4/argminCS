@@ -4,19 +4,16 @@
 \alias{argmin.HT.MT}
 \title{Perform argmin hypothesis test.}
 \usage{
-argmin.HT.MT(data, r, test = "z", r.min = NULL, r.min.sec = NULL, alpha = 0.05)
+argmin.HT.MT(difference.matrix, sample.mean = NULL, test = "z", alpha = 0.05)
 }
 \arguments{
-\item{data}{A n by p data matrix; each of its row is a p-dimensional sample.}
+\item{difference.matrix}{A n by (p-1) difference data matrix (reference dimension - the rest);
+each of its row is a (p-1)-dimensional vector of differences.}
 
-\item{r}{The dimension of interest for hypothesis test.}
+\item{sample.mean}{The sample mean of differences; defaults to NULL. It can be calculated via colMeans(difference.matrix).}
 
 \item{test}{The test to perform: 't' or 'z' test; defaults to 'z'.
 If data are believed to be normally distributed, use 't'; otherwise 'z'.}
-
-\item{r.min}{The sample argmin of the sample mean of data; defaults to NULL.}
-
-\item{r.min.sec}{The index of the second smallest dimension of the sample mean of the data; defaults to NULL.}
 
 \item{alpha}{The significance level of the hypothesis test; defaults to 0.05.}
 }

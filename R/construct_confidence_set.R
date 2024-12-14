@@ -11,21 +11,12 @@
 #'    \code{nonsplit (NS)} \tab  A variant of SML, but no splitting is involved.
 #'    One needs to pass a fixed lambda value as a required additional argument.\cr
 #'    \tab \cr
-#'    \code{fold (FD)} \tab A n fold version of SML; defaults to two folds. \cr
-#'    \tab \cr
-#'    \code{GU} \tab The method in \insertCite{dey.2024}{argminCS}. \cr
-#'    \tab \cr
-#'    \code{CCK.self.normalization (SN)} \tab Modified from the self-normalization method in \insertCite{cck.many.moments}{argminCS}. \cr
-#'    \tab \cr
-#'    \code{CCK.bootstrap (CB)} \tab Modified from the bootstrap method in \insertCite{cck.many.moments}{argminCS}. See also \insertCite{lei.cvc}{argminCS}. \cr
-#'    \tab \cr
 #'    \code{Bonferroni (MT)} \tab Multiple testing with Bonferroni's correction. \cr
 #'    \tab \cr
 #'    \code{Gupta (GTA)} \tab The method in \insertCite{gupta.1965}{argminCS}. \cr
 #'    \tab \cr
 #'    \code{Futschik (FCHK)} \tab The two-step method in \insertCite{futschik.1995}{argminCS} \cr
 #' }
-#' If computation is a concern, use 'MT'. Otherwise, 'SML' is recommended.
 #'
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param method A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
@@ -55,21 +46,6 @@
 #' ## nonsplit
 #' CS.argmin(data, method='NS', lambda=sqrt(n)/2.5)
 #'
-#' ### fold
-#' ## defaults to 2 fold
-#' CS.argmin(data, method='FD')
-#' ## 5 fold
-#' CS.argmin(data, method='FD', n.fold=5)
-#'
-#' ## GU
-#' CS.argmin(data, method='GU')
-#'
-#' ## self-normalization
-#' CS.argmin(data, method='SN')
-#'
-#' ## bootstrap
-#' CS.argmin(data, method='CB')
-#'
 #' ## Bonferroni (choose t test because of normal data)
 #' CS.argmin(data, method='MT', test='t')
 #'
@@ -88,10 +64,6 @@
 #' @references{
 #'   \insertRef{cck.many.moments}{argminCS}
 #'
-#'   \insertRef{lei.cvc}{argminCS}
-#'
-#'   \insertRef{dey.2024}{argminCS}
-#'
 #'  \insertRef{gupta.1965}{argminCS}
 #'
 #'  \insertRef{futschik.1995}{argminCS}
@@ -104,79 +76,25 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
 
   if (method == 'softmin.LOO' | method == 'SML'){
     sample.mean <- colMeans(data)
-    res <- sapply(1:p, function(r) {argmin.HT.LOO(data, r, sample.mean=sample.mean, alpha=alpha, ...)$ans})
+    res <- sapply(1:p, function(r) {
+      difference.matrix <- difference.matrix.r <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
+      sample.mean.r <- sample.mean[r] = sample.mean[-r]
+      return (argmin.HT.LOO(difference.matrix, sample.mean=sample.mean.r, alpha=alpha, ...)$ans)
+      })
     return (which(res == 'Accept'))
 
   } else if (method == 'argmin.LOO' | method == 'HML') {
     sample.mean <- colMeans(data)
-    res <- sapply(1:p, function(r) {argmin.HT.LOO(
-      data, r, min.algor=getMin.argmin.LOO, sample.mean=sample.mean, alpha=alpha, ...)$ans})
+    res <- sapply(1:p, function(r) {
+      difference.matrix <- difference.matrix.r <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
+      sample.mean.r <- sample.mean[r] - sample.mean[-r]
+      return (argmin.HT.LOO(difference.matrix, sample.mean=sample.mean.r, min.algor='argmin', alpha=alpha, ...)$ans)
+    })
     return (which(res == 'Accept'))
 
   } else if (method == 'nonsplit' | method == 'NS') {
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {argmin.HT.nonsplit(data, r, sample.mean=sample.mean, alpha=alpha, ...)$ans})
-    return (which(res == 'Accept'))
-
-  } else if (method == 'fold' | method == 'FD') {
-    additional.arguments <- list(...)
-    if (methods::hasArg(n.fold)){
-      n.fold <- additional.arguments$n.fold
-    } else{
-      n.fold <- 2 # defaults
-    }
-    seed <- (ceiling(abs(13*data[n,p]*n.fold)) + p) %% (2^31 - 1)
-    withr::with_seed(seed, {
-      flds <- caret::createFolds(1:n, k=n.fold, list=TRUE, returnTrain=FALSE)
-    })
-    sample.mean <- colMeans(data)
-    res <- sapply(1:p, function(r) {argmin.HT.fold(data, r, alpha=alpha, flds=flds, sample.mean=sample.mean,...)$ans})
-    return (which(res == 'Accept'))
-
-  } else if (method == 'GU') {
-    omega.provided <- methods::hasArg(omega)
-    if (!omega.provided){
-      omega <- omega.bootstrap(data)
-    }
-    seed <- floor(data[n,p]*p + p) %% (2^31 - 1)
-    withr::with_seed(seed, {
-      indices.training <- sample(n, floor(n/2), replace=F)
-    })
-    data.training <- data[indices.training,]
-    sample.mean.training <- colMeans(data.training)
-    min.indices <- which(sample.mean.training == min(sample.mean.training))
-    seed.argmin <- 3*seed
-    if (seed.argmin >  (2^31-1)){
-      seed.argmin <- seed.argmin %% (2^31-1)
-    }
-    withr::with_seed(seed.argmin, {
-      idx.min.training <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
-    })
-
-    data.testing <- data[-indices.training,]
-    sample.mean.testing <- colMeans(data.testing)
-
-    res <- NULL
-    if (omega.provided){
-      res <- sapply(1:p, function(r) {
-      argmin.HT.GU(data, r,
-                   estimated.minimum.mean=sample.mean.testing[idx.min.training],
-                   mean.r=sample.mean.testing[r], alpha=alpha, ...)$ans})
-    } else {
-      res <- sapply(1:p, function(r) {
-        argmin.HT.GU(data, r, omega = omega,
-                     estimated.minimum.mean=sample.mean.testing[idx.min.training],
-                     mean.r=sample.mean.testing[r], alpha=alpha, ...)$ans})
-    }
-    return (which(res == 'Accept'))
-  } else if (method == 'CCK.self.normalization' | method == 'SN'){
-    sample.mean <- colMeans(data)
-    res <- sapply(1:p, function(r) {argmin.HT.SN(data, r, sample.mean=sample.mean, alpha=alpha, ...)$ans})
-    return (which(res == 'Accept'))
-
-  } else if (method == 'CCK.bootstrap' | method == 'CB') {
-    sample.mean <- colMeans(data)
-    res <- sapply(1:p, function(r) {argmin.HT.bootstrap(data, r, sample.mean=sample.mean, alpha=alpha, ...)$ans})
     return (which(res == 'Accept'))
 
   } else if (method == 'Bonferroni' | method == 'MT') {
@@ -199,14 +117,10 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
       additional.arguments <- list(...)
       std <- additional.arguments$std
       stds <- rep(std, p)
-    ## testing
-    # if (methods::hasArg(stds)){
-    #   additional.arguments <- list(...)
-    #   stds <- additional.arguments$stds
-    #   res <- sapply(1:p, function(r) {argmin.HT.gupta(
-    #     data, r, critical.val=critical.val, sample.mean=sample.mean, alpha=alpha, ...)$ans})
+
     } else {
       stds <- rep(1, p)
+      # the method does not support the use of sample standard deviations
       #stds <- apply(data, 2, stats::sd)
     }
     res <- sapply(1:p, function(r) {argmin.HT.gupta(
@@ -229,13 +143,14 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     }
 
     # # comment out to show the violation of validity
-    # if (methods::hasArg(std)){
-    #   std <- additional.arguments$std
-    #   stds <- rep(std, p)
-    # } else {
-    #   stds <- rep(1, p)
-    # }
-    stds <- apply(data, 2, stats::sd)
+    if (methods::hasArg(std)){
+      std <- additional.arguments$std
+      stds <- rep(std, p)
+    } else {
+      stds <- rep(1, p)
+    }
+    ## the method does not support the use of sample standard deviations
+    # stds <- apply(data, 2, stats::sd)
 
     sample.mean <- colMeans(data)
     # step 1
@@ -260,7 +175,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
 
   } else {
     stop("'method' should be one of 'softmin.LOO' (SML), 'argmin.LOO' (HML),
-         'nonsplit' (NS), 'fold' (FD), 'GU', 'CCK.bootstrap' (CB), 'Bonferroni' (MT), Gupta (GTA), 'Futschik (FCHK)")
+         'nonsplit' (NS), 'Bonferroni' (MT), Gupta (GTA), 'Futschik (FCHK)")
   }
 }
 
