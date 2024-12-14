@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 Welcome! Here we have source code to perform argmin hypothesis test.
 
 ## Overview
-The goal of argminCS is to produce confidence set of argmin from iid samples with a valid type 1 control, while exhibiting desirable statistical power. In particular, the method 'softmin.LOO' is the main innovative component in the paper *Winners with Confidence: Argmin Inference over a High-Dimensional Discrete Candidate Set* by Tianyu Zhang, Hao Lee and Jing Lei. Several other methods are also implemented within the package to ease method comparison and simulations. 
+The goal of argminCS is to produce confidence set of argmin from iid samples with a valid type 1 control, while exhibiting desirable statistical power. In particular, the method 'softmin.LOO' is the main innovative component in our paper *Winners with Confidence: Argmin Inference over a High-Dimensional Discrete Candidate Set*. Several other methods are also implemented within the package to ease method comparison and simulations. 
 
 ## Citation
 If you use the **argminCS** package for your research or any experiment, please cite our paper "Winners with Confidence: Argmin Inference over a
@@ -41,21 +41,24 @@ This is a basic example which shows you how to solve a common problem:
 library(argminCS)
 dimension <- 4
 sample.size <- 200
-mu <- (1:20)/20
+p <- 20
+mu <- (1:p)/p
 cov <- diag(length(mu))
 set.seed(108)
 data <- MASS::mvrnorm(sample.size, mu, cov)
-sample.mean <- colMeans(data)
 
 ## to test if 'dimension' is likely to be argmin with (default) softmin.LOO
-argmin.HT(data, dimension, method='SML')
+difference.matrix <- matrix(rep(data[, dimension], p-1), 
+                            ncol = p-1, 
+                            byrow = FALSE) - data[, -dimension]
+argmin.HT(difference.matrix, dimension, method='SML')
 
 ## rather than perform a hypothesis testing for a specific dimension, 
 ## one can directly generate a discrete confidence set by 
 CS.argmin(data, method='SML')
 ```
 
-Regarding the details of methods and their associated tuning parameters, we encourage users to install the package and check function documentation. Note that the method in the NC state paper is not supported for now.
+Regarding the details of methods and their associated tuning parameters, we encourage users to install the package and check function documentation.
 <!-- What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so: -->
 
 <!-- ```{r cars} -->
