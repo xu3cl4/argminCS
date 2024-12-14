@@ -2,12 +2,11 @@
 % Please edit documentation in R/data_driven_lambda.R
 \name{lambda.adaptive.enlarge}
 \alias{lambda.adaptive.enlarge}
-\title{Iteratively enlarge a tuning parameter \eqn{\lambda} in a data-driven way.}
+\title{Iteratively enlarge a tuning parameter \eqn{\lambda} in a scaled.difference.matrix-driven way.}
 \usage{
 lambda.adaptive.enlarge(
   lambda,
-  data,
-  r,
+  scaled.difference.matrix,
   algorithm,
   sample.mean = NULL,
   flds = NULL,
@@ -19,14 +18,13 @@ lambda.adaptive.enlarge(
 \arguments{
 \item{lambda}{The real-valued tuning parameter for exponential weightings (the calculation of softmin).}
 
-\item{data}{A n by p data matrix; each of its row is a p-dimensional sample.}
-
-\item{r}{The dimension of interest for hypothesis test.}
+\item{scaled.difference.matrix}{A n by (p-1) difference scaled.difference.matrix matrix after column-wise scaling (reference dimension - the rest);
+each of its row is a (p-1)-dimensional vector of differences.}
 
 \item{algorithm}{'LOO' or 'fold'.}
 
-\item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.}
+\item{sample.mean}{The sample mean of the n samples in scaled.difference.matrix; defaults to NULL. It can be calculated via colMeans(scaled.difference.matrix).
+If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(scaled.difference.matrix) to speed up computation.}
 
 \item{flds}{A list of row position integers corresponding to folds. It is for the fixed fold algorithm.}
 
@@ -34,50 +32,9 @@ If your experiment involves hypothesis testing over more than one dimension, pas
 
 \item{verbose}{A boolean value indicating if the number of iterations should be printed to console; defaults to FALSE.}
 
-\item{...}{Additional arguments to \link{is.lambda.feasible.LOO}, \link{is.lambda.feasible.fold}.}
-}
-\value{
-An (potentially) enlarged \eqn{\lambda}.
+\item{...}{Additional arguments to \link{is.lambda.feasible.fold}.}
 }
 \description{
 Iteratively enlarge a tuning parameter \eqn{\lambda} to enhance the power of hypothesis testing.
 The iterative algorithm ends when an enlarged \eqn{\lambda} unlikely yields the first order stability.
-}
-\examples{
-n <- 300
-mu <- (1:10)/5
-cov <- diag(length(mu))
-set.seed(31)
-data <- MASS::mvrnorm(n, mu, cov)
-sample.mean <- colMeans(data)
-
-## compute a data-driven lambda, and check its feasibility (LOO algorithm)
-lambda <- lambda.adaptive(data, 1, sample.mean=sample.mean)
-lambda.adaptive.enlarge(lambda, data, 1, algorithm='LOO',
-        sample.mean=sample.mean)
-
-## want to ensure a greater stability
-lambda.adaptive.enlarge(lambda, data, 1, algorithm='LOO',
-        sample.mean=sample.mean, threshold=0.001)
-
-## print out the number of iterations
-lambda.adaptive.enlarge(lambda, data, 1, algorithm='LOO',
-        sample.mean=sample.mean, verbose=TRUE)
-
-## compute a data-driven lambda, and check its feasibility (fold algorithm)
-flds <- caret::createFolds(1:n, k=2, list=TRUE, returnTrain=FALSE)
-lambda <- lambda.adaptive(data, 1, sample.mean=sample.mean)
-lambda.adaptive.enlarge(lambda, data, 1, algorithm='fold',
-          sample.mean=sample.mean, flds=flds)
-
-## want to ensure a greater stability
-lambda.adaptive.enlarge(lambda, data, 1, algorithm='fold',
-          sample.mean=sample.mean, flds=flds, threshold=0.001)
-
-## print out the number of iterations
-lambda.adaptive.enlarge(lambda, data, 1, algorithm='fold',
-          sample.mean=sample.mean, flds=flds, verbose=TRUE)
-}
-\seealso{
-\link{is.lambda.feasible.LOO}
 }

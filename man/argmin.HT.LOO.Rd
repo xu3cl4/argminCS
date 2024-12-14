@@ -5,39 +5,39 @@
 \title{Perform argmin hypothesis test.}
 \usage{
 argmin.HT.LOO(
-  data,
-  r,
+  difference.matrix,
   sample.mean = NULL,
-  min.algor = getMin.softmin.LOO,
+  min.algor = "softmin",
   lambda = NULL,
   const = 2.5,
   enlarge = TRUE,
   alpha = 0.05,
-  true.mean = NULL,
+  true.mean.difference = NULL,
+  output.weights = FALSE,
   ...
 )
 }
 \arguments{
-\item{data}{A n by p data matrix; each of its row is a p-dimensional sample.}
+\item{difference.matrix}{A n by (p-1) difference data matrix (reference dimension - the rest);
+each of its row is a (p-1)-dimensional vector of differences.}
 
-\item{r}{The dimension of interest for hypothesis test.}
-
-\item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
+\item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(difference.matrix).
 If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.}
 
-\item{min.algor}{The algorithm to find the minimum excluding the r-th dimension; defaults to \link{getMin.softmin.LOO}. The other option is \link{getMin.argmin.LOO}.}
+\item{min.algor}{The algorithm to find the minimum excluding the r-th dimension; defaults to 'softmin'. The other option is 'argmin'.}
 
 \item{lambda}{The real-valued tuning parameter for exponential weightings (the calculation of softmin); defaults to NULL.
 If lambda=NULL (recommended), the function would determine a lambda value in a data-driven way.}
-
-\item{const}{A scaling constant for the data driven \eqn{\lambda}; defaults to 2.5. As its value gets larger, the first order stability tends to increase while power might decrease.}
 
 \item{enlarge}{A boolean value indicating if the data-driven lambda should be determined via an iterative enlarging algorithm; defaults to TRUE.}
 
 \item{alpha}{The significance level of the hypothesis test; defaults to 0.05.}
 
-\item{true.mean}{The population mean landscape; defaults to NULL. If a vector were provided, the centered test statistic would be outputted.
+\item{true.mean.difference}{The population mean of the differences; defaults to NULL.
+If a vector were provided, the centered test statistic would be outputted.
 It is only useful for a simulation purpose.}
+
+\item{output.weights}{A boolean variable specifying whether the exponential weights should be outputted; defaults to FALSE.}
 
 \item{...}{Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}.}
 }
@@ -53,7 +53,15 @@ A list containing:\tabular{ll}{
    \tab \cr
    \code{lambda} \tab The lambda used in the hypothesis testing. \cr
    \tab \cr
+   \code{lambda.capped} \tab Boolean variable indicating the data-driven lambda has reached the large threshold n^5 \cr
+   \tab \cr
+   \code{residual.slepian} \tab The final approximate first order stability term for the data-driven lambda.
+   \tab \cr
+   \code{variance.bound} \tab The final variance bound for the data-driven lambda.
+   \tab \cr
    \code{test.stat.centered} \tab (Optional) The centered test statistic. Outputted only when true.mean is not NULL. \cr
+   \tab \cr
+   \code{exponential.weights} \tab (Optional) A (n.fold by p) matrix storing the exponential weightings in the test statistic. \cr
 }
 }
 \description{

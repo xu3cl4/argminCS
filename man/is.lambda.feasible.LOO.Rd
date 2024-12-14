@@ -6,10 +6,9 @@
 \usage{
 is.lambda.feasible.LOO(
   lambda,
-  data,
-  r,
+  scaled.difference.matrix,
   sample.mean = NULL,
-  threshold = 0.05,
+  threshold.1 = 0.05,
   threshold.2 = 0.1,
   n.pairs = 100,
   seed = NULL
@@ -18,14 +17,13 @@ is.lambda.feasible.LOO(
 \arguments{
 \item{lambda}{The real-valued tuning parameter for exponential weightings (the calculation of softmin).}
 
-\item{data}{A n by p data matrix; each of its row is a p-dimensional sample.}
+\item{scaled.difference.matrix}{A n by (p-1) difference scaled.difference.matrix matrix after column-wise scaling (reference dimension - the rest);
+each of its row is a (p-1)-dimensional vector of differences.}
 
-\item{r}{The dimension of interest for hypothesis test.}
+\item{sample.mean}{The sample mean of the n samples in scaled.difference.matrix; defaults to NULL. It can be calculated via colMeans(scaled.difference.matrix).
+If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(scaled.difference.matrix) to speed up computation.}
 
-\item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.}
-
-\item{threshold}{A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.}
+\item{threshold.1}{A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.}
 
 \item{threshold.2}{A threshold value to check if the residual term in the Slepian interpolation is bounded by the mean shift.}
 
@@ -41,22 +39,4 @@ Check the feasibility of a tuning parameter \eqn{\lambda} for LOO algorithm by e
 whether its resulting \eqn{\nabla_i K_j} is less than a threshold value,
 i.e., the first order stability is likely achieved.
 For further details, we refer to the paper Zhang et al 2024.
-}
-\examples{
-n <- 300
-mu <- (1:10)/10
-cov <- diag(length(mu))
-set.seed(31)
-data <- MASS::mvrnorm(n, mu, cov)
-sample.mean <- colMeans(data)
-
-## compute a data-driven lambda, and check its feasibility
-lambda <- lambda.adaptive(data, 1, sample.mean=sample.mean)
-is.lambda.feasible.LOO(lambda, data, 1, sample.mean=sample.mean)
-
-## want to ensure a greater stability
-is.lambda.feasible.LOO(lambda, data, 1, sample.mean=sample.mean, threshold=0.01)
-
-## smaller n.pairs to speed up computation
-is.lambda.feasible.LOO(lambda, data, 1, sample.mean=sample.mean, n.pairs=50)
 }

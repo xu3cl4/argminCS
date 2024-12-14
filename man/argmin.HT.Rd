@@ -7,14 +7,15 @@
 argmin.HT(data, r, method = "softmin.LOO", ...)
 }
 \arguments{
-\item{data}{A n by p data matrix; each of its row is a p-dimensional sample.}
+\item{data}{(1) A n by p data matrix for (GTA); each of its row is a p-dimensional sample, or
+(2) A n by (p-1) difference matrix for (SML, HML, NS, MT); each of its row is a (p-1)-dimensional sample differences}
 
 \item{r}{The dimension of interest for hypothesis test.}
 
 \item{method}{A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
 For the list of supported methods and their abbreviations, see Details.}
 
-\item{...}{Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}, \link{argmin.HT.GU}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
+\item{...}{Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
 A correct argument name needs to be specified if it is used.}
 }
 \value{
@@ -33,19 +34,10 @@ The supported methods include:\tabular{ll}{
    \code{nonsplit (NS)} \tab  A variant of SML, but no splitting is involved.
    One needs to pass a fixed lambda value as a required additional argument.\cr
    \tab \cr
-   \code{fold (FD)} \tab A n fold version of SML. \cr
-   \tab \cr
-   \code{GU} \tab The method in \insertCite{dey.2024}{argminCS}. \cr
-   \tab \cr
-   \code{CCK.self.normalization (SN)} \tab Modified from the self-normalization method in \insertCite{cck.many.moments}{argminCS}. \cr
-   \tab \cr
-   \code{CCK.bootstrap (CB)} \tab Modified from the bootstrap method in \insertCite{cck.many.moments}{argminCS}. See also \insertCite{lei.cvc}{argminCS}. \cr
-   \tab \cr
    \code{Bonferroni (MT)} \tab Multiple testing with Bonferroni's correction. \cr
    \tab \cr
-   \code{Gupta (GTA)} \tab Multiple testing with Bonferroni's correction. \cr
+   \code{Gupta (GTA)} \tab The method in \insertRef{gupta.1965}{argminCS}. \cr
 }
-If computation is a concern, use 'MT'. Otherwise, 'SML' is recommended.
 }
 \examples{
 r <- 4
@@ -57,63 +49,28 @@ data <- MASS::mvrnorm(n, mu, cov)
 sample.mean <- colMeans(data)
 
 ## softmin.LOO
-argmin.HT(data, r)
-# provide centered test statistic
-argmin.HT(data, r, true.mean=mu)
+difference.matrix.r <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
+argmin.HT(difference.matrix, r)
+# provide centered test statistic (to simulate asymptotic normality)
+true.mean.difference.r <- mu[r] - mu[-r]
+argmin.HT(difference.matrix, r, true.mean=true.mean.difference.r)
 
 ## argmin.LOO
-argmin.HT(data, r, method='HML')
+argmin.HT(difference.matrix, r, method='HML')
 
 ## nonsplit
-argmin.HT(data, r, method='NS', lambda=sqrt(n)/2.5)
-
-### fold
-## defaults to 2 fold
-argmin.HT(data, r, method='FD')
-argmin.HT(data, r, method='FD', min.algor='argmin')
-## 5 fold
-argmin.HT(data, r, method='FD', n.fold=5)
-
-### GU
-## calculate omega first
-omega <- omega.bootstrap(data, alpha=0.05)
-omega
-
-## let the function to perform data-splitting
-## and other necessary hypothesis testing preparation
-argmin.HT(data, r, method='GU', omega=omega)
-# one can also let the function to tune omega automatically
-argmin.HT(data, r, method='GU')
-
-## split the data by ourselves
-set.seed(32)
-indices.training <- sample(n, n/2, replace=FALSE)
-data.training <- data[indices.training,]
-data.testing <- data[-indices.training,]
-estimated.minimum.mean <- mean(data.testing[,which.min(colMeans(data.training))])
-argmin.HT(data, 1, method='GU', omega=omega,
-estimated.minimum.mean=estimated.minimum.mean, mean.r=mean(data.testing[,r]))
-
-## self-normalization
-argmin.HT(data, r, method='SN')
-
-## bootstrap
-argmin.HT(data, r, method='CB')
+argmin.HT(difference.matrix, r, method='NS', lambda=sqrt(n)/2.5)
 
 ## Bonferroni (choose t test because of normal data)
-argmin.HT(data, r, method='MT', test='t')
+argmin.HT(difference.matrix, r, method='MT', test='t')
 
-## Gupta (choose t test because of normal data)
+## Gupta
 critical.val <- get.quantile.gupta.selection(p=length(mu))
 argmin.HT(data, r, method='GTA', critical.val=critical.val)
 }
 \references{
 {
   \insertRef{cck.many.moments}{argminCS}
-
-  \insertRef{lei.cvc}{argminCS}
-
-  \insertRef{dey.2024}{argminCS}
 
   \insertRef{gupta.1965}{argminCS}
 

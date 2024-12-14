@@ -1,67 +1,25 @@
-#' Iteratively enlarge a tuning parameter \eqn{\lambda} in a data-driven way.
+#' Iteratively enlarge a tuning parameter \eqn{\lambda} in a scaled.difference.matrix-driven way.
 #'
 #' Iteratively enlarge a tuning parameter \eqn{\lambda} to enhance the power of hypothesis testing.
 #' The iterative algorithm ends when an enlarged \eqn{\lambda} unlikely yields the first order stability.
 #'
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
-#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
-#' @param r The dimension of interest for hypothesis test.
+#' @param scaled.difference.matrix A n by (p-1) difference scaled.difference.matrix matrix after column-wise scaling (reference dimension - the rest);
+#' each of its row is a (p-1)-dimensional vector of differences.
 #' @param algorithm 'LOO' or 'fold'.
-#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-#' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(data) to speed up computation.
+#' @param sample.mean The sample mean of the n samples in scaled.difference.matrix; defaults to NULL. It can be calculated via colMeans(scaled.difference.matrix).
+#' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(scaled.difference.matrix) to speed up computation.
 #' @param flds A list of row position integers corresponding to folds. It is for the fixed fold algorithm.
 #' @param mult.factor In each iteration, \eqn{\lambda} would be multiplied by mult.factor to yield an enlarged \eqn{\lambda}; defaults to 2.
 #' @param verbose A boolean value indicating if the number of iterations should be printed to console; defaults to FALSE.
-#' @param ... Additional arguments to \link{is.lambda.feasible.LOO}, \link{is.lambda.feasible.fold}.
-#'
-#' @return An (potentially) enlarged \eqn{\lambda}.
-#' @export
-#'
-#' @seealso \link{is.lambda.feasible.LOO}
-#'
-#' @importFrom MASS mvrnorm
-#' @importFrom caret createFolds
-#' @examples
-#' n <- 300
-#' mu <- (1:10)/5
-#' cov <- diag(length(mu))
-#' set.seed(31)
-#' data <- MASS::mvrnorm(n, mu, cov)
-#' sample.mean <- colMeans(data)
-#'
-#' ## compute a data-driven lambda, and check its feasibility (LOO algorithm)
-#' lambda <- lambda.adaptive(data, 1, sample.mean=sample.mean)
-#' lambda.adaptive.enlarge(lambda, data, 1, algorithm='LOO',
-#'         sample.mean=sample.mean)
-#'
-#' ## want to ensure a greater stability
-#' lambda.adaptive.enlarge(lambda, data, 1, algorithm='LOO',
-#'         sample.mean=sample.mean, threshold=0.001)
-#'
-#' ## print out the number of iterations
-#' lambda.adaptive.enlarge(lambda, data, 1, algorithm='LOO',
-#'         sample.mean=sample.mean, verbose=TRUE)
-#'
-#' ## compute a data-driven lambda, and check its feasibility (fold algorithm)
-#' flds <- caret::createFolds(1:n, k=2, list=TRUE, returnTrain=FALSE)
-#' lambda <- lambda.adaptive(data, 1, sample.mean=sample.mean)
-#' lambda.adaptive.enlarge(lambda, data, 1, algorithm='fold',
-#'           sample.mean=sample.mean, flds=flds)
-#'
-#' ## want to ensure a greater stability
-#' lambda.adaptive.enlarge(lambda, data, 1, algorithm='fold',
-#'           sample.mean=sample.mean, flds=flds, threshold=0.001)
-#'
-#' ## print out the number of iterations
-#' lambda.adaptive.enlarge(lambda, data, 1, algorithm='fold',
-#'           sample.mean=sample.mean, flds=flds, verbose=TRUE)
-lambda.adaptive.enlarge <- function(lambda, data, r, algorithm, sample.mean=NULL, flds=NULL,
+#' @param ... Additional arguments to \link{is.lambda.feasible.fold}.
+lambda.adaptive.enlarge <- function(lambda, scaled.difference.matrix, algorithm, sample.mean=NULL, flds=NULL,
                                     mult.factor=2, verbose=FALSE, ...){
 
-  n <- nrow(data)
+  n <- nrow(scaled.difference.matrix)
 
-  if (is.null(sample.mean) & algorithm=='LOO'){
-    sample.mean <- colMeans(data)
+  if (is.null(sample.mean)){
+    sample.mean <- colMeans(scaled.difference.matrix)
   }
 
   if (is.null(flds) & algorithm=='fold'){
@@ -70,135 +28,109 @@ lambda.adaptive.enlarge <- function(lambda, data, r, algorithm, sample.mean=NULL
 
   lambda.curr <- lambda
   lambda.next <- mult.factor*lambda
+  threshold <- n^5 # any large value
+
+  # keep track of the feasibility criterion bounds
+  residual.slepian <- 0
+  variance.bound <- 0
+  centering.shift.bound <- 0
+
+  # check feasibility of the next lambda
   if (algorithm == 'LOO'){
-    feasible <- is.lambda.feasible.LOO(lambda.next, data, r, sample.mean=sample.mean, ...)
-    #threshold <- n
-    threshold <- n^5
+    res <- is.lambda.feasible.LOO(lambda.next, scaled.difference.matrix, sample.mean=sample.mean, ...)
+    feasible <- res$feasible
+    residual.slepian.next <- res$residual.slepian
+    variance.bound.next <- res$variance.bound
+    centering.shift.bound.next <- res$centering.shift.bound
+
   } else if (algorithm == 'fold'){
     n.fold <- length(flds)
-    feasible <- is.lambda.feasible.fold(lambda.next, data, r, flds=flds,
-                                        sample.mean=sample.mean, ...)
-    if (n.fold == 2){ ## may need some experiments over threshold
-      # threshold <- n^2
-      threshold <- n^5
-    } else if (n.fold== 5){
-      # threshold <- n^(3/2)
-      threshold <- n^5
-    } else{
-      stop("lambda.adaptive.enlarge: only supports LOO, 2-fold and 5-fold algorithms for now")
-    }
+    res <- is.lambda.feasible.fold(lambda.next, scaled.difference.matrix, flds=flds,
+                                   sample.mean=sample.mean, ...)
+    feasible <- res$feasible
+    residual.slepian.next <- res$residual.slepian
+    variance.bound.next <- res$variance.bound
+    centering.shift.bound.next <- res$centering.shift.bound
+
   } else {
     stop("'algorithm' should be either 'LOO' or 'fold'")
   }
+
   count <- 1
-  while (feasible & lambda.next < threshold){
+  while (feasible & lambda.next <= threshold){
+    ## updating rule
     lambda.curr <- lambda.next
+    residual.slepian <- residual.slepian.next
+    variance.bound <- variance.bound.next
+    centering.shift.bound <- centering.shift.bound.next
     lambda.next <- mult.factor*lambda.next
+
+    ## check feasibility
     if (algorithm == 'LOO'){
-      feasible <- is.lambda.feasible.LOO(lambda.next, data, r, sample.mean=sample.mean, ...)
+      res <- is.lambda.feasible.LOO(lambda.next, scaled.difference.matrix, sample.mean=sample.mean, ...)
+      feasible <- res$feasible
+      residual.slepian.next <- res$residual.slepian
+      variance.bound.next <- res$variance.bound
+      centering.shift.bound.next <- res$centering.shift.bound
     } else {
-      feasible <- is.lambda.feasible.fold(lambda.next, data, r, flds=flds,
-                                          sample.mean=sample.mean, ...)
+      res <- is.lambda.feasible.fold(lambda.next, scaled.difference.matrix, flds=flds,
+                                     sample.mean=sample.mean, ...)
+      feasible <- res$feasible
+      residual.slepian.next <- res$residual.slepian
+      variance.bound.next <- res$variance.bound
+      centering.shift.bound.next <- res$centering.shift.bound
     }
     count <- count + 1
   }
+  if (residual.slepian == 0 & variance.bound == 0 & centering.shift.bound == 0){
+    # just to store how it fails to perform the first iteration
+    residual.slepian <- residual.slepian.next
+    variance.bound <- variance.bound.next
+    centering.shift.bound <- centering.shift.bound.next
+  }
+
   if (verbose){
     print(glue::glue('before: {lambda}, after: {lambda.curr}, iteration: {count}'))
   }
-  return (lambda.curr)
-  # return (lambda.next)
+
+  capped <- ifelse(lambda.next <= threshold, FALSE, TRUE)
+  return (list(lambda=lambda.curr, capped=capped,
+               residual.slepian=residual.slepian,
+               variance.bound=variance.bound,
+               centering.shift.bound=centering.shift.bound))
 }
 
-#' Generate a data-driven \eqn{\lambda} for LOO algorithm.
+#' Generate a scaled.difference.matrix-driven \eqn{\lambda} for LOO algorithm.
 #'
-#' Generate a data-driven \eqn{\lambda} for LOO algorithm motivated by the derivation of the first order stability.
+#' Generate a scaled.difference.matrix-driven \eqn{\lambda} for LOO algorithm motivated by the derivation of the first order stability.
 #' For its precise definition, we refer to the paper Zhang et al 2024.
 #'
-#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
-#' @param r The dimension of interest for hypothesis test.
-#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-#' @param const A scaling constant for the data driven \eqn{\lambda}; defaults to 2.5. As its value gets larger, the first order stability tends to increase while power might decrease.
+#' @param scaled.difference.matrix A n by (p-1) difference scaled.difference.matrix matrix after column-wise scaling (reference dimension - the rest);
+#' each of its row is a (p-1)-dimensional vector of differences.
+#' @param sample.mean The sample mean of the n samples in scaled.difference.matrix; defaults to NULL. It can be calculated via colMeans(scaled.difference.matrix).
+#' @param const A scaling constant for the scaled.difference.matrix driven \eqn{\lambda}; defaults to 2.5. As its value gets larger, the first order stability tends to increase while power might decrease.
 #'
-#' @return A data-driven \eqn{\lambda} for LOO algorithm.
+#' @return A scaled.difference.matrix-driven \eqn{\lambda} for LOO algorithm.
 #' @export
 #'
 #' @importFrom MASS mvrnorm
-#' @examples
-#' n <- 300
-#' mu <- (1:10)/10
-#' cov <- diag(length(mu))
-#' set.seed(31)
-#' data <- MASS::mvrnorm(n, mu, cov)
-#' sample.mean <- colMeans(data)
-#'
-#' ## compute a data-driven lambda, and check its feasibility
-#' lambda.adaptive(data, 1, sample.mean=sample.mean)
-#'
-#' ## want to ensure a greater stability
-#' lambda.adaptive(data, 1, sample.mean=sample.mean, const=3)
-lambda.adaptive <- function(data, r, sample.mean=NULL, const=2.5){
-  n <- nrow(data)
-  p <- ncol(data)
+lambda.adaptive.LOO <- function(scaled.difference.matrix, sample.mean=NULL, const=2.5){
+  n <- nrow(scaled.difference.matrix)
+  p.minus.1 <- ncol(scaled.difference.matrix)
 
   if (is.null(sample.mean)){
-    sample.mean <- colMeans(data)
+    sample.mean <- colMeans(scaled.difference.matrix)
   }
   Xs.min <- sapply(1:n, function(i){
-    mu.hat.noi <- (sample.mean*n - data[i,])/(n-1)
+    mu.hat.noi <- (sample.mean*n - scaled.difference.matrix[i,])/(n-1)
 
-    min.indices <- which(mu.hat.noi[-r] == min(mu.hat.noi[-r]))
+    min.indices <- which(mu.hat.noi == max(mu.hat.noi))
+    min.idx <- ifelse(length(min.indices) > 1,
+                      sample(c(min.indices), 1), min.indices[1])
 
-    seed <- ceiling(abs(19*i*r*data[r,r]*sample.mean[r])+i) %% (2^31 - 1)
-    withr::with_seed(seed, {
-      min.idx <- ifelse(length(min.indices) > 1,
-                        sample(c(min.indices), 1), min.indices[1])
-    })
-
-    X.min <- data[i,-r][min.idx]
+    X.min <- scaled.difference.matrix[i,min.idx]
     return (X.min)
   })
-  lambda.suggested <- sqrt(n)/(const*stats::sd(Xs.min))
-  return (lambda.suggested)
-}
-
-#' Generate a data-driven \eqn{\lambda} for fixed fold algorithm.
-#'
-#' Generate a data-driven \eqn{\lambda} for fixed fold algorithm motivated by the derivation of the first order stability.
-#'
-#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
-#' @param r The dimension of interest for hypothesis test.
-#' @param flds A list of row position integers corresponding to folds.
-#' @param const A scaling constant for the data driven \eqn{\lambda}; defaults to 2.5. As its value gets larger, the first order stability tends to increase while power might decrease.
-#'
-#' @return A data-driven \eqn{\lambda} for fixed fold algorithm.
-#' @export
-#'
-#' @importFrom caret createFolds
-#' @importFrom MASS mvrnorm
-#' @examples
-#' n <- 300
-#' mu <- (1:10)/10
-#' cov <- diag(length(mu))
-#' set.seed(31)
-#' data <- MASS::mvrnorm(n, mu, cov)
-#' flds <- caret::createFolds(1:n, k=2, list=TRUE, returnTrain=FALSE)
-#'
-#' ## compute a data-driven lambda, and check its feasibility
-#' lambda.adaptive.fold(data, 1, flds)
-#'
-#' ## want to ensure a greater stability
-#' lambda.adaptive.fold(data, 1, flds, const=3)
-lambda.adaptive.fold <- function(data, r, flds, const=2.5){
-  n <- nrow(data)
-  n.fold <- length(flds)
-
-  Xs.min <- lapply(1:n.fold, function(fold){
-    mu.out.fold <- colMeans(data[setdiff(1:n, flds[[fold]]),])
-    min.idx <- find.sub.argmin(mu.out.fold, r)
-    Xs.min.fold <- data[flds[[fold]], min.idx]
-    return (Xs.min.fold)
-  })
-  Xs.min <- do.call(c, Xs.min)
 
   return (sqrt(n)/(const*stats::sd(Xs.min)))
 }
