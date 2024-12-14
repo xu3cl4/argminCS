@@ -28,6 +28,8 @@ each of its row is a (p-1)-dimensional vector of differences.}
 \item{lambda}{The real-valued tuning parameter for exponential weightings (the calculation of softmin); defaults to NULL.
 If lambda=NULL (recommended), the function would determine a lambda value in a data-driven way.}
 
+\item{const}{The scaling constant for initial data-driven lambda}
+
 \item{enlarge}{A boolean value indicating if the data-driven lambda should be determined via an iterative enlarging algorithm; defaults to TRUE.}
 
 \item{alpha}{The significance level of the hypothesis test; defaults to 0.05.}
@@ -60,7 +62,7 @@ A list containing:\tabular{ll}{
    \tab \cr
    \code{test.stat.centered} \tab (Optional) The centered test statistic. Outputted only when true.mean is not NULL. \cr
    \tab \cr
-   \code{exponential.weights} \tab (Optional) A (n.fold by p) matrix storing the exponential weightings in the test statistic. \cr
+   \code{exponential.weights} \tab (Optional) A (n by p-1) matrix storing the exponential weightings in the test statistic. \cr
 }
 }
 \description{

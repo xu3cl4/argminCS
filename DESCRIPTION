@@ -15,7 +15,6 @@ RoxygenNote: 7.3.1
 RdMacros: Rdpack
 Imports: 
     BSDA,
-    caret,
     glue,
     LDATS,
     MASS,

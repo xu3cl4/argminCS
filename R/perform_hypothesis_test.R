@@ -66,15 +66,19 @@
 #' }
 argmin.HT <- function(data, r, method='softmin.LOO', ...){
   if (method == 'softmin.LOO' | method == 'SML'){
+    difference.matrix <- data
     return (argmin.HT.LOO(difference.matrix, ...))
 
   } else if (method == 'argmin.LOO' | method == 'HML') {
-    return (argmin.HT.LOO(difference.matrix, min.algor=getMin.argmin.LOO, ...))
+    difference.matrix <- data
+    return (argmin.HT.LOO(difference.matrix, min.algor='argmin', ...))
 
   } else if (method == 'nonsplit' | method == 'NS') {
+    difference.matrix <- data
     return (argmin.HT.nonsplit(difference.matrix, ...))
 
   } else if (method == 'Bonferroni' | method == 'MT') {
+    difference.matrix <- data
     return (argmin.HT.MT(difference.matrix, ...))
 
   } else if (method == 'Gupta' | method == 'GTA' | method=='gupta') {
@@ -97,6 +101,7 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin); defaults to NULL.
 #' If lambda=NULL (recommended), the function would determine a lambda value in a data-driven way.
 #' @inheritParams lambda.adaptive.enlarge
+#' @param const The scaling constant for initial data-driven lambda
 #' @param enlarge A boolean value indicating if the data-driven lambda should be determined via an iterative enlarging algorithm; defaults to TRUE.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
 #' @param true.mean.difference The population mean of the differences; defaults to NULL.
@@ -124,7 +129,7 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
 #'    \tab \cr
 #'    \code{test.stat.centered} \tab (Optional) The centered test statistic. Outputted only when true.mean is not NULL. \cr
 #'    \tab \cr
-#'    \code{exponential.weights} \tab (Optional) A (n.fold by p) matrix storing the exponential weightings in the test statistic. \cr
+#'    \code{exponential.weights} \tab (Optional) A (n by p-1) matrix storing the exponential weightings in the test statistic. \cr
 #' }
 argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmin',
                           lambda=NULL, const=2.5, enlarge=TRUE, alpha=0.05, true.mean.difference=NULL, output.weights=FALSE, ...){
@@ -159,7 +164,7 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
     lambda <- lambda.adaptive.LOO(scaled.difference.matrix, sample.mean=sample.mean, const=const)
     if (enlarge) {
       res <- lambda.adaptive.enlarge(
-        lambda, scaled.difference.matrix, algorithm='LOO', sample.mean=sample.mean, ...)
+        lambda, scaled.difference.matrix, sample.mean=sample.mean, ...)
       lambda <- res$lambda
       capped <- res$capped # A boolean variable indicating if the resulting lambda reaches the capped value
       residual.slepian <- res$residual.slepian
@@ -168,7 +173,7 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
   }
 
   if (output.weights){
-    # n.fold by (p-1)
+    # n by (p-1)
     exponential.weights <- matrix(0, n, p - 1)
   }
 
@@ -252,11 +257,10 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
 #' @details
 #' This method is not recommended, given its poor performance when p is small.
 #'
-#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
-#' @param r The dimension of interest for hypothesis test.
+#' @param difference.matrix A n by (p-1) difference data matrix (reference dimension - the rest);
+#' each of its row is a (p-1)-dimensional vector of differences.
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
-#' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-#' If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.
+#' @param sample.mean The sample mean of differences; defaults to NULL. It can be calculated via colMeans(difference.matrix).
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
 #'
 #' @return A list containing:\tabular{ll}{
@@ -268,20 +272,31 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
 #'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
-argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
-  n <- nrow(data)
-  val.critical <- stats::qnorm(1-alpha, 0, 1)
+argmin.HT.nonsplit <- function(difference.matrix, lambda, sample.mean=NULL, alpha=0.05){
 
+  n <- nrow(difference.matrix)
+  p <- ncol(difference.matrix)
+
+  ## scale the difference.matrix (pre-processing step)
+  sd.difference.matrix <- apply(difference.matrix, 2, stats::sd)
+  non.identical.columns <- which(!(sd.difference.matrix == 0 & difference.matrix[1,] == 0))
+  scaled.difference.matrix <- sweep(difference.matrix[,non.identical.columns],
+                                    2, sd.difference.matrix[non.identical.columns], FUN='/')
+
+  ## sample mean
   if (is.null(sample.mean)){
-    sample.mean <- colMeans(data)
+    sample.mean <- colMeans(scaled.difference.matrix)
+  } else {
+    sample.mean <- sample.mean[non.identical.columns]/sd.difference.matrix[non.identical.columns]
   }
 
-  weights <- LDATS::softmax(-lambda*sample.mean[-r])
-  Qs <- data[,-r] %*% weights
-  diffs <- data[,r] - Qs
+  val.critical <- stats::qnorm(1-alpha, 0, 1)
+
+  weights <- LDATS::softmax(lambda*sample.mean)
+  diffs <- scaled.difference.matrix %*% weights
 
   sigma <- stats::sd(diffs) # 2n
-  test.stat <- sqrt(n)*(sample.mean[r] - mean(Qs))
+  test.stat <- sqrt(n)*(mean(diffs))
   test.stat.scale <- test.stat/sigma
 
   ans <- ifelse(test.stat.scale < val.critical, 'Accept', 'Reject')
@@ -309,6 +324,7 @@ argmin.HT.nonsplit <- function(data, r, lambda, sample.mean=NULL, alpha=0.05){
 argmin.HT.MT <- function(difference.matrix, sample.mean=NULL, test='z', alpha=0.05){
 
   p <- ncol(difference.matrix) + 1
+  val.critical <- alpha
 
   sd.difference.matrix <- apply(difference.matrix, 2, stats::sd)
   non.identical.columns <- which(!(sd.difference.matrix == 0 & difference.matrix[1,] == 0))
@@ -324,7 +340,7 @@ argmin.HT.MT <- function(difference.matrix, sample.mean=NULL, test='z', alpha=0.
 
   difference.matrix.non.identical <- difference.matrix[,non.identical.columns]
   if (test == 't') {
-    res <- t.test(difference.matrix.non.identical[,argmax], alternative='greater')
+    res <- stats::t.test(difference.matrix.non.identical[,argmax], alternative='greater')
   } else {
     ## z test
     res <- BSDA::z.test(difference.matrix.non.identical[,argmax], alternative='greater')

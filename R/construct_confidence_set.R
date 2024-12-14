@@ -22,7 +22,7 @@
 #' @param method A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
 #' For the list of supported methods and their abbreviations, see Details.
 #' @param alpha The significance level; defaults to 0.05. The function produces a (1-alpha) confidence set.
-#' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}, \link{argmin.HT.fold}, \link{is.lambda.feasible.fold}, \link{argmin.HT.GU}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
+#' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
 #' A correct argument name needs to be specified if it is used.
 #'
 #' @return A vector of indices (0-based) representing the (1 - alpha) confidence set.
@@ -77,8 +77,8 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
   if (method == 'softmin.LOO' | method == 'SML'){
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
-      difference.matrix <- difference.matrix.r <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
-      sample.mean.r <- sample.mean[r] = sample.mean[-r]
+      difference.matrix <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
+      sample.mean.r <- sample.mean[r] - sample.mean[-r]
       return (argmin.HT.LOO(difference.matrix, sample.mean=sample.mean.r, alpha=alpha, ...)$ans)
       })
     return (which(res == 'Accept'))
@@ -86,7 +86,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
   } else if (method == 'argmin.LOO' | method == 'HML') {
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
-      difference.matrix <- difference.matrix.r <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
+      difference.matrix <-  matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
       sample.mean.r <- sample.mean[r] - sample.mean[-r]
       return (argmin.HT.LOO(difference.matrix, sample.mean=sample.mean.r, min.algor='argmin', alpha=alpha, ...)$ans)
     })
@@ -94,18 +94,20 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
 
   } else if (method == 'nonsplit' | method == 'NS') {
     sample.mean <- colMeans(data)
-    res <- sapply(1:p, function(r) {argmin.HT.nonsplit(data, r, sample.mean=sample.mean, alpha=alpha, ...)$ans})
+    res <- sapply(1:p, function(r) {
+      difference.matrix <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
+      sample.mean.r <- sample.mean[r] - sample.mean[-r]
+      return (argmin.HT.nonsplit(difference.matrix, sample.mean=sample.mean.r, alpha=alpha, ...)$ans)
+      })
     return (which(res == 'Accept'))
 
   } else if (method == 'Bonferroni' | method == 'MT') {
     sample.mean <- colMeans(data) # np
-    min.indices <- which(sample.mean == min(sample.mean))
-    seed <- ceiling(107*sample.mean[1]*data[n,p]) %% (2^31-1)
-    withr::with_seed(seed, {
-      r.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
-    })
-    r.min.sec <- find.sub.argmin(sample.mean, r.min)
-    res <- sapply(1:p, function(r) {argmin.HT.MT(data, r, r.min=r.min, r.min.sec=r.min.sec, alpha=alpha, ...)$ans})
+    res <- sapply(1:p, function(r) {
+      difference.matrix <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
+      sample.mean.r <- sample.mean[r] - sample.mean[-r]
+      return (argmin.HT.MT(difference.matrix, sample.mean=sample.mean.r, alpha=alpha, ...)$ans)
+      })
     return (which(res == 'Accept'))
 
   } else if (method == 'Gupta' | method == 'gupta' | method == 'GTA') {

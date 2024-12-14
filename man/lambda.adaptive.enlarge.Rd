@@ -7,9 +7,7 @@
 lambda.adaptive.enlarge(
   lambda,
   scaled.difference.matrix,
-  algorithm,
   sample.mean = NULL,
-  flds = NULL,
   mult.factor = 2,
   verbose = FALSE,
   ...
@@ -21,18 +19,14 @@ lambda.adaptive.enlarge(
 \item{scaled.difference.matrix}{A n by (p-1) difference scaled.difference.matrix matrix after column-wise scaling (reference dimension - the rest);
 each of its row is a (p-1)-dimensional vector of differences.}
 
-\item{algorithm}{'LOO' or 'fold'.}
-
 \item{sample.mean}{The sample mean of the n samples in scaled.difference.matrix; defaults to NULL. It can be calculated via colMeans(scaled.difference.matrix).
 If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(scaled.difference.matrix) to speed up computation.}
-
-\item{flds}{A list of row position integers corresponding to folds. It is for the fixed fold algorithm.}
 
 \item{mult.factor}{In each iteration, \eqn{\lambda} would be multiplied by mult.factor to yield an enlarged \eqn{\lambda}; defaults to 2.}
 
 \item{verbose}{A boolean value indicating if the number of iterations should be printed to console; defaults to FALSE.}
 
-\item{...}{Additional arguments to \link{is.lambda.feasible.fold}.}
+\item{...}{Additional arguments to \link{is.lambda.feasible.LOO}.}
 }
 \description{
 Iteratively enlarge a tuning parameter \eqn{\lambda} to enhance the power of hypothesis testing.

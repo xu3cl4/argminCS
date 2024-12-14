@@ -74,6 +74,6 @@ is.lambda.feasible.LOO <- function(lambda, scaled.difference.matrix, sample.mean
   mean.shift <- mean(diffs.weighted.true.mean)
   upper.bound.1 <- threshold.1*variance
 
-  return (list(feasible=ifelse(residual.slepian < max(upper.bound.1, upper.bound.2), TRUE, FALSE),
+  return (list(feasible=ifelse(residual.slepian < upper.bound.1, TRUE, FALSE),
                residual.slepian=residual.slepian, variance.bound=upper.bound.1))
 }

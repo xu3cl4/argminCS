@@ -14,7 +14,7 @@ For the list of supported methods and their abbreviations, see Details.}
 
 \item{alpha}{The significance level; defaults to 0.05. The function produces a (1-alpha) confidence set.}
 
-\item{...}{Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}, \link{argmin.HT.fold}, \link{is.lambda.feasible.fold}, \link{argmin.HT.GU}, \link{argmin.HT.SN}, \link{argmin.HT.bootstrap}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
+\item{...}{Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
 A correct argument name needs to be specified if it is used.}
 }
 \value{

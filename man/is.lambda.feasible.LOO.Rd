@@ -9,7 +9,6 @@ is.lambda.feasible.LOO(
   scaled.difference.matrix,
   sample.mean = NULL,
   threshold.1 = 0.05,
-  threshold.2 = 0.1,
   n.pairs = 100,
   seed = NULL
 )
@@ -24,8 +23,6 @@ each of its row is a (p-1)-dimensional vector of differences.}
 If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(scaled.difference.matrix) to speed up computation.}
 
 \item{threshold.1}{A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.}
-
-\item{threshold.2}{A threshold value to check if the residual term in the Slepian interpolation is bounded by the mean shift.}
 
 \item{n.pairs}{The number of \eqn{(i,j)} pairs for estimation; defaults to 100.}
 

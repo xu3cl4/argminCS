@@ -6,24 +6,18 @@
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
 #' @param scaled.difference.matrix A n by (p-1) difference scaled.difference.matrix matrix after column-wise scaling (reference dimension - the rest);
 #' each of its row is a (p-1)-dimensional vector of differences.
-#' @param algorithm 'LOO' or 'fold'.
 #' @param sample.mean The sample mean of the n samples in scaled.difference.matrix; defaults to NULL. It can be calculated via colMeans(scaled.difference.matrix).
 #' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(scaled.difference.matrix) to speed up computation.
-#' @param flds A list of row position integers corresponding to folds. It is for the fixed fold algorithm.
 #' @param mult.factor In each iteration, \eqn{\lambda} would be multiplied by mult.factor to yield an enlarged \eqn{\lambda}; defaults to 2.
 #' @param verbose A boolean value indicating if the number of iterations should be printed to console; defaults to FALSE.
-#' @param ... Additional arguments to \link{is.lambda.feasible.fold}.
-lambda.adaptive.enlarge <- function(lambda, scaled.difference.matrix, algorithm, sample.mean=NULL, flds=NULL,
+#' @param ... Additional arguments to \link{is.lambda.feasible.LOO}.
+lambda.adaptive.enlarge <- function(lambda, scaled.difference.matrix, sample.mean=NULL,
                                     mult.factor=2, verbose=FALSE, ...){
 
   n <- nrow(scaled.difference.matrix)
 
   if (is.null(sample.mean)){
     sample.mean <- colMeans(scaled.difference.matrix)
-  }
-
-  if (is.null(flds) & algorithm=='fold'){
-    stop("lambda.adaptive.enlarge: needs to provide 'flds' when tuning the parameter for fixed fold algorithm")
   }
 
   lambda.curr <- lambda
@@ -33,28 +27,12 @@ lambda.adaptive.enlarge <- function(lambda, scaled.difference.matrix, algorithm,
   # keep track of the feasibility criterion bounds
   residual.slepian <- 0
   variance.bound <- 0
-  centering.shift.bound <- 0
 
   # check feasibility of the next lambda
-  if (algorithm == 'LOO'){
-    res <- is.lambda.feasible.LOO(lambda.next, scaled.difference.matrix, sample.mean=sample.mean, ...)
-    feasible <- res$feasible
-    residual.slepian.next <- res$residual.slepian
-    variance.bound.next <- res$variance.bound
-    centering.shift.bound.next <- res$centering.shift.bound
-
-  } else if (algorithm == 'fold'){
-    n.fold <- length(flds)
-    res <- is.lambda.feasible.fold(lambda.next, scaled.difference.matrix, flds=flds,
-                                   sample.mean=sample.mean, ...)
-    feasible <- res$feasible
-    residual.slepian.next <- res$residual.slepian
-    variance.bound.next <- res$variance.bound
-    centering.shift.bound.next <- res$centering.shift.bound
-
-  } else {
-    stop("'algorithm' should be either 'LOO' or 'fold'")
-  }
+  res <- is.lambda.feasible.LOO(lambda.next, scaled.difference.matrix, sample.mean=sample.mean, ...)
+  feasible <- res$feasible
+  residual.slepian.next <- res$residual.slepian
+  variance.bound.next <- res$variance.bound
 
   count <- 1
   while (feasible & lambda.next <= threshold){
@@ -62,31 +40,19 @@ lambda.adaptive.enlarge <- function(lambda, scaled.difference.matrix, algorithm,
     lambda.curr <- lambda.next
     residual.slepian <- residual.slepian.next
     variance.bound <- variance.bound.next
-    centering.shift.bound <- centering.shift.bound.next
     lambda.next <- mult.factor*lambda.next
 
     ## check feasibility
-    if (algorithm == 'LOO'){
-      res <- is.lambda.feasible.LOO(lambda.next, scaled.difference.matrix, sample.mean=sample.mean, ...)
-      feasible <- res$feasible
-      residual.slepian.next <- res$residual.slepian
-      variance.bound.next <- res$variance.bound
-      centering.shift.bound.next <- res$centering.shift.bound
-    } else {
-      res <- is.lambda.feasible.fold(lambda.next, scaled.difference.matrix, flds=flds,
-                                     sample.mean=sample.mean, ...)
-      feasible <- res$feasible
-      residual.slepian.next <- res$residual.slepian
-      variance.bound.next <- res$variance.bound
-      centering.shift.bound.next <- res$centering.shift.bound
-    }
+    res <- is.lambda.feasible.LOO(lambda.next, scaled.difference.matrix, sample.mean=sample.mean, ...)
+    feasible <- res$feasible
+    residual.slepian.next <- res$residual.slepian
+    variance.bound.next <- res$variance.bound
     count <- count + 1
   }
-  if (residual.slepian == 0 & variance.bound == 0 & centering.shift.bound == 0){
+  if (residual.slepian == 0 & variance.bound == 0){
     # just to store how it fails to perform the first iteration
     residual.slepian <- residual.slepian.next
     variance.bound <- variance.bound.next
-    centering.shift.bound <- centering.shift.bound.next
   }
 
   if (verbose){
@@ -96,8 +62,7 @@ lambda.adaptive.enlarge <- function(lambda, scaled.difference.matrix, algorithm,
   capped <- ifelse(lambda.next <= threshold, FALSE, TRUE)
   return (list(lambda=lambda.curr, capped=capped,
                residual.slepian=residual.slepian,
-               variance.bound=variance.bound,
-               centering.shift.bound=centering.shift.bound))
+               variance.bound=variance.bound))
 }
 
 #' Generate a scaled.difference.matrix-driven \eqn{\lambda} for LOO algorithm.
