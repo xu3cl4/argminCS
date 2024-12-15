@@ -10,16 +10,16 @@ Welcome! Here we have source code to perform argmin hypothesis test.
 The goal of argminCS is to produce confidence set of argmin from iid
 samples with a valid type 1 control, while exhibiting desirable
 statistical power. In particular, the method ‘softmin.LOO’ is the main
-innovative component in the paper *Winners with Confidence: Discrete 
-Argmin Inference with an Application to Model Selection* by Tianyu Zhang, 
-Hao Lee and Jing Lei. Several other methods are also implemented
-within the package to ease method comparison and simulations.
+innovative component in our paper *Winners with Confidence: Argmin
+Inference over a High-Dimensional Discrete Candidate Set*. Several other
+methods are also implemented within the package to ease method
+comparison and simulations.
 
 ## Citation
 
 If you use the **argminCS** package for your research or any experiment,
-please cite our paper “Winners with Confidence: Discrete Argmin Inference 
-with an Application to Model Selection”.
+please cite our paper “Winners with Confidence: Argmin Inference over a
+High-Dimensional Discrete Candidate Set”.
 
 ## Installation
 
@@ -39,36 +39,53 @@ This is a basic example which shows you how to solve a common problem:
 library(argminCS)
 dimension <- 4
 sample.size <- 200
-mu <- (1:20)/20
+p <- 20
+mu <- (1:p)/p
 cov <- diag(length(mu))
 set.seed(108)
 data <- MASS::mvrnorm(sample.size, mu, cov)
-sample.mean <- colMeans(data)
 
 ## to test if 'dimension' is likely to be argmin with (default) softmin.LOO
-argmin.HT(data, dimension, method='SML')
+difference.matrix <- matrix(rep(data[, dimension], p-1), 
+                            ncol = p-1, 
+                            byrow = FALSE) - data[, -dimension]
+argmin.HT(difference.matrix, dimension, method='SML')
 #> $test.stat.scale
-#> [1] 0.2384774
+#> [1] -0.7101986
 #> 
 #> $critical.value
 #> [1] 1.644854
 #> 
 #> $std
-#> [1] 1.034184
+#> [1] 0.7251399
 #> 
 #> $ans
 #> [1] "Accept"
+#> 
+#> $lambda
+#> [1] 5.656854
+#> 
+#> $lambda.capped
+#> [1] FALSE
+#> 
+#> $residual.slepian
+#> [1] 0.04882178
+#> 
+#> $variance.bound
+#> [1] 0.03146688
+#> 
+#> $test.stat.centered
+#> NULL
 
 ## rather than perform a hypothesis testing for a specific dimension, 
 ## one can directly generate a discrete confidence set by 
 CS.argmin(data, method='SML')
-#> [1] 1 2 3 4 6 8
+#> [1] 1 2 5 6
 ```
 
 Regarding the details of methods and their associated tuning parameters,
 we encourage users to install the package and check function
-documentation. Note that the method in the NC state paper is not
-supported for now.
+documentation.
 <!-- What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so: -->
 
 <!-- ```{r cars} -->
@@ -97,6 +114,22 @@ Moment Inequalities.” IDEAS Working Paper Series from RePEc.
 Dey, N., M. Ryan, and J. P. Williams. 2024. “Anytime-Valid Generalized
 Universal Inference on Risk Minimizers.” *arXiv.org*.
 <https://doi.org/10.48550/arxiv.2402.00202>.
+
+</div>
+
+<div id="ref-futschik.1995" class="csl-entry">
+
+Futschik, Andreas, and Georg Pflug. 1995. “Confidence Sets for Discrete
+Stochastic Optimization.” *Annals of Operations Research* 56 (1):
+95–108. <https://doi.org/10.1007/BF02031702>.
+
+</div>
+
+<div id="ref-gupta.1965" class="csl-entry">
+
+Gupta, Shanti S. 1965. “On Some Multiple Decision (Selection and
+Ranking) Rules.” *Technometrics* 7 (2): 225–45.
+<https://doi.org/10.1080/00401706.1965.10490251>.
 
 </div>
 
