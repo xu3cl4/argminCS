@@ -141,4 +141,13 @@ American Statistical Association* 115 (532): 1978–97.
 
 </div>
 
+<div id="ref-mogstad2024inference" class="csl-entry">
+
+Mogstad, Magne, Joseph P Romano, Azeem M Shaikh, and Daniel Wilhelm.
+2024. “Inference for Ranks with Applications to Mobility Across
+Neighbourhoods and Academic Achievement Across Countries.” *Review of
+Economic Studies* 91 (1): 476–518.
+
+</div>
+
 </div>
