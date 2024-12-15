@@ -4,13 +4,13 @@
 \alias{argmin.HT}
 \title{A wrapper to perform argmin hypothesis test.}
 \usage{
-argmin.HT(data, r, method = "softmin.LOO", ...)
+argmin.HT(data, r = NULL, method = "softmin.LOO", ...)
 }
 \arguments{
 \item{data}{(1) A n by p data matrix for (GTA); each of its row is a p-dimensional sample, or
 (2) A n by (p-1) difference matrix for (SML, HML, NS, MT); each of its row is a (p-1)-dimensional sample differences}
 
-\item{r}{The dimension of interest for hypothesis test.}
+\item{r}{The dimension of interest for hypothesis test; defaults to NULL. (Only needed for GTA)}
 
 \item{method}{A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
 For the list of supported methods and their abbreviations, see Details.}
@@ -51,19 +51,19 @@ sample.mean <- colMeans(data)
 
 ## softmin.LOO
 difference.matrix.r <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
-argmin.HT(difference.matrix, r)
+argmin.HT(difference.matrix.r)
 # provide centered test statistic (to simulate asymptotic normality)
 true.mean.difference.r <- mu[r] - mu[-r]
-argmin.HT(difference.matrix, r, true.mean=true.mean.difference.r)
+argmin.HT(difference.matrix.r, true.mean=true.mean.difference.r)
 
 ## argmin.LOO
-argmin.HT(difference.matrix, r, method='HML')
+argmin.HT(difference.matrix.r, method='HML')
 
 ## nonsplit
-argmin.HT(difference.matrix, r, method='NS', lambda=sqrt(n)/2.5)
+argmin.HT(difference.matrix.r, method='NS', lambda=sqrt(n)/2.5)
 
 ## Bonferroni (choose t test because of normal data)
-argmin.HT(difference.matrix, r, method='MT', test='t')
+argmin.HT(difference.matrix.r, method='MT', test='t')
 
 ## Gupta
 critical.val <- get.quantile.gupta.selection(p=length(mu))

@@ -18,7 +18,7 @@
 #'
 #' @param data (1) A n by p data matrix for (GTA); each of its row is a p-dimensional sample, or
 #' (2) A n by (p-1) difference matrix for (SML, HML, NS, MT); each of its row is a (p-1)-dimensional sample differences
-#' @param r The dimension of interest for hypothesis test.
+#' @param r The dimension of interest for hypothesis test; defaults to NULL. (Only needed for GTA)
 #' @param method A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
 #' For the list of supported methods and their abbreviations, see Details.
 #' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
@@ -39,19 +39,19 @@
 #'
 #' ## softmin.LOO
 #' difference.matrix.r <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
-#' argmin.HT(difference.matrix, r)
+#' argmin.HT(difference.matrix.r)
 #' # provide centered test statistic (to simulate asymptotic normality)
 #' true.mean.difference.r <- mu[r] - mu[-r]
-#' argmin.HT(difference.matrix, r, true.mean=true.mean.difference.r)
+#' argmin.HT(difference.matrix.r, true.mean=true.mean.difference.r)
 #'
 #' ## argmin.LOO
-#' argmin.HT(difference.matrix, r, method='HML')
+#' argmin.HT(difference.matrix.r, method='HML')
 #'
 #' ## nonsplit
-#' argmin.HT(difference.matrix, r, method='NS', lambda=sqrt(n)/2.5)
+#' argmin.HT(difference.matrix.r, method='NS', lambda=sqrt(n)/2.5)
 #'
 #' ## Bonferroni (choose t test because of normal data)
-#' argmin.HT(difference.matrix, r, method='MT', test='t')
+#' argmin.HT(difference.matrix.r, method='MT', test='t')
 #'
 #' ## Gupta
 #' critical.val <- get.quantile.gupta.selection(p=length(mu))
@@ -64,7 +64,7 @@
 #'
 #'   \insertRef{futschik.1995}{argminCS}
 #' }
-argmin.HT <- function(data, r, method='softmin.LOO', ...){
+argmin.HT <- function(data, r=NULL, method='softmin.LOO', ...){
   if (method == 'softmin.LOO' | method == 'SML'){
     difference.matrix <- data
     return (argmin.HT.LOO(difference.matrix, ...))
@@ -123,9 +123,9 @@ argmin.HT <- function(data, r, method='softmin.LOO', ...){
 #'    \tab \cr
 #'    \code{lambda.capped} \tab Boolean variable indicating the data-driven lambda has reached the large threshold n^5 \cr
 #'    \tab \cr
-#'    \code{residual.slepian} \tab The final approximate first order stability term for the data-driven lambda.
+#'    \code{residual.slepian} \tab The final approximate first order stability term for the data-driven lambda. \cr
 #'    \tab \cr
-#'    \code{variance.bound} \tab The final variance bound for the data-driven lambda.
+#'    \code{variance.bound} \tab The final variance bound for the data-driven lambda. \cr
 #'    \tab \cr
 #'    \code{test.stat.centered} \tab (Optional) The centered test statistic. Outputted only when true.mean is not NULL. \cr
 #'    \tab \cr
@@ -206,6 +206,8 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
           diffs.weighted.centered[i] <- diffs.weighted[i] - sum(scaled.true.mean.difference*weights)
         }
       } else if (min.algor == 'argmin') {
+        residual.slepian <- NULL
+        variance.bound <- NULL
         min.indices <- which(sample.mean.noi == max(sample.mean.noi))
         seed.argmin.i <- ceiling(abs(23*sample.mean.noi[p.minus.1]*p) + i) %% (2^31-1)
         withr::with_seed(seed.argmin.i, {

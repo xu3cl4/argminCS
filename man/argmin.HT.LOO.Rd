@@ -56,9 +56,9 @@ A list containing:\tabular{ll}{
    \tab \cr
    \code{lambda.capped} \tab Boolean variable indicating the data-driven lambda has reached the large threshold n^5 \cr
    \tab \cr
-   \code{residual.slepian} \tab The final approximate first order stability term for the data-driven lambda.
+   \code{residual.slepian} \tab The final approximate first order stability term for the data-driven lambda. \cr
    \tab \cr
-   \code{variance.bound} \tab The final variance bound for the data-driven lambda.
+   \code{variance.bound} \tab The final variance bound for the data-driven lambda. \cr
    \tab \cr
    \code{test.stat.centered} \tab (Optional) The centered test statistic. Outputted only when true.mean is not NULL. \cr
    \tab \cr
