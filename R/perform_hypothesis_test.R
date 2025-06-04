@@ -132,7 +132,8 @@ argmin.HT <- function(data, r=NULL, method='softmin.LOO', ...){
 #'    \code{exponential.weights} \tab (Optional) A (n by p-1) matrix storing the exponential weightings in the test statistic. \cr
 #' }
 argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmin',
-                          lambda=NULL, const=2.5, enlarge=TRUE, alpha=0.05, true.mean.difference=NULL, output.weights=FALSE, ...){
+                          lambda=NULL, const=2.5, enlarge=TRUE, alpha=0.05,
+                          true.mean.difference=NULL, output.weights=FALSE, ...){
 
   ## scale the difference.matrix (pre-processing step)
   sd.difference.matrix <- apply(difference.matrix, 2, stats::sd)
@@ -170,6 +171,10 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
       residual.slepian <- res$residual.slepian
       variance.bound <- res$variance.bound
     }
+  } else {
+    residual.slepian <- NULL
+    variance.bound <- NULL
+    capped <- FALSE
   }
 
   if (output.weights){
@@ -208,6 +213,7 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
       } else if (min.algor == 'argmin') {
         residual.slepian <- NULL
         variance.bound <- NULL
+        capped <- FALSE
         min.indices <- which(sample.mean.noi == max(sample.mean.noi))
         seed.argmin.i <- ceiling(abs(23*sample.mean.noi[p.minus.1]*p) + i) %% (2^31-1)
         withr::with_seed(seed.argmin.i, {
