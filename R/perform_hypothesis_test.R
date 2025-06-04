@@ -174,7 +174,6 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
   } else {
     residual.slepian <- NULL
     variance.bound <- NULL
-    capped <- FALSE
   }
 
   if (output.weights){
