@@ -290,6 +290,7 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin).
 #' @param sample.mean The sample mean of differences; defaults to NULL. It can be calculated via colMeans(difference.matrix).
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
+#' @param scale.input A boolean variable specifying whether the input difference matrix should be standardized defaults to TRUE
 #'
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat.scale} \tab The scaled test statistic \cr
@@ -300,22 +301,31 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
 #'    \tab \cr
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
-argmin.HT.nonsplit <- function(difference.matrix, lambda, sample.mean=NULL, alpha=0.05){
+argmin.HT.nonsplit <- function(difference.matrix, lambda, sample.mean=NULL, alpha=0.05, scale.input=TRUE){
 
   n <- nrow(difference.matrix)
   p <- ncol(difference.matrix)
 
-  ## scale the difference.matrix (pre-processing step)
-  sd.difference.matrix <- apply(difference.matrix, 2, stats::sd)
-  non.identical.columns <- which(!(sd.difference.matrix == 0 & difference.matrix[1,] == 0))
-  scaled.difference.matrix <- sweep(difference.matrix[,non.identical.columns],
-                                    2, sd.difference.matrix[non.identical.columns], FUN='/')
+  if (scale.input) {
+    # Scale the difference.matrix (pre-processing step)
+    sd.difference.matrix <- apply(difference.matrix, 2, stats::sd)
+    # Filter out columns with zero sd and zero in first row (non-identical)
+    non.identical.columns <- which(!(sd.difference.matrix == 0 & difference.matrix[1,] == 0))
+    scaled.difference.matrix <- sweep(difference.matrix[,non.identical.columns, drop=FALSE],
+                                      2, sd.difference.matrix[non.identical.columns], FUN='/')
 
-  ## sample mean
-  if (is.null(sample.mean)){
-    sample.mean <- colMeans(scaled.difference.matrix)
+    # Adjust sample.mean accordingly
+    if (is.null(sample.mean)){
+      sample.mean <- colMeans(scaled.difference.matrix)
+    } else {
+      sample.mean <- sample.mean[non.identical.columns]/sd.difference.matrix[non.identical.columns]
+    }
   } else {
-    sample.mean <- sample.mean[non.identical.columns]/sd.difference.matrix[non.identical.columns]
+    # Use the raw matrix without scaling
+    scaled.difference.matrix <- difference.matrix
+    if (is.null(sample.mean)) {
+      sample.mean <- colMeans(difference.matrix)
+    }
   }
 
   val.critical <- stats::qnorm(1-alpha, 0, 1)
@@ -323,7 +333,7 @@ argmin.HT.nonsplit <- function(difference.matrix, lambda, sample.mean=NULL, alph
   weights <- LDATS::softmax(lambda*sample.mean)
   diffs <- scaled.difference.matrix %*% weights
 
-  sigma <- stats::sd(diffs) # 2n
+  sigma <- stats::sd(diffs)
   test.stat <- sqrt(n)*(mean(diffs))
   test.stat.scale <- test.stat/sigma
 
