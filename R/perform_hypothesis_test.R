@@ -362,7 +362,7 @@ argmin.HT.nonsplit <- function(difference.matrix, lambda, sample.mean=NULL, alph
 argmin.HT.MT <- function(difference.matrix, sample.mean=NULL, test='z', alpha=0.05){
 
   p <- ncol(difference.matrix) + 1
-  val.critical <- alpha
+  val.critical <- alpha/(p-1)
 
   sd.difference.matrix <- apply(difference.matrix, 2, stats::sd)
   non.identical.columns <- which(!(sd.difference.matrix == 0 & difference.matrix[1,] == 0))
