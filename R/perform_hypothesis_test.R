@@ -97,17 +97,17 @@ argmin.HT <- function(data, r=NULL, method='softmin.LOO', ...){
 #' @param difference.matrix A n by (p-1) difference data matrix (reference dimension - the rest);
 #' each of its row is a (p-1)-dimensional vector of differences.
 #' @param sample.mean The sample mean of differences; defaults to NULL. It can be calculated via colMeans(difference.matrix).
-#' @param min.algor The algorithm to find the minimum excluding the r-th dimension; defaults to 'softmin'. The other option is 'argmin'.
+#' @param min.algor The algorithm to compute the test statistic by weighting across dimensions; 'softmin' uses exponential weighting,
+#' while 'argmin' picks the largest mean coordinate directly. Defaults to 'softmin'.
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin); defaults to NULL.
 #' If lambda=NULL (recommended), the function would determine a lambda value in a data-driven way.
 #' @inheritParams lambda.adaptive.enlarge
 #' @param const The scaling constant for initial data-driven lambda
 #' @param enlarge A boolean value indicating if the data-driven lambda should be determined via an iterative enlarging algorithm; defaults to TRUE.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
-#' @param true.mean.difference The population mean of the differences; defaults to NULL.
-#' If a vector were provided, the centered test statistic would be outputted.
-#' It is only useful for a simulation purpose.
+#' @param true.mean.difference The population mean of the differences. (Optional); used to compute a centered test statistic for simulation or diagnostic purposes.
 #' @param output.weights A boolean variable specifying whether the exponential weights should be outputted; defaults to FALSE.
+#' @param scale.input A boolean variable specifying whether the input difference matrix should be standardized defaults to TRUE
 #' @param ... Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}.
 #'
 #' @return A list containing:\tabular{ll}{
@@ -117,7 +117,7 @@ argmin.HT <- function(data, r=NULL, method='softmin.LOO', ...){
 #'    \tab \cr
 #'    \code{std} \tab The standard deviation estimate. \cr
 #'    \tab \cr
-#'    \code{ans} \tab 'Reject' or 'Accept' \cr
+#'    \code{ans} \tab A character string: either 'Reject' or 'Accept', depending on the test outcome. \cr
 #'    \tab \cr
 #'    \code{lambda} \tab The lambda used in the hypothesis testing. \cr
 #'    \tab \cr
@@ -127,30 +127,47 @@ argmin.HT <- function(data, r=NULL, method='softmin.LOO', ...){
 #'    \tab \cr
 #'    \code{variance.bound} \tab The final variance bound for the data-driven lambda. \cr
 #'    \tab \cr
-#'    \code{test.stat.centered} \tab (Optional) The centered test statistic. Outputted only when true.mean is not NULL. \cr
+#'    \code{test.stat.centered} \tab (Optional) The centered test statistic, computed only if \code{true.mean.difference} is provided. \cr
 #'    \tab \cr
 #'    \code{exponential.weights} \tab (Optional) A (n by p-1) matrix storing the exponential weightings in the test statistic. \cr
 #' }
 argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmin',
                           lambda=NULL, const=2.5, enlarge=TRUE, alpha=0.05,
-                          true.mean.difference=NULL, output.weights=FALSE, ...){
+                          true.mean.difference=NULL, output.weights=FALSE, scale.input=TRUE,
+                          ...){
 
-  ## scale the difference.matrix (pre-processing step)
-  sd.difference.matrix <- apply(difference.matrix, 2, stats::sd)
-  non.identical.columns <- which(!(sd.difference.matrix == 0 & difference.matrix[1,] == 0))
-  scaled.difference.matrix <- sweep(difference.matrix[,non.identical.columns],
-                                    2, sd.difference.matrix[non.identical.columns], FUN='/')
+  ## Pre-processing: scale the difference.matrix or not
+  if (scale.input) {
+    sd.difference.matrix <- apply(difference.matrix, 2, stats::sd)
 
-  ## sample mean
-  if (is.null(sample.mean)){
-    sample.mean <- colMeans(scaled.difference.matrix)
+    # Exclude columns with zero standard deviation
+    non.identical.columns <- which(sd.difference.matrix != 0)
+
+    # Scale the matrix while preserving matrix structure in case of single-column extraction
+    scaled.difference.matrix <- sweep(difference.matrix[, non.identical.columns, drop=FALSE],
+                                      2, sd.difference.matrix[non.identical.columns], FUN='/')
+
+    # Adjust sample.mean and true.mean.difference accordingly
+    if (is.null(sample.mean)) {
+      sample.mean <- colMeans(scaled.difference.matrix)
+    } else {
+      sample.mean <- sample.mean[non.identical.columns]/sd.difference.matrix[non.identical.columns]
+    }
+
+    if (!is.null(true.mean.difference)) {
+      scaled.true.mean.difference <- true.mean.difference[non.identical.columns]/sd.difference.matrix[non.identical.columns]
+    }
   } else {
-    sample.mean <- sample.mean[non.identical.columns]/sd.difference.matrix[non.identical.columns]
-  }
+    # Use the raw matrix
+    scaled.difference.matrix <- difference.matrix
 
-  if (!is.null(true.mean.difference)){
-    scaled.true.mean.difference <- true.mean.difference/sd.difference.matrix
-    scaled.true.mean.difference <- scaled.true.mean.difference[non.identical.columns]
+    if (is.null(sample.mean)) {
+      sample.mean <- colMeans(difference.matrix)
+    }
+
+    if (!is.null(true.mean.difference)) {
+      scaled.true.mean.difference <- true.mean.difference
+    }
   }
 
   ## parameters
@@ -159,8 +176,13 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
   p <- p.minus.1 + 1
   val.critical <- stats::qnorm(1-alpha, 0, 1)
 
-  ## determine lambda if needed
+  ## some initializations
+  residual.slepian <- NULL
+  variance.bound <- NULL
   capped <- FALSE
+  test.stat.centered <- NULL
+
+  ## determine lambda if needed
   if (is.null(lambda) & min.algor=='softmin'){
     lambda <- lambda.adaptive.LOO(scaled.difference.matrix, sample.mean=sample.mean, const=const)
     if (enlarge) {
@@ -171,9 +193,6 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
       residual.slepian <- res$residual.slepian
       variance.bound <- res$variance.bound
     }
-  } else {
-    residual.slepian <- NULL
-    variance.bound <- NULL
   }
 
   if (output.weights){
@@ -181,11 +200,11 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
     exponential.weights <- matrix(0, n, p - 1)
   }
 
-  test.stat.centered <- NULL
   if (p == 2){
     ## the algorithm reduces to the pairwise t-test
-    sigma <- 1
+    sigma <- stats::sd(scaled.difference.matrix[,1])
     test.stat <- sqrt(n)*mean(scaled.difference.matrix[,1]) ## already scaled
+    test.stat.scale <- test.stat/sigma
     ans <- ifelse(test.stat < val.critical, 'Accept', 'Reject')
 
     ## ouptput centered test statistic
@@ -210,9 +229,6 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
           diffs.weighted.centered[i] <- diffs.weighted[i] - sum(scaled.true.mean.difference*weights)
         }
       } else if (min.algor == 'argmin') {
-        residual.slepian <- NULL
-        variance.bound <- NULL
-        capped <- FALSE
         min.indices <- which(sample.mean.noi == max(sample.mean.noi))
         seed.argmin.i <- ceiling(abs(23*sample.mean.noi[p.minus.1]*p) + i) %% (2^31-1)
         withr::with_seed(seed.argmin.i, {
@@ -240,20 +256,20 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
     }
   }
 
-  if(output.weights){
-    return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans,
-                 lambda=lambda, lambda.capped=capped,
-                 residual.slepian=residual.slepian,
-                 variance.bound=variance.bound,
-                 test.stat.centered=test.stat.centered,
-                 exponential.weights=exponential.weights))
-  } else {
-    return (list(test.stat.scale=test.stat.scale, critical.value=val.critical, std=sigma, ans=ans,
-                 lambda=lambda, lambda.capped=capped,
-                 residual.slepian=residual.slepian,
-                 variance.bound=variance.bound,
-                 test.stat.centered=test.stat.centered))
+  out <- list(test.stat.scale = test.stat.scale,
+              critical.value = val.critical,
+              std = sigma,
+              ans = ans,
+              lambda = lambda,
+              lambda.capped = capped,
+              residual.slepian = residual.slepian,
+              variance.bound = variance.bound,
+              test.stat.centered = test.stat.centered)
+
+  if (output.weights) {
+    out$exponential.weights <- exponential.weights
   }
+  return (out)
 }
 
 
