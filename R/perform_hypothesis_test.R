@@ -453,7 +453,7 @@ get.quantile.gupta.selection <- function(p, alpha=0.05, N=100000){
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
 #' If performing multiple tests across dimensions, pre-computing \code{sample.mean} and \code{critical.val}
 #' can significantly reduce computation time.
-#' @param stds A vector of (population) standard deviations for each dimension; defaults to a vector of 1's.
+#' @param stds A vector of the same (population) standard deviations for all dimensions; defaults to a vector of 1's.
 #' These are used to standardize the sample means.
 #' @param critical.val The quantile for the hypothesis test; defaults to NULL. It can be calculated via \link{get.quantile.gupta.selection}.
 #' If your experiment involves hypothesis testing over more than one dimension, pass a quantile to speed up computation.

@@ -11,9 +11,11 @@
 #'   \tab \cr
 #'   \code{Bonferroni (MT)} \tab Multiple testing using Bonferroni correction. \cr
 #'   \tab \cr
-#'   \code{Gupta (GTA)} \tab The method proposed by \insertCite{gupta.1965}{argminCS}. \cr
+#'   \code{Gupta (GTA)} \tab The method proposed by \insertCite{gupta.1965}{argminCS}.
+#'   Requires independence and the same population standard deviation for all dimensions. \cr
 #'   \tab \cr
 #'   \code{Futschik (FCHK)} \tab A two-step method from \insertCite{futschik.1995}{argminCS}. \cr
+#'   Requires independence and the same population standard deviation for all dimensions. \cr
 #' }
 #'
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
@@ -75,8 +77,8 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
   if (method %in% c('softmin.LOO', 'SML', 'sml')){
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
-      difference.matrix <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
-      sample.mean.r <- sample.mean[r] - sample.mean[-r]
+      difference.matrix <- get.difference.matrix(data, r)
+      sample.mean.r <- get.sample.mean(sample.mean, r)
       return (argmin.HT.LOO(difference.matrix, sample.mean=sample.mean.r, alpha=alpha, ...)$ans)
       })
     return (which(res == 'Accept'))
@@ -84,8 +86,8 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
   } else if (method %in% c('argmin.LOO', 'HML', 'hml')) {
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
-      difference.matrix <-  matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
-      sample.mean.r <- sample.mean[r] - sample.mean[-r]
+      difference.matrix <- get.difference.matrix(data, r)
+      sample.mean.r <- get.sample.mean(sample.mean, r)
       return (argmin.HT.LOO(difference.matrix, sample.mean=sample.mean.r, min.algor='argmin', alpha=alpha, ...)$ans)
     })
     return (which(res == 'Accept'))
@@ -93,8 +95,8 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
   } else if (method %in% c('nonsplit', 'NS', 'ns')) {
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
-      difference.matrix <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
-      sample.mean.r <- sample.mean[r] - sample.mean[-r]
+      difference.matrix <- get.difference.matrix(data, r)
+      sample.mean.r <- get.sample.mean(sample.mean, r)
       return (argmin.HT.nonsplit(difference.matrix, sample.mean=sample.mean.r, alpha=alpha, ...)$ans)
       })
     return (which(res == 'Accept'))
@@ -102,8 +104,8 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
   } else if (method %in% c('Bonferroni', 'bonferroni', 'MT', 'mt')) {
     sample.mean <- colMeans(data) # np
     res <- sapply(1:p, function(r) {
-      difference.matrix <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
-      sample.mean.r <- sample.mean[r] - sample.mean[-r]
+      difference.matrix <- get.difference.matrix(data, r)
+      sample.mean.r <- get.sample.mean(sample.mean, r)
       return (argmin.HT.MT(difference.matrix, sample.mean=sample.mean.r, alpha=alpha, ...)$ans)
       })
     return (which(res == 'Accept'))
@@ -148,9 +150,9 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
       stds <- rep(std, p)
     } else {
       stds <- rep(1, p)
+      ## the method does not support the use of sample standard deviations
+      # stds <- apply(data, 2, stats::sd)
     }
-    ## the method does not support the use of sample standard deviations
-    # stds <- apply(data, 2, stats::sd)
 
     sample.mean <- colMeans(data)
     # step 1
@@ -196,10 +198,6 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
 #' diff.mat <- get.difference.matrix(data, r = 2)
 #'
 #' @keywords internal
-get.difference.matrix <- function(data, r) {
-  matrix(rep(data[, r], ncol(data) - 1), ncol = ncol(data) - 1, byrow = FALSE) - data[, -r]
-}
-
 get.difference.matrix <- function(data, r) {
   difference.matrix <- matrix(rep(data[, r], ncol(data) - 1), ncol = ncol(data) - 1, byrow = FALSE) - data[, -r]
   return (difference.matrix)
