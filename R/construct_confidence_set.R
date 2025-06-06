@@ -1,31 +1,29 @@
 #' Construct a discrete confidence set for argmin.
 #'
-#' This is a wrapper to construct a discrete confidence set for argmin.. Multiple methods are supported.
+#' This is a wrapper to construct a discrete confidence set for argmin. Multiple methods are supported.
 #'
 #' @details The supported methods include:\tabular{ll}{
-#'    \code{softmin.LOO (SML)} \tab LOO (leave-one-out) algorithm, using the exponential weightings. \cr
-#'    \tab \cr
-#'    \code{argmin.LOO (HML)} \tab A variant of SML, but it uses (hard) argmin rather than exponential weighting.
-#'    The method is not recommended. \cr
-#'    \tab \cr
-#'    \code{nonsplit (NS)} \tab  A variant of SML, but no splitting is involved.
-#'    One needs to pass a fixed lambda value as a required additional argument.\cr
-#'    \tab \cr
-#'    \code{Bonferroni (MT)} \tab Multiple testing with Bonferroni's correction. \cr
-#'    \tab \cr
-#'    \code{Gupta (GTA)} \tab The method in \insertCite{gupta.1965}{argminCS}. \cr
-#'    \tab \cr
-#'    \code{Futschik (FCHK)} \tab The two-step method in \insertCite{futschik.1995}{argminCS} \cr
+#'   \code{softmin.LOO (SML)} \tab Leave-one-out algorithm using exponential weighting. \cr
+#'   \tab \cr
+#'   \code{argmin.LOO (HML)} \tab A variant of SML that uses hard argmin instead of exponential weighting. Not recommended. \cr
+#'   \tab \cr
+#'   \code{nonsplit (NS)} \tab A variant of SML without data splitting. Requires a fixed lambda value as an additional argument. \cr
+#'   \tab \cr
+#'   \code{Bonferroni (MT)} \tab Multiple testing using Bonferroni correction. \cr
+#'   \tab \cr
+#'   \code{Gupta (GTA)} \tab The method proposed by \insertCite{gupta.1965}{argminCS}. \cr
+#'   \tab \cr
+#'   \code{Futschik (FCHK)} \tab A two-step method from \insertCite{futschik.1995}{argminCS}. \cr
 #' }
 #'
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
-#' @param method A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
-#' For the list of supported methods and their abbreviations, see Details.
-#' @param alpha The significance level; defaults to 0.05. The function produces a (1-alpha) confidence set.
+#' @param method A string indicating the method used to construct the confidence set. Defaults to 'softmin.LOO'.
+#' Can be abbreviated (e.g., 'SML' for 'softmin.LOO'). See **Details** for available methods and abbreviations.
+#' @param alpha The significance level; defaults to 0.05. The function produces a \eqn{1 - \alpha} confidence set.
 #' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
 #' A correct argument name needs to be specified if it is used.
 #'
-#' @return A vector of indices (0-based) representing the (1 - alpha) confidence set.
+#' @return A vector of indices (1-based) representing the (1 - alpha) confidence set.
 #' @export
 #'
 #' @examples
@@ -74,7 +72,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
   n <- nrow(data)
   p <- ncol(data)
 
-  if (method == 'softmin.LOO' | method == 'SML'){
+  if (method %in% c('softmin.LOO', 'SML', 'sml')){
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
       difference.matrix <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
@@ -83,7 +81,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
       })
     return (which(res == 'Accept'))
 
-  } else if (method == 'argmin.LOO' | method == 'HML') {
+  } else if (method %in% c('argmin.LOO', 'HML', 'hml')) {
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
       difference.matrix <-  matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
@@ -92,7 +90,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     })
     return (which(res == 'Accept'))
 
-  } else if (method == 'nonsplit' | method == 'NS') {
+  } else if (method %in% c('nonsplit', 'NS', 'ns')) {
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
       difference.matrix <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
@@ -101,7 +99,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
       })
     return (which(res == 'Accept'))
 
-  } else if (method == 'Bonferroni' | method == 'MT') {
+  } else if (method %in% c('Bonferroni', 'bonferroni', 'MT', 'mt')) {
     sample.mean <- colMeans(data) # np
     res <- sapply(1:p, function(r) {
       difference.matrix <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
@@ -110,7 +108,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
       })
     return (which(res == 'Accept'))
 
-  } else if (method == 'Gupta' | method == 'gupta' | method == 'GTA') {
+  } else if (method %in% c('Gupta', 'gupta', 'GTA', 'gta')) {
     p <- ncol(data)
     critical.val <- get.quantile.gupta.selection(p=p, alpha=alpha)
     sample.mean <- colMeans(data)
@@ -123,14 +121,14 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     } else {
       stds <- rep(1, p)
       # the method does not support the use of sample standard deviations
-      #stds <- apply(data, 2, stats::sd)
+      # stds <- apply(data, 2, stats::sd)
     }
     res <- sapply(1:p, function(r) {argmin.HT.gupta(
       data, r, critical.val=critical.val, sample.mean=sample.mean, stds=stds, alpha=alpha, ...)$ans})
 
     return (which(res == 'Accept'))
 
-  } else if (method == 'futschik' | method == 'Futschik' | method == 'FCHK'){
+  } else if (method %in% c('futschik', 'FCHK', 'fchk')) {
 
     additional.arguments <- list(...)
     if (methods::hasArg(alpha.1) & methods::hasArg(alpha.2)){
@@ -177,7 +175,54 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
 
   } else {
     stop("'method' should be one of 'softmin.LOO' (SML), 'argmin.LOO' (HML),
-         'nonsplit' (NS), 'Bonferroni' (MT), Gupta (GTA), 'Futschik (FCHK)")
+       'nonsplit' (NS), 'Bonferroni' (MT), 'Gupta' (GTA), 'Futschik' (FCHK)")
   }
 }
+
+#' Construct a difference matrix for argmin hypothesis testing
+#'
+#' Given a data matrix and a reference column index, construct the difference matrix
+#' used in hypothesis testing procedures. Each column represents the difference
+#' between the reference dimension and one of the remaining dimensions.
+#'
+#' @param data A \code{n} by \code{p} data matrix; each row is a \code{p}-dimensional sample.
+#' @param r An integer between 1 and \code{p}, indicating the reference column (dimension).
+#'
+#' @return A \code{n} by \code{(p-1)} matrix where each row is the difference between the \code{r}-th column and the remaining columns.
+#'
+#' @examples
+#' set.seed(1)
+#' data <- matrix(rnorm(50), nrow = 10)
+#' diff.mat <- get.difference.matrix(data, r = 2)
+#'
+#' @keywords internal
+get.difference.matrix <- function(data, r) {
+  matrix(rep(data[, r], ncol(data) - 1), ncol = ncol(data) - 1, byrow = FALSE) - data[, -r]
+}
+
+get.difference.matrix <- function(data, r) {
+  difference.matrix <- matrix(rep(data[, r], ncol(data) - 1), ncol = ncol(data) - 1, byrow = FALSE) - data[, -r]
+  return (difference.matrix)
+}
+
+#' Compute sample mean differences for hypothesis testing
+#'
+#' Computes the vector of differences between the sample mean at the reference index
+#' and the remaining dimensions.
+#'
+#' @param sample.mean A vector of length \code{p} containing the sample means of each dimension.
+#' @param r An integer between 1 and \code{p}, indicating the reference dimension.
+#'
+#' @return A vector of length \code{p - 1} giving the differences: sample.mean[r] - sample.mean[-r].
+#'
+#' @examples
+#' sample.mean <- 1:5
+#' get.sample.mean.r(sample.mean, r = 3)
+#'
+#' @keywords internal
+get.sample.mean.r <- function(sample.mean, r) {
+  return (sample.mean[r] - sample.mean[-r])
+}
+
+
 
