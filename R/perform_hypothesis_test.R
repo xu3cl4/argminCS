@@ -64,30 +64,35 @@
 #'
 #'   \insertRef{futschik.1995}{argminCS}
 #' }
-argmin.HT <- function(data, r=NULL, method='softmin.LOO', ...){
-  if (method == 'softmin.LOO' | method == 'SML'){
-    difference.matrix <- data
-    return (argmin.HT.LOO(difference.matrix, ...))
+argmin.HT <- function(data, r = NULL, method = 'softmin.LOO', ...) {
+  method <- tolower(method)  # Case-insensitive matching
+  method <- match.arg(method,
+                      choices = c('softmin.loo', 'sml',
+                                  'argmin.loo', 'hml',
+                                  'nonsplit', 'ns',
+                                  'bonferroni', 'mt',
+                                  'gupta', 'gta', 'gupta'))
 
-  } else if (method == 'argmin.LOO' | method == 'HML') {
-    difference.matrix <- data
-    return (argmin.HT.LOO(difference.matrix, min.algor='argmin', ...))
-
-  } else if (method == 'nonsplit' | method == 'NS') {
-    difference.matrix <- data
-    return (argmin.HT.nonsplit(difference.matrix, ...))
-
-  } else if (method == 'Bonferroni' | method == 'MT') {
-    difference.matrix <- data
-    return (argmin.HT.MT(difference.matrix, ...))
-
-  } else if (method == 'Gupta' | method == 'GTA' | method=='gupta') {
-    return (argmin.HT.gupta(data, r, ...))
-
-  } else {
-    stop("'method' should be one of 'softmin.LOO' (SML), 'argmin.LOO' (HML),
-         'nonsplit' (NS), 'Bonferroni' (MT), 'Gupta' (GTA)")
+  # Precompute difference.matrix if needed
+  methods.needing.differences <- c('softmin.loo', 'sml', 'argmin.loo', 'hml', 'nonsplit', 'ns', 'bonferroni', 'mt')
+  if (method %in% methods.needing.differences) {
+    if (is.null(r)) {
+      difference.matrix <- data
+    } else {
+      p <- ncol(data)
+      difference.matrix <- matrix(rep(data[, r], p - 1), ncol = p - 1, byrow = FALSE) - data[, -r]
+    }
   }
+
+  # Dispatch based on method
+  switch(method,
+         'softmin.loo' =, 'sml' = argmin.HT.LOO(difference.matrix, ...),
+         'argmin.loo' =, 'hml' = argmin.HT.LOO(difference.matrix, min.algor = 'argmin', ...),
+         'nonsplit' =, 'ns' = argmin.HT.nonsplit(difference.matrix, ...),
+         'bonferroni' =, 'mt' = argmin.HT.MT(difference.matrix, ...),
+         'gupta' =, 'gta' = argmin.HT.gupta(data, r, ...),
+         stop("'method' should be one of: 'softmin.LOO' (SML), 'argmin.LOO' (HML), 'nonsplit' (NS), 'Bonferroni' (MT), or 'Gupta' (GTA)")
+  )
 }
 
 #' Perform argmin hypothesis test.
