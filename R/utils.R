@@ -2,6 +2,7 @@
 #'
 #' @param nums A vector of numbers
 #' @param idx An index to be excluded
+#' @param seed Optional. If provided, used to seed the random sampling (for reproducibility).
 #'
 #' @return The index of the second smallest dimension (as an integer).
 #' @export
@@ -14,12 +15,24 @@
 #' nums <- c(1,1,2)
 #' find.sub.argmin(nums,1)
 #' ## return 2
-find.sub.argmin <- function(nums, idx){
+find.sub.argmin <- function(nums, idx, seed=NULL){
 
   min.val <- min(nums[-idx])
   min.indices <- setdiff(which(nums == min.val), c(idx))
-  withr::with_seed(ceiling(abs(idx*7+nums[idx]) + idx), {
-    min.idx.sec <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
-  })
+  if (!is.null(seed)) {
+    withr::with_seed(seed, {
+      if (length(min.indices) > 1) {
+        min.idx.sec <- sample(min.indices, 1)
+      } else {
+        min.idx.sec <- min.indices[1]
+      }
+    })
+  } else {
+    if (length(min.indices) > 1) {
+      min.idx.sec <- sample(min.indices, 1)
+    } else {
+      min.idx.sec <- min.indices[1]
+    }
+  }
   return (min.idx.sec)
 }
