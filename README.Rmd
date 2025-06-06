@@ -51,7 +51,7 @@ data <- MASS::mvrnorm(sample.size, mu, cov)
 difference.matrix <- matrix(rep(data[, dimension], p-1), 
                             ncol = p-1, 
                             byrow = FALSE) - data[, -dimension]
-argmin.HT(difference.matrix, dimension, method='SML')
+argmin.HT(difference.matrix, method='SML')
 
 ## rather than perform a hypothesis testing for a specific dimension, 
 ## one can directly generate a discrete confidence set by 

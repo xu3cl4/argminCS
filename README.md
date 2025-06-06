@@ -49,7 +49,7 @@ data <- MASS::mvrnorm(sample.size, mu, cov)
 difference.matrix <- matrix(rep(data[, dimension], p-1), 
                             ncol = p-1, 
                             byrow = FALSE) - data[, -dimension]
-argmin.HT(difference.matrix, dimension, method='SML')
+argmin.HT(difference.matrix, method='SML')
 #> $test.stat.scale
 #> [1] -0.7101986
 #> 
