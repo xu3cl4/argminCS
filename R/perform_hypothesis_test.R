@@ -43,6 +43,10 @@
 #' # provide centered test statistic (to simulate asymptotic normality)
 #' true.mean.difference.r <- mu[r] - mu[-r]
 #' argmin.HT(difference.matrix.r, true.mean=true.mean.difference.r)
+#' # keep the data unstandardized
+#' argmin.HT(difference.matrix.r, scale.input=FALSE)
+#' # use an user-specified lambda
+#' argmin.HT(difference.matrix.r, lambda=sqrt{n}/2.5)
 #'
 #' ## argmin.LOO
 #' argmin.HT(difference.matrix.r, method='HML')
@@ -348,8 +352,8 @@ argmin.HT.nonsplit <- function(difference.matrix, lambda, sample.mean=NULL, alph
 #' @param difference.matrix A n by (p-1) difference data matrix (reference dimension - the rest);
 #' each of its row is a (p-1)-dimensional vector of differences.
 #' @param sample.mean The sample mean of differences; defaults to NULL. It can be calculated via colMeans(difference.matrix).
-#' @param test The test to perform: 't' or 'z' test; defaults to 'z'.
-#' If data are believed to be normally distributed, use 't'; otherwise 'z'.
+#' @param test The test to perform: 't' or 'z'; defaults to 'z'.
+#' If the data are assumed normally distributed, use 't'; otherwise 'z'.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
 #'
 #' @return A list containing:\tabular{ll}{
@@ -361,6 +365,8 @@ argmin.HT.nonsplit <- function(difference.matrix, lambda, sample.mean=NULL, alph
 #' }
 argmin.HT.MT <- function(difference.matrix, sample.mean=NULL, test='z', alpha=0.05){
 
+  test <- match.arg(test, choices = c('t', 'z'))
+
   p <- ncol(difference.matrix) + 1
   val.critical <- alpha/(p-1)
 
@@ -368,7 +374,7 @@ argmin.HT.MT <- function(difference.matrix, sample.mean=NULL, test='z', alpha=0.
   non.identical.columns <- which(!(sd.difference.matrix == 0 & difference.matrix[1,] == 0))
 
   if (is.null(sample.mean)){
-    mean.difference <- colMeans(difference.matrix[,non.identical.columns])
+    mean.difference <- colMeans(difference.matrix[,non.identical.columns,drop = FALSE])
   } else {
     mean.difference <- sample.mean[non.identical.columns]
   }
@@ -376,7 +382,7 @@ argmin.HT.MT <- function(difference.matrix, sample.mean=NULL, test='z', alpha=0.
   scaled.mean.differences <- mean.difference/sd.difference.matrix[non.identical.columns]
   argmax <- which.max(scaled.mean.differences)
 
-  difference.matrix.non.identical <- difference.matrix[,non.identical.columns]
+  difference.matrix.non.identical <- difference.matrix[,non.identical.columns,drop = FALSE]
   if (test == 't') {
     res <- stats::t.test(difference.matrix.non.identical[,argmax], alternative='greater')
   } else {
@@ -384,8 +390,8 @@ argmin.HT.MT <- function(difference.matrix, sample.mean=NULL, test='z', alpha=0.
     res <- BSDA::z.test(difference.matrix.non.identical[,argmax], alternative='greater')
   }
   p.val <- res$p.value
-
   ans <- ifelse(p.val > val.critical, 'Accept', 'Reject')
+
   return (list(p.val=p.val, critical.value=val.critical, ans=ans))
 }
 
@@ -436,17 +442,19 @@ get.quantile.gupta.selection <- function(p, alpha=0.05, N=100000){
   }
 }
 
-#' @title Perform argmin hypothesis test.
+#' @title Perform argmin hypothesis test using Gupta's method.
 #'
-#' @description Test if a dimension may be argmin, using the method in \insertCite{gupta.1965}{argminCS}.
+#' @description Test whether a dimension is the argmin, using the method in \insertCite{gupta.1965}{argminCS}.
 #'
 #' @note This method requires independence among the dimensions.
 #'
 #' @param data A n by p data matrix; each of its row is a p-dimensional sample.
 #' @param r The dimension of interest for hypothesis test.
 #' @param sample.mean The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-#' If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.
-#' @param stds The equal dimension-wise ( population) standard deviations of the n samples in data; defaults a vector of 1's.
+#' If performing multiple tests across dimensions, pre-computing \code{sample.mean} and \code{critical.val}
+#' can significantly reduce computation time.
+#' @param stds A vector of (population) standard deviations for each dimension; defaults to a vector of 1's.
+#' These are used to standardize the sample means.
 #' @param critical.val The quantile for the hypothesis test; defaults to NULL. It can be calculated via \link{get.quantile.gupta.selection}.
 #' If your experiment involves hypothesis testing over more than one dimension, pass a quantile to speed up computation.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
@@ -473,6 +481,8 @@ argmin.HT.gupta <- function(data, r, sample.mean=NULL, stds=NULL, critical.val=N
   # to speed up the computation, in case that there are many dimensions involving.
   n <- nrow(data)
   p <- ncol(data)
+
+  if (r < 1 || r > p) stop("Parameter 'r' must be an integer between 1 and the number of columns in 'data'.")
 
   if (is.null(critical.val)){
     critical.val <- get.quantile.gupta.selection(p=p, alpha=alpha, ...)
