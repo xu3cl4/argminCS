@@ -19,8 +19,7 @@
 #'
 #' @importFrom MASS mvrnorm
 is.lambda.feasible.LOO <- function(lambda, scaled.difference.matrix, sample.mean=NULL,
-                                   threshold.1=0.05,
-                                   n.pairs=100, seed=NULL){
+                                   threshold.1=0.05, n.pairs=100, seed=NULL){
 
   n <- nrow(scaled.difference.matrix)
   p.minus.1 <- ncol(scaled.difference.matrix)
@@ -34,18 +33,20 @@ is.lambda.feasible.LOO <- function(lambda, scaled.difference.matrix, sample.mean
   ## use at most 100 pairs of samples for estimation
   n.pairs <- min(n.pairs, n)
 
-  # subsample from the given sample
-  if (is.null(seed)){
-    seed <- ceiling(abs(17*scaled.difference.matrix[n,p.minus.1]*lambda + n.pairs)) %% (2^31 - 1)
+  # sub-sample from the given sample
+  if (!is.null(seed)){
+    seed <- ceiling(abs(seed*scaled.difference.matrix[n,p.minus.1]*lambda + n.pairs)) %% (2^31 - 1)
+    withr::with_seed(seed, {
+    # we simply shuffle and sub-sample the indices 1:n to get triplets (i,j,k)
+    indices <- sample(n, n.pairs, replace=FALSE)
+    })
+  } else {
+    indices <- sample(n, n.pairs, replace=FALSE)
   }
-  # withr::with_seed(seed, {
-  ## we simply shuffle and subsample the indices 1:n to get triplets (i,j,k)
-  indices <- sample(n, n.pairs, replace=FALSE)
-  # })
 
   differences.by.perturbing.one <- rep(NA, n.pairs)
   diffs.weighted <- rep(NA, n.pairs)
-  diffs.weighted.true.mean <- rep(NA, n.pairs)
+  # diffs.weighted.true.mean <- rep(NA, n.pairs)
   for (repeat_idx in (1:n.pairs)) {
     index.j <- indices[repeat_idx]
     index.i <- indices[ifelse((repeat_idx + 1) > n.pairs, (repeat_idx + 1) %% n.pairs, (repeat_idx + 1))]
@@ -63,15 +64,13 @@ is.lambda.feasible.LOO <- function(lambda, scaled.difference.matrix, sample.mean
     mu.no.j <- (sample.mean*n - scaled.difference.matrix[index.j,])/(n-1)
     weights <- LDATS::softmax(lambda*mu.no.j)
     diffs.weighted[repeat_idx] <- sum(weights*scaled.difference.matrix[index.j,])
-    diffs.weighted.true.mean[repeat_idx] <- sum(weights*sample.mean) # use sample mean to estimate true mean
+    # diffs.weighted.true.mean[repeat_idx] <- sum(weights*sample.mean) # use sample mean to estimate true mean
   }
   difference.by.perturbing.one.squared <- mean(differences.by.perturbing.one^2)
   residual.slepian <- n*difference.by.perturbing.one.squared
 
   # estimate variance by leaving one out
   variance <- stats::var(diffs.weighted)
-
-  mean.shift <- mean(diffs.weighted.true.mean)
   upper.bound.1 <- threshold.1*variance
 
   return (list(feasible=ifelse(residual.slepian < upper.bound.1, TRUE, FALSE),

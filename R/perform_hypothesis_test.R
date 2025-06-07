@@ -118,6 +118,7 @@ argmin.HT <- function(data, r = NULL, method = 'softmin.LOO', ...) {
 #' @param output.weights A boolean variable specifying whether the exponential weights should be outputted; defaults to FALSE.
 #' @param scale.input A boolean variable specifying whether the input difference matrix should be standardized defaults to TRUE
 #' @param ... Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}.
+#' @param seed (Optional) If provided, used to seed the random sampling (for reproducibility).
 #'
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat.scale} \tab The scaled test statistic \cr
@@ -142,7 +143,7 @@ argmin.HT <- function(data, r = NULL, method = 'softmin.LOO', ...) {
 #' }
 argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmin',
                           lambda=NULL, const=2.5, enlarge=TRUE, alpha=0.05,
-                          true.mean.difference=NULL, output.weights=FALSE, scale.input=TRUE,
+                          true.mean.difference=NULL, output.weights=FALSE, scale.input=TRUE, seed=NULL,
                           ...){
 
   ## Pre-processing: scale the difference.matrix or not
@@ -196,7 +197,7 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
     lambda <- lambda.adaptive.LOO(scaled.difference.matrix, sample.mean=sample.mean, const=const)
     if (enlarge) {
       res <- lambda.adaptive.enlarge(
-        lambda, scaled.difference.matrix, sample.mean=sample.mean, ...)
+        lambda, scaled.difference.matrix, sample.mean=sample.mean, seed=seed, ...)
       lambda <- res$lambda
       capped <- res$capped # A boolean variable indicating if the resulting lambda reaches the capped value
       residual.slepian <- res$residual.slepian
@@ -216,7 +217,7 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
     test.stat.scale <- test.stat/sigma
     ans <- ifelse(test.stat < val.critical, 'Accept', 'Reject')
 
-    ## ouptput centered test statistic
+    ## output centered test statistic
     if (!is.null(true.mean.difference)){
       test.stat.centered <- test.stat - sqrt(n)*true.mean.difference/sd.difference.matrix[1]
       ## in this case, true.mean.difference is a scalar
@@ -239,10 +240,14 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
         }
       } else if (min.algor == 'argmin') {
         min.indices <- which(sample.mean.noi == max(sample.mean.noi))
-        seed.argmin.i <- ceiling(abs(23*sample.mean.noi[p.minus.1]*p) + i) %% (2^31-1)
-        withr::with_seed(seed.argmin.i, {
+        if (!is.null(seed)) {
+          seed.argmin.i <- ceiling(abs(seed*sample.mean.noi[p.minus.1]*p) + i) %% (2^31-1)
+          withr::with_seed(seed.argmin.i, {
+            idx.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
+          })
+        } else {
           idx.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
-        })
+        }
         diffs.weighted[i] <- scaled.difference.matrix[i,idx.min]
 
         ## output centered test statistic

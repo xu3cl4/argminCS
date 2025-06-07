@@ -2,7 +2,7 @@
 #'
 #' @param nums A vector of numbers
 #' @param idx An index to be excluded
-#' @param seed Optional. If provided, used to seed the random sampling (for reproducibility).
+#' @param seed (Optional) If provided, used to seed the random sampling (for reproducibility).
 #'
 #' @return The index of the second smallest dimension (as an integer).
 #' @export
