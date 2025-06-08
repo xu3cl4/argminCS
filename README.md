@@ -83,6 +83,11 @@ CS.argmin(data, method='SML')
 #> [1] 1 2 5 6
 ```
 
+## Detailed Tutorial
+
+Here is a detailed
+[tutorial](https://xu3cl4.github.io/argminCS/demo_CSargmin.html).
+
 Regarding the details of methods and their associated tuning parameters,
 we encourage users to install the package and check function
 documentation.
