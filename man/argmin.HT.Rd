@@ -55,6 +55,10 @@ argmin.HT(difference.matrix.r)
 # provide centered test statistic (to simulate asymptotic normality)
 true.mean.difference.r <- mu[r] - mu[-r]
 argmin.HT(difference.matrix.r, true.mean=true.mean.difference.r)
+# keep the data unstandardized
+argmin.HT(difference.matrix.r, scale.input=FALSE)
+# use an user-specified lambda
+argmin.HT(difference.matrix.r, lambda=sqrt(n)/2.5)
 
 ## argmin.LOO
 argmin.HT(difference.matrix.r, method='HML')

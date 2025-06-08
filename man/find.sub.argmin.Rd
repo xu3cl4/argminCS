@@ -4,12 +4,14 @@
 \alias{find.sub.argmin}
 \title{Get the index of the smallest dimension apart from an index}
 \usage{
-find.sub.argmin(nums, idx)
+find.sub.argmin(nums, idx, seed = NULL)
 }
 \arguments{
 \item{nums}{A vector of numbers}
 
 \item{idx}{An index to be excluded}
+
+\item{seed}{(Optional) If provided, used to seed the random sampling (for reproducibility).}
 }
 \value{
 The index of the second smallest dimension (as an integer).

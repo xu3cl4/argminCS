@@ -197,6 +197,8 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
 #' data <- matrix(rnorm(50), nrow = 10)
 #' diff.mat <- get.difference.matrix(data, r = 2)
 #'
+#' @export
+#'
 #' @keywords internal
 get.difference.matrix <- function(data, r) {
   difference.matrix <- matrix(rep(data[, r], ncol(data) - 1), ncol = ncol(data) - 1, byrow = FALSE) - data[, -r]
@@ -216,6 +218,8 @@ get.difference.matrix <- function(data, r) {
 #' @examples
 #' sample.mean <- 1:5
 #' get.sample.mean.r(sample.mean, r = 3)
+#'
+#' @export
 #'
 #' @keywords internal
 get.sample.mean.r <- function(sample.mean, r) {

@@ -9,35 +9,35 @@ CS.argmin(data, method = "softmin.LOO", alpha = 0.05, ...)
 \arguments{
 \item{data}{A n by p data matrix; each of its row is a p-dimensional sample.}
 
-\item{method}{A string indicating the method for hypothesis test; defaults to 'softmin.LOO'. Passing an abbreviation is allowed.
-For the list of supported methods and their abbreviations, see Details.}
+\item{method}{A string indicating the method used to construct the confidence set. Defaults to 'softmin.LOO'.
+Can be abbreviated (e.g., 'SML' for 'softmin.LOO'). See **Details** for available methods and abbreviations.}
 
-\item{alpha}{The significance level; defaults to 0.05. The function produces a (1-alpha) confidence set.}
+\item{alpha}{The significance level; defaults to 0.05. The function produces a \eqn{1 - \alpha} confidence set.}
 
 \item{...}{Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
 A correct argument name needs to be specified if it is used.}
 }
 \value{
-A vector of indices (0-based) representing the (1 - alpha) confidence set.
+A vector of indices (1-based) representing the (1 - alpha) confidence set.
 }
 \description{
-This is a wrapper to construct a discrete confidence set for argmin.. Multiple methods are supported.
+This is a wrapper to construct a discrete confidence set for argmin. Multiple methods are supported.
 }
 \details{
 The supported methods include:\tabular{ll}{
-   \code{softmin.LOO (SML)} \tab LOO (leave-one-out) algorithm, using the exponential weightings. \cr
-   \tab \cr
-   \code{argmin.LOO (HML)} \tab A variant of SML, but it uses (hard) argmin rather than exponential weighting.
-   The method is not recommended. \cr
-   \tab \cr
-   \code{nonsplit (NS)} \tab  A variant of SML, but no splitting is involved.
-   One needs to pass a fixed lambda value as a required additional argument.\cr
-   \tab \cr
-   \code{Bonferroni (MT)} \tab Multiple testing with Bonferroni's correction. \cr
-   \tab \cr
-   \code{Gupta (GTA)} \tab The method in \insertCite{gupta.1965}{argminCS}. \cr
-   \tab \cr
-   \code{Futschik (FCHK)} \tab The two-step method in \insertCite{futschik.1995}{argminCS} \cr
+  \code{softmin.LOO (SML)} \tab Leave-one-out algorithm using exponential weighting. \cr
+  \tab \cr
+  \code{argmin.LOO (HML)} \tab A variant of SML that uses hard argmin instead of exponential weighting. Not recommended. \cr
+  \tab \cr
+  \code{nonsplit (NS)} \tab A variant of SML without data splitting. Requires a fixed lambda value as an additional argument. \cr
+  \tab \cr
+  \code{Bonferroni (MT)} \tab Multiple testing using Bonferroni correction. \cr
+  \tab \cr
+  \code{Gupta (GTA)} \tab The method proposed by \insertCite{gupta.1965}{argminCS}.
+  Requires independence and the same population standard deviation for all dimensions. \cr
+  \tab \cr
+  \code{Futschik (FCHK)} \tab A two-step method from \insertCite{futschik.1995}{argminCS}. \cr
+  Requires independence and the same population standard deviation for all dimensions. \cr
 }
 }
 \examples{

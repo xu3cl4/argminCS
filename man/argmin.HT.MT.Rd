@@ -12,8 +12,8 @@ each of its row is a (p-1)-dimensional vector of differences.}
 
 \item{sample.mean}{The sample mean of differences; defaults to NULL. It can be calculated via colMeans(difference.matrix).}
 
-\item{test}{The test to perform: 't' or 'z' test; defaults to 'z'.
-If data are believed to be normally distributed, use 't'; otherwise 'z'.}
+\item{test}{The test to perform: 't' or 'z'; defaults to 'z'.
+If the data are assumed normally distributed, use 't'; otherwise 'z'.}
 
 \item{alpha}{The significance level of the hypothesis test; defaults to 0.05.}
 }

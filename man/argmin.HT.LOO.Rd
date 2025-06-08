@@ -14,6 +14,8 @@ argmin.HT.LOO(
   alpha = 0.05,
   true.mean.difference = NULL,
   output.weights = FALSE,
+  scale.input = TRUE,
+  seed = NULL,
   ...
 )
 }
@@ -23,7 +25,8 @@ each of its row is a (p-1)-dimensional vector of differences.}
 
 \item{sample.mean}{The sample mean of differences; defaults to NULL. It can be calculated via colMeans(difference.matrix).}
 
-\item{min.algor}{The algorithm to find the minimum excluding the r-th dimension; defaults to 'softmin'. The other option is 'argmin'.}
+\item{min.algor}{The algorithm to compute the test statistic by weighting across dimensions; 'softmin' uses exponential weighting,
+while 'argmin' picks the largest mean coordinate directly. Defaults to 'softmin'.}
 
 \item{lambda}{The real-valued tuning parameter for exponential weightings (the calculation of softmin); defaults to NULL.
 If lambda=NULL (recommended), the function would determine a lambda value in a data-driven way.}
@@ -34,11 +37,13 @@ If lambda=NULL (recommended), the function would determine a lambda value in a d
 
 \item{alpha}{The significance level of the hypothesis test; defaults to 0.05.}
 
-\item{true.mean.difference}{The population mean of the differences; defaults to NULL.
-If a vector were provided, the centered test statistic would be outputted.
-It is only useful for a simulation purpose.}
+\item{true.mean.difference}{The population mean of the differences. (Optional); used to compute a centered test statistic for simulation or diagnostic purposes.}
 
 \item{output.weights}{A boolean variable specifying whether the exponential weights should be outputted; defaults to FALSE.}
+
+\item{scale.input}{A boolean variable specifying whether the input difference matrix should be standardized. Defaults to TRUE}
+
+\item{seed}{(Optional) If provided, used to seed the random sampling (for reproducibility).}
 
 \item{...}{Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}.}
 }
@@ -46,11 +51,11 @@ It is only useful for a simulation purpose.}
 A list containing:\tabular{ll}{
    \code{test.stat.scale} \tab The scaled test statistic \cr
    \tab \cr
-.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejection. \cr
+   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejection. \cr
    \tab \cr
    \code{std} \tab The standard deviation estimate. \cr
    \tab \cr
-   \code{ans} \tab 'Reject' or 'Accept' \cr
+   \code{ans} \tab A character string: either 'Reject' or 'Accept', depending on the test outcome. \cr
    \tab \cr
    \code{lambda} \tab The lambda used in the hypothesis testing. \cr
    \tab \cr
@@ -60,7 +65,7 @@ A list containing:\tabular{ll}{
    \tab \cr
    \code{variance.bound} \tab The final variance bound for the data-driven lambda. \cr
    \tab \cr
-   \code{test.stat.centered} \tab (Optional) The centered test statistic. Outputted only when true.mean is not NULL. \cr
+   \code{test.stat.centered} \tab (Optional) The centered test statistic, computed only if \code{true.mean.difference} is provided. \cr
    \tab \cr
    \code{exponential.weights} \tab (Optional) A (n by p-1) matrix storing the exponential weightings in the test statistic. \cr
 }

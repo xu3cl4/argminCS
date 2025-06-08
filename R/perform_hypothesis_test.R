@@ -46,7 +46,7 @@
 #' # keep the data unstandardized
 #' argmin.HT(difference.matrix.r, scale.input=FALSE)
 #' # use an user-specified lambda
-#' argmin.HT(difference.matrix.r, lambda=sqrt{n}/2.5)
+#' argmin.HT(difference.matrix.r, lambda=sqrt(n)/2.5)
 #'
 #' ## argmin.LOO
 #' argmin.HT(difference.matrix.r, method='HML')
@@ -110,20 +110,19 @@ argmin.HT <- function(data, r = NULL, method = 'softmin.LOO', ...) {
 #' while 'argmin' picks the largest mean coordinate directly. Defaults to 'softmin'.
 #' @param lambda The real-valued tuning parameter for exponential weightings (the calculation of softmin); defaults to NULL.
 #' If lambda=NULL (recommended), the function would determine a lambda value in a data-driven way.
-#' @inheritParams lambda.adaptive.enlarge
 #' @param const The scaling constant for initial data-driven lambda
 #' @param enlarge A boolean value indicating if the data-driven lambda should be determined via an iterative enlarging algorithm; defaults to TRUE.
 #' @param alpha The significance level of the hypothesis test; defaults to 0.05.
 #' @param true.mean.difference The population mean of the differences. (Optional); used to compute a centered test statistic for simulation or diagnostic purposes.
 #' @param output.weights A boolean variable specifying whether the exponential weights should be outputted; defaults to FALSE.
-#' @param scale.input A boolean variable specifying whether the input difference matrix should be standardized defaults to TRUE
-#' @param ... Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}.
+#' @param scale.input A boolean variable specifying whether the input difference matrix should be standardized. Defaults to TRUE
 #' @param seed (Optional) If provided, used to seed the random sampling (for reproducibility).
+#' @param ... Additional arguments to \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}.
 #'
 #' @return A list containing:\tabular{ll}{
 #'    \code{test.stat.scale} \tab The scaled test statistic \cr
 #'    \tab \cr
-#'.   \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejection. \cr
+#'    \code{critical.value} \tab The critical value for the hypothesis test. Being greater than it leads to a rejection. \cr
 #'    \tab \cr
 #'    \code{std} \tab The standard deviation estimate. \cr
 #'    \tab \cr
@@ -143,8 +142,7 @@ argmin.HT <- function(data, r = NULL, method = 'softmin.LOO', ...) {
 #' }
 argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmin',
                           lambda=NULL, const=2.5, enlarge=TRUE, alpha=0.05,
-                          true.mean.difference=NULL, output.weights=FALSE, scale.input=TRUE, seed=NULL,
-                          ...){
+                          true.mean.difference=NULL, output.weights=FALSE, scale.input=TRUE, seed=NULL, ...){
 
   ## Pre-processing: scale the difference.matrix or not
   if (scale.input) {

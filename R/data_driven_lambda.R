@@ -1,4 +1,4 @@
-#' Iteratively enlarge a tuning parameter \eqn{\lambda} in a scaled.difference.matrix-driven way.
+#' Iteratively enlarge a tuning parameter \eqn{\lambda} in a data-driven way.
 #'
 #' Iteratively enlarge a tuning parameter \eqn{\lambda} to enhance the power of hypothesis testing.
 #' The iterative algorithm ends when an enlarged \eqn{\lambda} unlikely yields the first order stability.
@@ -11,6 +11,37 @@
 #' @param mult.factor In each iteration, \eqn{\lambda} would be multiplied by mult.factor to yield an enlarged \eqn{\lambda}; defaults to 2.
 #' @param verbose A boolean value indicating if the number of iterations should be printed to console; defaults to FALSE.
 #' @param ... Additional arguments to \link{is.lambda.feasible.LOO}.
+#'
+#' @return A list containing:
+#' \tabular{ll}{
+#'   \code{lambda} \tab The final (enlarged) lambda that is still feasible. \cr
+#'   \tab \cr
+#'   \code{capped} \tab Logical, \code{TRUE} if the enlargement was capped due to reaching the threshold. \cr
+#'   \tab \cr
+#'   \code{residual.slepian} \tab Residual value from the feasibility check at the final lambda. \cr
+#'   \tab \cr
+#'   \code{variance.bound} \tab Variance bound used in the final feasibility check. \cr
+#' }
+#'
+#' @examples
+#' # Simulate data
+#' set.seed(123)
+#' r <- 4
+#' n <- 200
+#' mu <- (1:20)/20
+#' cov <- diag(length(mu))
+#' set.seed(108)
+#' data <- MASS::mvrnorm(n, mu, cov)
+#' sample.mean <- colMeans(data)
+#' diff.mat <- get.difference.matrix(data, r)
+#' sample.mean.r <- get.sample.mean.r(sample.mean, r)
+#' lambda <- lambda.adaptive.LOO(diff.mat, sample.mean=sample.mean.r)
+#'
+#' # Run the enlargement algorithm
+#' res <- lambda.adaptive.enlarge(lambda, diff.mat, sample.mean=sample.mean.r, seed=3)
+#' res
+#'
+#' @export
 lambda.adaptive.enlarge <- function(lambda, scaled.difference.matrix, sample.mean=NULL,
                                     mult.factor=2, verbose=FALSE, ...){
 

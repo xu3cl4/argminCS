@@ -4,7 +4,13 @@
 \alias{argmin.HT.nonsplit}
 \title{Perform argmin hypothesis test.}
 \usage{
-argmin.HT.nonsplit(difference.matrix, lambda, sample.mean = NULL, alpha = 0.05)
+argmin.HT.nonsplit(
+  difference.matrix,
+  lambda,
+  sample.mean = NULL,
+  alpha = 0.05,
+  scale.input = TRUE
+)
 }
 \arguments{
 \item{difference.matrix}{A n by (p-1) difference data matrix (reference dimension - the rest);
@@ -15,6 +21,8 @@ each of its row is a (p-1)-dimensional vector of differences.}
 \item{sample.mean}{The sample mean of differences; defaults to NULL. It can be calculated via colMeans(difference.matrix).}
 
 \item{alpha}{The significance level of the hypothesis test; defaults to 0.05.}
+
+\item{scale.input}{A boolean variable specifying whether the input difference matrix should be standardized defaults to TRUE}
 }
 \value{
 A list containing:\tabular{ll}{

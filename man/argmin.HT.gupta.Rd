@@ -2,7 +2,7 @@
 % Please edit documentation in R/perform_hypothesis_test.R
 \name{argmin.HT.gupta}
 \alias{argmin.HT.gupta}
-\title{Perform argmin hypothesis test.}
+\title{Perform argmin hypothesis test using Gupta's method.}
 \usage{
 argmin.HT.gupta(
   data,
@@ -20,9 +20,11 @@ argmin.HT.gupta(
 \item{r}{The dimension of interest for hypothesis test.}
 
 \item{sample.mean}{The sample mean of the n samples in data; defaults to NULL. It can be calculated via colMeans(data).
-If your experiment involves hypothesis testing over more than one dimension, compute colMeans(data) and pass it to sample.mean to speed up computation.}
+If performing multiple tests across dimensions, pre-computing \code{sample.mean} and \code{critical.val}
+can significantly reduce computation time.}
 
-\item{stds}{The equal dimension-wise ( population) standard deviations of the n samples in data; defaults a vector of 1's.}
+\item{stds}{A vector of the same (population) standard deviations for all dimensions; defaults to a vector of 1's.
+These are used to standardize the sample means.}
 
 \item{critical.val}{The quantile for the hypothesis test; defaults to NULL. It can be calculated via \link{get.quantile.gupta.selection}.
 If your experiment involves hypothesis testing over more than one dimension, pass a quantile to speed up computation.}
@@ -42,7 +44,7 @@ A list containing:\tabular{ll}{
 }
 }
 \description{
-Test if a dimension may be argmin, using the method in \insertCite{gupta.1965}{argminCS}.
+Test whether a dimension is the argmin, using the method in \insertCite{gupta.1965}{argminCS}.
 }
 \note{
 This method requires independence among the dimensions.
