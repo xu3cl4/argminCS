@@ -78,7 +78,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
       difference.matrix <- get.difference.matrix(data, r)
-      sample.mean.r <- get.sample.mean(sample.mean, r)
+      sample.mean.r <- get.sample.mean.r(sample.mean, r)
       return (argmin.HT.LOO(difference.matrix, sample.mean=sample.mean.r, alpha=alpha, ...)$ans)
       })
     return (which(res == 'Accept'))
@@ -87,7 +87,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
       difference.matrix <- get.difference.matrix(data, r)
-      sample.mean.r <- get.sample.mean(sample.mean, r)
+      sample.mean.r <- get.sample.mean.r(sample.mean, r)
       return (argmin.HT.LOO(difference.matrix, sample.mean=sample.mean.r, min.algor='argmin', alpha=alpha, ...)$ans)
     })
     return (which(res == 'Accept'))
@@ -96,7 +96,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
       difference.matrix <- get.difference.matrix(data, r)
-      sample.mean.r <- get.sample.mean(sample.mean, r)
+      sample.mean.r <- get.sample.mean.r(sample.mean, r)
       return (argmin.HT.nonsplit(difference.matrix, sample.mean=sample.mean.r, alpha=alpha, ...)$ans)
       })
     return (which(res == 'Accept'))
@@ -105,7 +105,7 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     sample.mean <- colMeans(data) # np
     res <- sapply(1:p, function(r) {
       difference.matrix <- get.difference.matrix(data, r)
-      sample.mean.r <- get.sample.mean(sample.mean, r)
+      sample.mean.r <- get.sample.mean.r(sample.mean, r)
       return (argmin.HT.MT(difference.matrix, sample.mean=sample.mean.r, alpha=alpha, ...)$ans)
       })
     return (which(res == 'Accept'))
