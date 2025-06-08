@@ -1,0 +1,180 @@
+---
+title: "Argmin Inference with argminCS"
+author: "Tianyu Zhang, Hao Lee and Jing Lei"
+format: html
+output-dir: "~/Documents/argminCS/docs/"
+---
+
+Welcome to the tutorial for the R package `argminCS`. When comparing noisy performance metrics across several competing agents - such as machine learning algorithms, voting candidates, or maximum likelihood parameter estimates - we are often interested in identifying the best-performing agents. 
+
+Suppose we are evaluating 20 agents, and for each, we have 30 noisy loss measurements:
+
+```{r}
+sample_size <- 30
+agent_num <- 20
+
+set.seed(100)
+true_loss <- 3*((1:agent_num) / agent_num)
+true_loss[1:5] <- true_loss[5]
+
+cov <- diag(length(true_loss))
+data <- MASS::mvrnorm(sample_size, true_loss, cov)
+rownames(data) <- paste0("Obs_", 1:sample_size)
+colnames(data) <- paste0("Agent_", 1:agent_num)
+```
+
+Here are the first few rows of the observed data:
+```{r}
+print(data[1:5, 1:5])
+```
+
+Agents 1–5 have the lowest true losses.
+
+```{r}
+library(ggplot2)
+df <- data.frame(
+    Agent = factor(1:agent_num),
+    True_Loss = true_loss
+)
+ggplot(df, aes(x = Agent, y = True_Loss, group = 1)) +
+    geom_line(color = "steelblue", linewidth = 1) +
+    geom_point(color = "darkred", size = 2) +
+    theme_minimal() +
+    labs(
+        title = "True Loss for Each Agent",
+        x = "Agent",
+        y = "True Loss"
+    )
+```
+
+A simple approach is to use the agent with the smallest sample mean loss as the estimated best:
+
+```{r}
+col_avg <- colMeans(data)
+winner_est <- which.min(col_avg)
+cat("Estimated winner: Agent", winner_est, "with average loss", col_avg[winner_est], "\n")
+cat("True winners are Agents 1 to 5\n")
+
+```
+
+However, due to noise in the observations, it's important to quantify the uncertainty in this winner selection. The `argminCS` package provides tools to construct a confidence set for the best agent.
+
+
+```{r}
+library(argminCS)
+confidence_set <- CS.argmin(data, method = "SML")
+print(confidence_set)
+```
+
+The algorithm think agent 1-9 are all potential best performers given the current data. We made some type-II errors since it includes suboptimal ones.
+
+We now repeat the procedure 100 times to estimate how often each agent is included in the confidence set:
+
+```{r, eval = F}
+set.seed(123)
+repeat_N <- 100
+results <- matrix(0, nrow = repeat_N, ncol = agent_num)
+colnames(results) <- paste0("Agent_", 1:agent_num)
+
+for (i in 1:repeat_N) {
+    # Generate new data
+    data_i <- MASS::mvrnorm(sample_size, true_loss, cov)
+    # Compute confidence set
+    cs_i <- CS.argmin(data_i, method = "SML")
+    # Mark agents in the confidence set
+    results[i, as.numeric(cs_i)] <- 1
+}
+inclusion_prop <- colSums(results) / repeat_N
+```
+
+```{r, eval = T, echo = F}
+dir <- getwd()
+output_dir <- glue::glue('{dir}/data')
+if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+```
+
+```{r, eval = F, echo = F}
+saveRDS(inclusion_prop, file = file.path(output_dir, "inclusion.rds"))
+```
+
+```{r, eval = T, echo = F}
+inclusion_prop <- readRDS(file.path(output_dir, "inclusion.rds"))
+```
+
+```{r}
+df_inclusion <- data.frame(
+    Agent = factor(1:agent_num),
+    Inclusion = inclusion_prop
+)
+
+ggplot(df_inclusion, aes(x = Agent, y = Inclusion)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    labs(
+        title = "Confidence Set Inclusion Rate by Agent",
+        x = "Agent",
+        y = "Proportion"
+    ) +
+    theme_minimal() +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1))
+```
+
+Next, we increase the sample size:
+
+```{r}
+sample_size_large <- 500
+```
+
+Repeat the simulation at the larger sample size:
+
+```{r, eval = F}
+set.seed(123)
+results <- matrix(0, nrow = repeat_N, ncol = agent_num)
+colnames(results) <- paste0("Agent_", 1:agent_num)
+
+for (i in 1:repeat_N) {
+    # Generate new data
+    data_i <- MASS::mvrnorm(sample_size_large, true_loss, cov)
+    # Compute confidence set
+    cs_i <- CS.argmin(data_i, method = "SML")
+    # Mark agents in the confidence set
+    results[i, as.numeric(cs_i)] <- 1
+}
+inclusion_prop_large <- colSums(results) / repeat_N
+
+```
+
+
+```{r, eval = F, echo = F}
+
+saveRDS(inclusion_prop_large, file = file.path(output_dir, "inclusion_large.rds"))
+```
+
+```{r, eval = T, echo = F}
+
+inclusion_prop_large <- readRDS(file.path(output_dir, "inclusion_large.rds"))
+```
+
+With a larger sample size, suboptimal agents are included less frequently in the confidence set. In fact, in our paper, we theoretically showed that each of the optimal agents is included with probability exceeding 0.95 while the probability of including any suboptimal agent converges to zero.
+
+```{r}
+df_inclusion <- data.frame(
+    Agent = factor(1:agent_num),
+    Inclusion = inclusion_prop_large
+)
+
+ggplot(df_inclusion, aes(x = Agent, y = Inclusion)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    labs(
+        title = "Confidence Set Inclusion Rate by Agent",
+        x = "Agent",
+        y = "Proportion"
+    ) +
+    theme_minimal() +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1))
+```
+
+## References
+
+- Zhang, T., Lee, H., & Lei, J.. *Winners with Confidence: Discrete Argmin Inference with an Application to Model Selection*.
+
+
