@@ -88,9 +88,8 @@ CS.argmin(data, method='SML')
 Here is a detailed
 [tutorial](https://xu3cl4.github.io/argminCS/demo_CSargmin.html).
 
-Regarding the details of methods and their associated tuning parameters,
-we encourage users to install the package and check function
-documentation.
+Regarding other details of methods, we encourage users to install the
+package and check function documentation.
 <!-- What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so: -->
 
 <!-- ```{r cars} -->

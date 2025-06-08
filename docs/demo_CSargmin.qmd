@@ -88,8 +88,7 @@ inclusion_prop <- colSums(results) / repeat_N
 ```
 
 ```{r, eval = T, echo = F}
-dir <- getwd()
-output_dir <- glue::glue('{dir}/data')
+output_dir <- file.path("~", "Documents", "argminCS", "docs", "data")
 if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
 ```
 
