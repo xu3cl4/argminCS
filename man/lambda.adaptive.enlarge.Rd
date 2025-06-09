@@ -62,6 +62,9 @@ sample.mean.r <- get.sample.mean.r(sample.mean, r)
 lambda <- lambda.adaptive.LOO(diff.mat, sample.mean=sample.mean.r)
 
 # Run the enlargement algorithm
+res <- lambda.adaptive.enlarge(lambda, diff.mat, sample.mean=sample.mean.r)
+res
+# with a seed
 res <- lambda.adaptive.enlarge(lambda, diff.mat, sample.mean=sample.mean.r, seed=3)
 res
 

@@ -41,6 +41,9 @@
 #' # Run the enlargement algorithm
 #' res <- lambda.adaptive.enlarge(lambda, diff.mat, sample.mean=sample.mean.r, seed=3)
 #' res
+#' # with a seed
+#' res <- lambda.adaptive.enlarge(lambda, diff.mat, sample.mean=sample.mean.r, seed=3)
+#' res
 #'
 #' @export
 lambda.adaptive.enlarge <- function(lambda, scaled.difference.matrix, sample.mean=NULL,
