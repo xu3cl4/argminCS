@@ -33,10 +33,10 @@ The supported methods include:\tabular{ll}{
   \tab \cr
   \code{Bonferroni (MT)} \tab Multiple testing using Bonferroni correction. \cr
   \tab \cr
-  \code{Gupta (GTA)} \tab The method proposed by \insertCite{gupta.1965}{argminCS}.
+  \code{Gupta (GTA)} \tab The method proposed by \insertCite{gupta.1965;textual}{argminCS}.
   Requires independence and the same population standard deviation for all dimensions. \cr
   \tab \cr
-  \code{Futschik (FCHK)} \tab A two-step method from \insertCite{futschik.1995}{argminCS}. \cr
+  \code{Futschik (FCHK)} \tab A two-step method from \insertCite{futschik.1995;textual}{argminCS}.
   Requires independence and the same population standard deviation for all dimensions. \cr
 }
 }
@@ -51,6 +51,9 @@ sample.mean <- colMeans(data)
 
 ## softmin.LOO
 CS.argmin(data)
+
+## use seed
+CS.argmin(data, seed=3)
 
 ## argmin.LOO
 CS.argmin(data, method='HML')

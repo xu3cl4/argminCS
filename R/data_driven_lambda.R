@@ -10,6 +10,7 @@
 #' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(scaled.difference.matrix) to speed up computation.
 #' @param mult.factor In each iteration, \eqn{\lambda} would be multiplied by mult.factor to yield an enlarged \eqn{\lambda}; defaults to 2.
 #' @param verbose A boolean value indicating if the number of iterations should be printed to console; defaults to FALSE.
+#' @param seed (Optional) If provided, used to seed for tie-breaking (for reproducibility).
 #' @param ... Additional arguments to \link{is.lambda.feasible.LOO}.
 #'
 #' @return A list containing:
@@ -43,7 +44,11 @@
 #'
 #' @export
 lambda.adaptive.enlarge <- function(lambda, scaled.difference.matrix, sample.mean=NULL,
-                                    mult.factor=2, verbose=FALSE, ...){
+                                    mult.factor=2, verbose=FALSE, seed=NULL, ...){
+
+  if (lambda < 0) {
+    stop('The weighting parameter lambda needs to be non-negative.')
+  }
 
   n <- nrow(scaled.difference.matrix)
 
@@ -60,7 +65,7 @@ lambda.adaptive.enlarge <- function(lambda, scaled.difference.matrix, sample.mea
   variance.bound <- 0
 
   # check feasibility of the next lambda
-  res <- is.lambda.feasible.LOO(lambda.next, scaled.difference.matrix, sample.mean=sample.mean, ...)
+  res <- is.lambda.feasible.LOO(lambda.next, scaled.difference.matrix, sample.mean=sample.mean, seed=seed, ...)
   feasible <- res$feasible
   residual.slepian.next <- res$residual.slepian
   variance.bound.next <- res$variance.bound
@@ -74,7 +79,7 @@ lambda.adaptive.enlarge <- function(lambda, scaled.difference.matrix, sample.mea
     lambda.next <- mult.factor*lambda.next
 
     ## check feasibility
-    res <- is.lambda.feasible.LOO(lambda.next, scaled.difference.matrix, sample.mean=sample.mean, ...)
+    res <- is.lambda.feasible.LOO(lambda.next, scaled.difference.matrix, sample.mean=sample.mean, seed=seed, ...)
     feasible <- res$feasible
     residual.slepian.next <- res$residual.slepian
     variance.bound.next <- res$variance.bound
@@ -105,12 +110,27 @@ lambda.adaptive.enlarge <- function(lambda, scaled.difference.matrix, sample.mea
 #' each of its row is a (p-1)-dimensional vector of differences.
 #' @param sample.mean The sample mean of the n samples in scaled.difference.matrix; defaults to NULL. It can be calculated via colMeans(scaled.difference.matrix).
 #' @param const A scaling constant for the scaled.difference.matrix driven \eqn{\lambda}; defaults to 2.5. As its value gets larger, the first order stability tends to increase while power might decrease.
+#' @param seed (Optional) If provided, used to seed for tie-breaking (for reproducibility).
 #'
 #' @return A scaled.difference.matrix-driven \eqn{\lambda} for LOO algorithm.
-#' @export
 #'
+#' @examples
+#' # Simulate data
+#' set.seed(123)
+#' r <- 4
+#' n <- 200
+#' mu <- (1:20)/20
+#' cov <- diag(length(mu))
+#' set.seed(108)
+#' data <- MASS::mvrnorm(n, mu, cov)
+#' sample.mean <- colMeans(data)
+#' diff.mat <- get.difference.matrix(data, r)
+#' sample.mean.r <- get.sample.mean.r(sample.mean, r)
+#' lambda <- lambda.adaptive.LOO(diff.mat, sample.mean=sample.mean.r)
+#'
+#' @export
 #' @importFrom MASS mvrnorm
-lambda.adaptive.LOO <- function(scaled.difference.matrix, sample.mean=NULL, const=2.5){
+lambda.adaptive.LOO <- function(scaled.difference.matrix, sample.mean=NULL, const=2.5, seed=NULL){
   n <- nrow(scaled.difference.matrix)
   p.minus.1 <- ncol(scaled.difference.matrix)
 
@@ -121,8 +141,16 @@ lambda.adaptive.LOO <- function(scaled.difference.matrix, sample.mean=NULL, cons
     mu.hat.noi <- (sample.mean*n - scaled.difference.matrix[i,])/(n-1)
 
     min.indices <- which(mu.hat.noi == max(mu.hat.noi))
-    min.idx <- ifelse(length(min.indices) > 1,
-                      sample(c(min.indices), 1), min.indices[1])
+    if (!is.null(seed)) {
+      seed <- ceiling(abs(seed*scaled.difference.matrix[n,p.minus.1] + i)) %% (2^31 - 1)
+      withr::with_seed(seed, {
+        min.idx <- ifelse(length(min.indices) > 1,
+                          sample(c(min.indices), 1), min.indices[1])
+      })
+    } else {
+      min.idx <- ifelse(length(min.indices) > 1,
+                        sample(c(min.indices), 1), min.indices[1])
+    }
 
     X.min <- scaled.difference.matrix[i,min.idx]
     return (X.min)

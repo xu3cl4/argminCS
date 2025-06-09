@@ -10,6 +10,7 @@ lambda.adaptive.enlarge(
   sample.mean = NULL,
   mult.factor = 2,
   verbose = FALSE,
+  seed = NULL,
   ...
 )
 }
@@ -25,6 +26,8 @@ If your experiment involves hypothesis testing over more than one dimension, pas
 \item{mult.factor}{In each iteration, \eqn{\lambda} would be multiplied by mult.factor to yield an enlarged \eqn{\lambda}; defaults to 2.}
 
 \item{verbose}{A boolean value indicating if the number of iterations should be printed to console; defaults to FALSE.}
+
+\item{seed}{(Optional) If provided, used to seed for tie-breaking (for reproducibility).}
 
 \item{...}{Additional arguments to \link{is.lambda.feasible.LOO}.}
 }

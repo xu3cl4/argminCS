@@ -4,7 +4,12 @@
 \alias{lambda.adaptive.LOO}
 \title{Generate a scaled.difference.matrix-driven \eqn{\lambda} for LOO algorithm.}
 \usage{
-lambda.adaptive.LOO(scaled.difference.matrix, sample.mean = NULL, const = 2.5)
+lambda.adaptive.LOO(
+  scaled.difference.matrix,
+  sample.mean = NULL,
+  const = 2.5,
+  seed = NULL
+)
 }
 \arguments{
 \item{scaled.difference.matrix}{A n by (p-1) difference scaled.difference.matrix matrix after column-wise scaling (reference dimension - the rest);
@@ -13,6 +18,8 @@ each of its row is a (p-1)-dimensional vector of differences.}
 \item{sample.mean}{The sample mean of the n samples in scaled.difference.matrix; defaults to NULL. It can be calculated via colMeans(scaled.difference.matrix).}
 
 \item{const}{A scaling constant for the scaled.difference.matrix driven \eqn{\lambda}; defaults to 2.5. As its value gets larger, the first order stability tends to increase while power might decrease.}
+
+\item{seed}{(Optional) If provided, used to seed for tie-breaking (for reproducibility).}
 }
 \value{
 A scaled.difference.matrix-driven \eqn{\lambda} for LOO algorithm.
@@ -20,4 +27,19 @@ A scaled.difference.matrix-driven \eqn{\lambda} for LOO algorithm.
 \description{
 Generate a scaled.difference.matrix-driven \eqn{\lambda} for LOO algorithm motivated by the derivation of the first order stability.
 For its precise definition, we refer to the paper Zhang et al 2024.
+}
+\examples{
+# Simulate data
+set.seed(123)
+r <- 4
+n <- 200
+mu <- (1:20)/20
+cov <- diag(length(mu))
+set.seed(108)
+data <- MASS::mvrnorm(n, mu, cov)
+sample.mean <- colMeans(data)
+diff.mat <- get.difference.matrix(data, r)
+sample.mean.r <- get.sample.mean.r(sample.mean, r)
+lambda <- lambda.adaptive.LOO(diff.mat, sample.mean=sample.mean.r)
+
 }

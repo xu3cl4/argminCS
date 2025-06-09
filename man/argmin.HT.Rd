@@ -59,6 +59,8 @@ argmin.HT(difference.matrix.r, true.mean=true.mean.difference.r)
 argmin.HT(difference.matrix.r, scale.input=FALSE)
 # use an user-specified lambda
 argmin.HT(difference.matrix.r, lambda=sqrt(n)/2.5)
+# add a seed
+argmin.HT(difference.matrix.r, seed=17)
 
 ## argmin.LOO
 argmin.HT(difference.matrix.r, method='HML')

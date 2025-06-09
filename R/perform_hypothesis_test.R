@@ -47,6 +47,8 @@
 #' argmin.HT(difference.matrix.r, scale.input=FALSE)
 #' # use an user-specified lambda
 #' argmin.HT(difference.matrix.r, lambda=sqrt(n)/2.5)
+#' # add a seed
+#' argmin.HT(difference.matrix.r, seed=17)
 #'
 #' ## argmin.LOO
 #' argmin.HT(difference.matrix.r, method='HML')
@@ -192,7 +194,7 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
 
   ## determine lambda if needed
   if (is.null(lambda) & min.algor=='softmin'){
-    lambda <- lambda.adaptive.LOO(scaled.difference.matrix, sample.mean=sample.mean, const=const)
+    lambda <- lambda.adaptive.LOO(scaled.difference.matrix, sample.mean=sample.mean, const=const, seed=seed)
     if (enlarge) {
       res <- lambda.adaptive.enlarge(
         lambda, scaled.difference.matrix, sample.mean=sample.mean, seed=seed, ...)
@@ -275,11 +277,14 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
               lambda = lambda,
               lambda.capped = capped,
               residual.slepian = residual.slepian,
-              variance.bound = variance.bound,
-              test.stat.centered = test.stat.centered)
+              variance.bound = variance.bound)
 
   if (output.weights) {
     out$exponential.weights <- exponential.weights
+  }
+
+  if (!is.null(true.mean.difference)) {
+    out$test.stat.centered <- test.stat.centered
   }
   return (out)
 }
