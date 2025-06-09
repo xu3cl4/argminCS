@@ -142,7 +142,7 @@ lambda.adaptive.LOO <- function(scaled.difference.matrix, sample.mean=NULL, cons
 
     min.indices <- which(mu.hat.noi == max(mu.hat.noi))
     if (!is.null(seed)) {
-      seed <- ceiling(abs(seed*scaled.difference.matrix[n,p.minus.1] + i)) %% (2^31 - 1)
+      seed <- ceiling(abs(seed*scaled.difference.matrix[n,p.minus.1] + i*seed)) %% (2^31 - 1)
       withr::with_seed(seed, {
         min.idx <- ifelse(length(min.indices) > 1,
                           sample(c(min.indices), 1), min.indices[1])

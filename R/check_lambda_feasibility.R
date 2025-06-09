@@ -12,7 +12,7 @@
 #' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(scaled.difference.matrix) to speed up computation.
 #' @param threshold.1 A threshold value to examine if the first order stability is likely achieved; defaults to 0.05. As its value gets smaller, the first order stability tends to increase while power might decrease.
 #' @param n.pairs The number of \eqn{(i,j)} pairs for estimation; defaults to 100.
-#' @param seed An integer-valued seed for subsampling. If no value is given, the seed would be set, using the value of other arguments.
+#' @param seed (Optional) An integer-valued seed for subsampling.
 #'
 #' @return A boolean value indicating if the given \eqn{\lambda} likely gives the first order stability.
 #' @export
@@ -35,7 +35,7 @@ is.lambda.feasible.LOO <- function(lambda, scaled.difference.matrix, sample.mean
 
   # sub-sample from the given sample
   if (!is.null(seed)){
-    seed <- ceiling(abs(seed*scaled.difference.matrix[n,p.minus.1]*lambda + n.pairs)) %% (2^31 - 1)
+    seed <- ceiling(abs(seed*scaled.difference.matrix[n,p.minus.1]*lambda + n.pairs*seed)) %% (2^31 - 1)
     withr::with_seed(seed, {
     # we simply shuffle and sub-sample the indices 1:n to get triplets (i,j,k)
     indices <- sample(n, n.pairs, replace=FALSE)

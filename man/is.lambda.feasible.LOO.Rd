@@ -26,7 +26,7 @@ If your experiment involves hypothesis testing over more than one dimension, pas
 
 \item{n.pairs}{The number of \eqn{(i,j)} pairs for estimation; defaults to 100.}
 
-\item{seed}{An integer-valued seed for subsampling. If no value is given, the seed would be set, using the value of other arguments.}
+\item{seed}{(Optional) An integer-valued seed for subsampling.}
 }
 \value{
 A boolean value indicating if the given \eqn{\lambda} likely gives the first order stability.
