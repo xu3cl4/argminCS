@@ -3,6 +3,10 @@ Type: Package
 Title: Argmin Inference over a Discrete Candidate Set
 Version: 0.1.0
 Author: Tianyu Zhang, Hao Lee, Jing Lei
+Authors@R: c(
+  person(given = "Tianyu", family = "Zhang", role = "aut"),
+  person(given = "Hao", family = "Lee", role = c("aut", "cre"), email = "haolee@andrew.cmu.edu"),
+  person(given = "Jing", family = "Lei", role = "aut"))
 Maintainer: Hao Lee <haolee@andrew.cmu.edu>
 Description: Functions to perform inference on argmin/argmax, particularly, 
   help construct a discrete confidence set for argmin/argmax.
