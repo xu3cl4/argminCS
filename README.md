@@ -51,36 +51,33 @@ difference.matrix <- matrix(rep(data[, dimension], p-1),
                             byrow = FALSE) - data[, -dimension]
 argmin.HT(difference.matrix, method='SML')
 #> $test.stat.scale
-#> [1] -0.7101986
+#> [1] 2.274283
 #> 
 #> $critical.value
 #> [1] 1.644854
 #> 
 #> $std
-#> [1] 0.7251399
+#> [1] 1
 #> 
 #> $ans
-#> [1] "Accept"
+#> [1] "Reject"
 #> 
 #> $lambda
-#> [1] 5.656854
+#> [1] 1.94368e+11
 #> 
 #> $lambda.capped
-#> [1] FALSE
+#> [1] TRUE
 #> 
 #> $residual.slepian
-#> [1] 0.04882178
+#> [1] 0
 #> 
 #> $variance.bound
-#> [1] 0.03146688
-#> 
-#> $test.stat.centered
-#> NULL
+#> [1] 0.0842562
 
 ## rather than perform a hypothesis testing for a specific dimension, 
 ## one can directly generate a discrete confidence set by 
 CS.argmin(data, method='SML')
-#> [1] 1 2 5 6
+#> [1] 1 2
 ```
 
 ## Detailed Tutorial
@@ -90,17 +87,6 @@ Here is a detailed
 
 Regarding other details of methods, we encourage users to install the
 package and check function documentation.
-<!-- What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so: -->
-
-<!-- ```{r cars} -->
-<!-- summary(cars) -->
-<!-- ``` -->
-<!-- You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. -->
-<!-- You can also embed plots, for example: -->
-<!-- ```{r pressure, echo = FALSE} -->
-<!-- plot(pressure) -->
-<!-- ``` -->
-<!-- In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN. -->
 
 ## Key References
 
@@ -109,7 +95,7 @@ package and check function documentation.
 <div id="ref-cck.many.moments" class="csl-entry">
 
 Chernozhukov, V., D. Chetverikov, and K. Kato. 2013. “Testing Many
-Moment Inequalities.” IDEAS Working Paper Series from RePEc.
+Moment Inequalities.” RePEc.
 
 </div>
 

@@ -88,7 +88,7 @@ inclusion_prop <- colSums(results) / repeat_N
 ```
 
 ```{r, eval = T, echo = F}
-output_dir <- file.path("~", "Documents", "argminCS", "docs", "data")
+output_dir <- file.path("~", "Users/haolee/Desktop/argmin_CS/argminCS", "argminCS", "docs", "data")
 if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
 ```
 
@@ -149,7 +149,6 @@ saveRDS(inclusion_prop_large, file = file.path(output_dir, "inclusion_large.rds"
 ```
 
 ```{r, eval = T, echo = F}
-
 inclusion_prop_large <- readRDS(file.path(output_dir, "inclusion_large.rds"))
 ```
 
