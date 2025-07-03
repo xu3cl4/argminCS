@@ -26,7 +26,7 @@
 #' @param ... Additional arguments to \link{argmin.HT.LOO}, \link{lambda.adaptive.enlarge}, \link{is.lambda.feasible.LOO}, \link{argmin.HT.MT}, \link{argmin.HT.gupta}.
 #' A correct argument name needs to be specified if it is used.
 #'
-#' @return 'Accept' or 'Reject'. A string indicating whether the given dimension could be an argmin (Accept) or not (Reject).
+#' @return 'Accept' or 'Reject'. A string indicating whether the given dimension could be an argmin (Accept) or not (Reject), and relevant statistics.
 #' @export
 #'
 #' @examples
@@ -77,9 +77,10 @@
 #'   \insertRef{cck.many.moments}{argminCS}
 #'
 #'   \insertRef{gupta.1965}{argminCS}
+#'
+#'   \insertRef{futschik.1995}{argminCS}
 #'}
 #'
-#' \insertRef{futschik.1995}{argminCS}
 argmin.HT <- function(data, r = NULL, method = 'softmin.LOO', ...) {
   method <- tolower(method)  # Case-insensitive matching
   method <- match.arg(method,

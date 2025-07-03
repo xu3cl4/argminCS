@@ -19,7 +19,7 @@ For the list of supported methods and their abbreviations, see Details.}
 A correct argument name needs to be specified if it is used.}
 }
 \value{
-'Accept' or 'Reject'. A string indicating whether the given dimension could be an argmin (Accept) or not (Reject).
+'Accept' or 'Reject'. A string indicating whether the given dimension could be an argmin (Accept) or not (Reject), and relevant statistics.
 }
 \description{
 This is a wrapper to perform hypothesis test to see if a given dimension may be an argmin. Multiple methods are supported.
@@ -89,7 +89,7 @@ argmin.HT(data, r, method='GTA', critical.val=critical.val)
   \insertRef{cck.many.moments}{argminCS}
 
   \insertRef{gupta.1965}{argminCS}
-}
 
-\insertRef{futschik.1995}{argminCS}
+  \insertRef{futschik.1995}{argminCS}
+}
 }
