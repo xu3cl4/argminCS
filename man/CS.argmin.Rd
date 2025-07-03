@@ -29,7 +29,7 @@ The supported methods include:\tabular{ll}{
   \tab \cr
   \code{argmin.LOO (HML)} \tab A variant of SML that uses hard argmin instead of exponential weighting. Not recommended. \cr
   \tab \cr
-  \code{nonsplit (NS)} \tab A variant of SML without data splitting. Requires a fixed lambda value as an additional argument. \cr
+  \code{nonsplit (NS)} \tab A variant of SML without data splitting. Requires a fixed lambda value as an additional argument. Not recommended\cr
   \tab \cr
   \code{Bonferroni (MT)} \tab Multiple testing using Bonferroni correction. \cr
   \tab \cr

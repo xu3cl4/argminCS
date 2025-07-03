@@ -25,8 +25,8 @@ This is a wrapper to construct a confidence set for the argmax by negating the i
 \details{
 The supported methods include:\tabular{ll}{
   \code{softmin.LOO (SML)} \tab Leave-one-out algorithm using exponential weighting. \cr
-  \code{argmin.LOO (HML)} \tab Variant of SML that uses hard argmin instead of soft weighting. \cr
-  \code{nonsplit (NS)} \tab Variant of SML without data splitting. Requires a fixed lambda value. \cr
+  \code{argmin.LOO (HML)} \tab Variant of SML that uses hard argmin instead of soft weighting. Not recommended. \cr
+  \code{nonsplit (NS)} \tab Variant of SML without data splitting. Requires a fixed lambda value. Not recommended. \cr
   \code{Bonferroni (MT)} \tab Multiple testing using Bonferroni correction. \cr
   \code{Gupta (GTA)} \tab The method of \insertRef{gupta.1965}{argminCS}. \cr
   \code{Futschik (FCHK)} \tab A two-step method from \insertRef{futschik.1995}{argminCS}. \cr

@@ -8,7 +8,7 @@
 #'   \tab \cr
 #'   \code{argmin.LOO (HML)} \tab A variant of SML that uses hard argmin instead of exponential weighting. Not recommended. \cr
 #'   \tab \cr
-#'   \code{nonsplit (NS)} \tab A variant of SML without data splitting. Requires a fixed lambda value as an additional argument. \cr
+#'   \code{nonsplit (NS)} \tab A variant of SML without data splitting. Requires a fixed lambda value as an additional argument. Not recommended\cr
 #'   \tab \cr
 #'   \code{Bonferroni (MT)} \tab Multiple testing using Bonferroni correction. \cr
 #'   \tab \cr
@@ -193,8 +193,8 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
 #'
 #' @details The supported methods include:\tabular{ll}{
 #'   \code{softmin.LOO (SML)} \tab Leave-one-out algorithm using exponential weighting. \cr
-#'   \code{argmin.LOO (HML)} \tab Variant of SML that uses hard argmin instead of soft weighting. \cr
-#'   \code{nonsplit (NS)} \tab Variant of SML without data splitting. Requires a fixed lambda value. \cr
+#'   \code{argmin.LOO (HML)} \tab Variant of SML that uses hard argmin instead of soft weighting. Not recommended. \cr
+#'   \code{nonsplit (NS)} \tab Variant of SML without data splitting. Requires a fixed lambda value. Not recommended. \cr
 #'   \code{Bonferroni (MT)} \tab Multiple testing using Bonferroni correction. \cr
 #'   \code{Gupta (GTA)} \tab The method of \insertRef{gupta.1965}{argminCS}. \cr
 #'   \code{Futschik (FCHK)} \tab A two-step method from \insertRef{futschik.1995}{argminCS}. \cr

@@ -32,7 +32,8 @@ The supported methods include:\tabular{ll}{
    The method is not recommended because its type 1 error is not controlled. \cr
    \tab \cr
    \code{nonsplit (NS)} \tab  A variant of SML, but no splitting is involved.
-   One needs to pass a fixed lambda value as a required additional argument.\cr
+   One needs to pass a fixed lambda value as a required additional argument.
+   The method is not recommended because its type 1 error is not controlled. \cr
    \tab \cr
    \code{Bonferroni (MT)} \tab Multiple testing with Bonferroni's correction. \cr
    \tab \cr
