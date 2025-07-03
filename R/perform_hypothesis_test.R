@@ -122,9 +122,9 @@ argmin.HT <- function(data, r = NULL, method = 'softmin.LOO', ...) {
 #' @details The supported methods include:\tabular{ll}{
 #'   \code{softmin.LOO (SML)} \tab Leave-one-out algorithm using exponential weighting. \cr
 #'   \tab \cr
-#'   \code{argmin.LOO (HML)} \tab A variant of SML that uses hard argmin instead of exponential weighting. \cr
+#'   \code{argmin.LOO (HML)} \tab A variant of SML that uses hard argmin instead of exponential weighting. Not recommended. \cr
 #'   \tab \cr
-#'   \code{nonsplit (NS)} \tab Variant of SML without data splitting. Requires a fixed lambda value. \cr
+#'   \code{nonsplit (NS)} \tab Variant of SML without data splitting. Requires a fixed lambda value. Not recommended. \cr
 #'   \tab \cr
 #'   \code{Bonferroni (MT)} \tab Multiple testing using Bonferroni correction. \cr
 #'   \tab \cr
@@ -331,6 +331,10 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
     if (!is.null(true.mean.difference)){
       test.stat.centered <- test.stat - sqrt(n)*true.mean.difference/sd.difference.matrix[1]
       ## in this case, true.mean.difference is a scalar
+    }
+
+    if (output.weights){
+      exponential.weights <- matrix(1, n, 1)
     }
   } else {
     diffs.weighted <- rep(NA, n)

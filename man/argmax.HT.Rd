@@ -29,9 +29,9 @@ It internally negates the data and reuses the implementation from \code{\link{ar
 The supported methods include:\tabular{ll}{
   \code{softmin.LOO (SML)} \tab Leave-one-out algorithm using exponential weighting. \cr
   \tab \cr
-  \code{argmin.LOO (HML)} \tab A variant of SML that uses hard argmin instead of exponential weighting. \cr
+  \code{argmin.LOO (HML)} \tab A variant of SML that uses hard argmin instead of exponential weighting. Not recommended. \cr
   \tab \cr
-  \code{nonsplit (NS)} \tab Variant of SML without data splitting. Requires a fixed lambda value. \cr
+  \code{nonsplit (NS)} \tab Variant of SML without data splitting. Requires a fixed lambda value. Not recommended. \cr
   \tab \cr
   \code{Bonferroni (MT)} \tab Multiple testing using Bonferroni correction. \cr
   \tab \cr
