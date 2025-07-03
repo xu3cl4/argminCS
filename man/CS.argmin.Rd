@@ -53,7 +53,7 @@ sample.mean <- colMeans(data)
 CS.argmin(data)
 
 ## use seed
-CS.argmin(data, seed=3)
+CS.argmin(data, seed=13)
 
 ## argmin.LOO
 CS.argmin(data, method='HML')

@@ -2,6 +2,7 @@
 
 export(CS.argmax)
 export(CS.argmin)
+export(argmax.HT)
 export(argmin.HT)
 export(find.sub.argmin)
 export(get.difference.matrix)

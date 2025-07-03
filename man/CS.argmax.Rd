@@ -7,41 +7,67 @@
 CS.argmax(data, method = "softmin.LOO", alpha = 0.05, ...)
 }
 \arguments{
-\item{data}{A \eqn{n \times p} data matrix; each row is a p-dimensional sample.}
+\item{data}{An \eqn{n \times p} matrix; each row is a p-dimensional sample.}
 
-\item{method}{A string indicating the method used to construct the confidence set.
-Defaults to \code{'softmin.LOO'}. Can use abbreviations: \code{'SML'}, \code{'HML'}, \code{'NS'},
-\code{'MT'}, \code{'GTA'}, \code{'FCHK'}.}
+\item{method}{A string indicating the method to use; defaults to 'softmin.LOO'.
+Can be abbreviated (e.g., 'SML' for 'softmin.LOO'). See Details for full list.}
 
-\item{alpha}{The significance level; defaults to 0.05.}
+\item{alpha}{Significance level. The function returns a \eqn{1 - \alpha} confidence set.}
 
-\item{...}{Additional arguments passed to relevant testing functions, such as \code{argmin.HT.LOO},
-\code{argmin.HT.gupta}, etc.}
+\item{...}{Additional arguments passed to corresponding testing functions.}
 }
 \value{
-A vector of indices (1-based) representing the \eqn{1 - \alpha} confidence set for the argmax.
+A vector of indices (1-based) representing the confidence set for the argmax.
 }
 \description{
-This function constructs a \eqn{1 - \alpha} confidence set for the argmax.
-It reuses \code{\link{CS.argmin}} machinery by negating the data.
+This is a wrapper to construct a confidence set for the argmax by negating the input and reusing \code{\link{CS.argmin}}.
 }
 \details{
 The supported methods include:\tabular{ll}{
-   \code{softmin.LOO (SML)} \tab Leave-one-out algorithm using exponential weighting. \cr
-   \code{argmin.LOO (HML)} \tab A variant of SML using hard argmin instead of soft weights. \cr
-   \code{nonsplit (NS)} \tab SML variant without data splitting. Requires a fixed lambda. \cr
-   \code{Bonferroni (MT)} \tab Multiple testing with Bonferroni correction. \cr
-   \code{Gupta (GTA)} \tab The method from \insertCite{gupta.1965;textual}{argminCS}. \cr
-   \code{Futschik (FCHK)} \tab A two-step method from \insertCite{futschik.1995;textual}{argminCS}. \cr
+  \code{softmin.LOO (SML)} \tab Leave-one-out algorithm using exponential weighting. \cr
+  \code{argmin.LOO (HML)} \tab Variant of SML that uses hard argmin instead of soft weighting. \cr
+  \code{nonsplit (NS)} \tab Variant of SML without data splitting. Requires a fixed lambda value. \cr
+  \code{Bonferroni (MT)} \tab Multiple testing using Bonferroni correction. \cr
+  \code{Gupta (GTA)} \tab The method of \insertRef{gupta.1965}{argminCS}. \cr
+  \code{Futschik (FCHK)} \tab A two-step method from \insertRef{futschik.1995}{argminCS}. \cr
 }
 }
 \examples{
-set.seed(123)
-n <- 200; p <- 10
-mu <- (1:p) / p
-data <- MASS::mvrnorm(n, mu, diag(p))
-CS.argmax(data, method = 'SML')
+set.seed(108)
+n <- 200
+p <- 20
+mu <- (1:p)/p
+cov <- diag(p)
+data <- MASS::mvrnorm(n, mu, cov)
 
-# With Gupta
-CS.argmax(data, method = 'GTA')
+## softmin.LOO (SML)
+CS.argmax(data)
+
+## argmin.LOO (HML)
+CS.argmax(data, method = "HML")
+
+## nonsplit (NS) - requires lambda
+CS.argmax(data, method = "NS", lambda = sqrt(n)/2.5)
+
+## Bonferroni (MT) - t test default
+CS.argmax(data, method = "MT", test = "t")
+
+## Gupta (GTA)
+CS.argmax(data, method = "GTA")
+
+## Futschik (FCHK) with default alpha.1 and alpha.2
+CS.argmax(data, method = "FCHK")
+
+## Futschik (FCHK) with user-specified alpha.1 and alpha.2
+alpha.1 <- 0.001
+alpha.2 <- 1 - (0.95 / (1 - alpha.1))
+CS.argmax(data, method = "FCHK", alpha.1 = alpha.1, alpha.2 = alpha.2)
+
+}
+\references{
+\insertRef{gupta.1965}{argminCS}
+
+\insertRef{futschik.1995}{argminCS}
+
+\insertRef{cck.many.moments}{argminCS}
 }
