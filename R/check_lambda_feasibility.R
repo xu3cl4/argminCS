@@ -10,7 +10,7 @@
 #' each of its row is a (p-1)-dimensional vector of differences.
 #' @param sample.mean The sample mean of the n samples in scaled.difference.matrix; defaults to NULL. It can be calculated via colMeans(scaled.difference.matrix).
 #' If your experiment involves hypothesis testing over more than one dimension, pass sample.mean=colMeans(scaled.difference.matrix) to speed up computation.
-#' @param threshold.1 A threshold value to examine if the first order stability is likely achieved; defaults to 0.08. As its value gets smaller, the first order stability tends to increase while power might decrease.
+#' @param threshold A threshold value to examine if the first order stability is likely achieved; defaults to 0.08. As its value gets smaller, the first order stability tends to increase while power might decrease.
 #' @param n.pairs The number of \eqn{(i,j)} pairs for estimation; defaults to 100.
 #' @param seed (Optional) An integer-valued seed for subsampling.
 #'
@@ -19,7 +19,7 @@
 #'
 #' @importFrom MASS mvrnorm
 is.lambda.feasible.LOO <- function(lambda, scaled.difference.matrix, sample.mean=NULL,
-                                   threshold.1=0.08, n.pairs=100, seed=NULL){
+                                   threshold=0.08, n.pairs=100, seed=NULL){
 
   n <- nrow(scaled.difference.matrix)
   p.minus.1 <- ncol(scaled.difference.matrix)
@@ -71,7 +71,7 @@ is.lambda.feasible.LOO <- function(lambda, scaled.difference.matrix, sample.mean
 
   # estimate variance by leaving one out
   variance <- stats::var(diffs.weighted)
-  upper.bound.1 <- threshold.1*variance
+  upper.bound.1 <- threshold*variance
 
   return (list(feasible=ifelse(residual.slepian < upper.bound.1, TRUE, FALSE),
                residual.slepian=residual.slepian, variance.bound=upper.bound.1))
