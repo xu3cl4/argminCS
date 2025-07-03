@@ -2,6 +2,7 @@
 #'
 #' This is a wrapper to perform hypothesis test to see if a given dimension may be an argmin. Multiple methods are supported.
 #'
+#' @importFrom Rdpack reprompt
 #' @details The supported methods include:\tabular{ll}{
 #'    \code{softmin.LOO (SML)} \tab LOO (leave-one-out) algorithm, using the exponential weightings. \cr
 #'    \tab \cr
@@ -40,13 +41,17 @@
 #' ## softmin.LOO
 #' difference.matrix.r <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
 #' argmin.HT(difference.matrix.r)
+#'
 #' # provide centered test statistic (to simulate asymptotic normality)
 #' true.mean.difference.r <- mu[r] - mu[-r]
 #' argmin.HT(difference.matrix.r, true.mean=true.mean.difference.r)
+#'
 #' # keep the data unstandardized
 #' argmin.HT(difference.matrix.r, scale.input=FALSE)
+#'
 #' # use an user-specified lambda
 #' argmin.HT(difference.matrix.r, lambda=sqrt(n)/2.5)
+#'
 #' # add a seed
 #' argmin.HT(difference.matrix.r, seed=17)
 #'
@@ -62,14 +67,15 @@
 #' ## Gupta
 #' critical.val <- get.quantile.gupta.selection(p=length(mu))
 #' argmin.HT(data, r, method='GTA', critical.val=critical.val)
+#'
 #' @importFrom Rdpack reprompt
 #' @references{
 #'   \insertRef{cck.many.moments}{argminCS}
 #'
 #'   \insertRef{gupta.1965}{argminCS}
+#'}
 #'
-#'   \insertRef{futschik.1995}{argminCS}
-#' }
+#' \insertRef{futschik.1995}{argminCS}
 argmin.HT <- function(data, r = NULL, method = 'softmin.LOO', ...) {
   method <- tolower(method)  # Case-insensitive matching
   method <- match.arg(method,
@@ -424,11 +430,10 @@ argmin.HT.MT <- function(difference.matrix, sample.mean=NULL, test='z', alpha=0.
 #' get.quantile.gupta.selection(p=100)
 #'
 #' @importFrom Rdpack reprompt
-#' @references{
-#'  \insertRef{gupta.1965}{argminCS}
+#' @references
+#' \insertRef{gupta.1965}{argminCS}
 #'
-#'  \insertRef{futschik.1995}{argminCS}
-#' }
+#' \insertRef{futschik.1995}{argminCS}
 get.quantile.gupta.selection <- function(p, alpha=0.05, N=100000){
   quantile <- quantiles.gupta[quantiles.gupta$p == p, as.character(alpha)]
 
@@ -452,6 +457,7 @@ get.quantile.gupta.selection <- function(p, alpha=0.05, N=100000){
 
 #' @title Perform argmin hypothesis test using Gupta's method.
 #'
+#' @importFrom Rdpack reprompt
 #' @description Test whether a dimension is the argmin, using the method in \insertCite{gupta.1965}{argminCS}.
 #'
 #' @note This method requires independence among the dimensions.
@@ -477,12 +483,11 @@ get.quantile.gupta.selection <- function(p, alpha=0.05, N=100000){
 #'    \code{ans} \tab 'Reject' or 'Accept' \cr
 #' }
 #'
-#' @importFrom Rdpack reprompt
-#' @references{
-#'  \insertRef{gupta.1965}{argminCS}
+#' @references
+#' \insertRef{gupta.1965}{argminCS}
 #'
-#'  \insertRef{futschik.1995}{argminCS}
-#' }
+#' \insertRef{futschik.1995}{argminCS}
+#'
 argmin.HT.gupta <- function(data, r, sample.mean=NULL, stds=NULL, critical.val=NULL, alpha=0.05, ...){
 
   # note that the implementation can, in turn, asks for scaled.sample.mean, its min and second min

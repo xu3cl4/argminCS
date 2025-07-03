@@ -50,9 +50,7 @@ Test whether a dimension is the argmin, using the method in \insertCite{gupta.19
 This method requires independence among the dimensions.
 }
 \references{
-{
- \insertRef{gupta.1965}{argminCS}
+\insertRef{gupta.1965}{argminCS}
 
- \insertRef{futschik.1995}{argminCS}
-}
+\insertRef{futschik.1995}{argminCS}
 }

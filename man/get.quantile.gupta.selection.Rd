@@ -31,9 +31,7 @@ get.quantile.gupta.selection(p=100)
 
 }
 \references{
-{
- \insertRef{gupta.1965}{argminCS}
+\insertRef{gupta.1965}{argminCS}
 
- \insertRef{futschik.1995}{argminCS}
-}
+\insertRef{futschik.1995}{argminCS}
 }

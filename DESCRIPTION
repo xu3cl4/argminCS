@@ -11,7 +11,7 @@ Encoding: UTF-8
 LazyData: true
 URL: https://github.com/xu3cl4/argminCS
 BugReports: https://github.com/xu3cl4/argminCS/issues
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 RdMacros: Rdpack
 Imports: 
     BSDA,

@@ -52,13 +52,17 @@ sample.mean <- colMeans(data)
 ## softmin.LOO
 difference.matrix.r <- matrix(rep(data[,r], p-1), ncol=p-1, byrow=FALSE) - data[,-r]
 argmin.HT(difference.matrix.r)
+
 # provide centered test statistic (to simulate asymptotic normality)
 true.mean.difference.r <- mu[r] - mu[-r]
 argmin.HT(difference.matrix.r, true.mean=true.mean.difference.r)
+
 # keep the data unstandardized
 argmin.HT(difference.matrix.r, scale.input=FALSE)
+
 # use an user-specified lambda
 argmin.HT(difference.matrix.r, lambda=sqrt(n)/2.5)
+
 # add a seed
 argmin.HT(difference.matrix.r, seed=17)
 
@@ -74,13 +78,14 @@ argmin.HT(difference.matrix.r, method='MT', test='t')
 ## Gupta
 critical.val <- get.quantile.gupta.selection(p=length(mu))
 argmin.HT(data, r, method='GTA', critical.val=critical.val)
+
 }
 \references{
 {
   \insertRef{cck.many.moments}{argminCS}
 
   \insertRef{gupta.1965}{argminCS}
-
-  \insertRef{futschik.1995}{argminCS}
 }
+
+\insertRef{futschik.1995}{argminCS}
 }

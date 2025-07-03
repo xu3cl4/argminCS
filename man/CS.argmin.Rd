@@ -7,7 +7,7 @@
 CS.argmin(data, method = "softmin.LOO", alpha = 0.05, ...)
 }
 \arguments{
-\item{data}{A n by p data matrix; each of its row is a p-dimensional sample.}
+\item{data}{A n by p data matrix; each row is a p-dimensional sample.}
 
 \item{method}{A string indicating the method used to construct the confidence set. Defaults to 'softmin.LOO'.
 Can be abbreviated (e.g., 'SML' for 'softmin.LOO'). See **Details** for available methods and abbreviations.}

@@ -2,6 +2,7 @@
 #'
 #' This is a wrapper to construct a discrete confidence set for argmin. Multiple methods are supported.
 #'
+#' @importFrom Rdpack reprompt
 #' @details The supported methods include:\tabular{ll}{
 #'   \code{softmin.LOO (SML)} \tab Leave-one-out algorithm using exponential weighting. \cr
 #'   \tab \cr
@@ -18,7 +19,7 @@
 #'   Requires independence and the same population standard deviation for all dimensions. \cr
 #' }
 #'
-#' @param data A n by p data matrix; each of its row is a p-dimensional sample.
+#' @param data A n by p data matrix; each row is a p-dimensional sample.
 #' @param method A string indicating the method used to construct the confidence set. Defaults to 'softmin.LOO'.
 #' Can be abbreviated (e.g., 'SML' for 'softmin.LOO'). See **Details** for available methods and abbreviations.
 #' @param alpha The significance level; defaults to 0.05. The function produces a \eqn{1 - \alpha} confidence set.
@@ -182,6 +183,46 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
     stop("'method' should be one of 'softmin.LOO' (SML), 'argmin.LOO' (HML),
        'nonsplit' (NS), 'Bonferroni' (MT), 'Gupta' (GTA), 'Futschik' (FCHK)")
   }
+}
+
+#' Construct a discrete confidence set for argmax.
+#'
+#' This function constructs a \eqn{1 - \alpha} confidence set for the argmax.
+#' It reuses \code{\link{CS.argmin}} machinery by negating the data.
+#'
+#' @importFrom Rdpack reprompt
+#' @details The supported methods include:\tabular{ll}{
+#'    \code{softmin.LOO (SML)} \tab Leave-one-out algorithm using exponential weighting. \cr
+#'    \code{argmin.LOO (HML)} \tab A variant of SML using hard argmin instead of soft weights. \cr
+#'    \code{nonsplit (NS)} \tab SML variant without data splitting. Requires a fixed lambda. \cr
+#'    \code{Bonferroni (MT)} \tab Multiple testing with Bonferroni correction. \cr
+#'    \code{Gupta (GTA)} \tab The method from \insertCite{gupta.1965;textual}{argminCS}. \cr
+#'    \code{Futschik (FCHK)} \tab A two-step method from \insertCite{futschik.1995;textual}{argminCS}. \cr
+#' }
+#'
+#' @param data A \eqn{n \times p} data matrix; each row is a p-dimensional sample.
+#' @param method A string indicating the method used to construct the confidence set.
+#' Defaults to \code{'softmin.LOO'}. Can use abbreviations: \code{'SML'}, \code{'HML'}, \code{'NS'},
+#' \code{'MT'}, \code{'GTA'}, \code{'FCHK'}.
+#' @param alpha The significance level; defaults to 0.05.
+#' @param ... Additional arguments passed to relevant testing functions, such as \code{argmin.HT.LOO},
+#' \code{argmin.HT.gupta}, etc.
+#'
+#' @return A vector of indices (1-based) representing the \eqn{1 - \alpha} confidence set for the argmax.
+#' @export
+#'
+#' @examples
+#' set.seed(123)
+#' n <- 200; p <- 10
+#' mu <- (1:p) / p
+#' data <- MASS::mvrnorm(n, mu, diag(p))
+#' CS.argmax(data, method = 'SML')
+#'
+#' # With Gupta
+#' CS.argmax(data, method = 'GTA')
+CS.argmax <- function(data, method = 'softmin.LOO', alpha = 0.05, ...) {
+  negated.data <- -data
+  CS.argmin(data = negated.data, method = method, alpha = alpha, ...)
 }
 
 #' Construct a difference matrix for argmin hypothesis testing
