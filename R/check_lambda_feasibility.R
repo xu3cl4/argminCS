@@ -64,15 +64,14 @@ is.lambda.feasible.LOO <- function(lambda, scaled.difference.matrix, sample.mean
     mu.no.j <- (sample.mean*n - scaled.difference.matrix[index.j,])/(n-1)
     weights <- LDATS::softmax(lambda*mu.no.j)
     diffs.weighted[repeat_idx] <- sum(weights*scaled.difference.matrix[index.j,])
-    # diffs.weighted.true.mean[repeat_idx] <- sum(weights*sample.mean) # use sample mean to estimate true mean
   }
   difference.by.perturbing.one.squared <- mean(differences.by.perturbing.one^2)
   residual.slepian <- n*difference.by.perturbing.one.squared
 
   # estimate variance by leaving one out
   variance <- stats::var(diffs.weighted)
-  upper.bound.1 <- threshold*variance
+  variance.upper.bound <- threshold*variance
 
-  return (list(feasible=ifelse(residual.slepian < upper.bound.1, TRUE, FALSE),
-               residual.slepian=residual.slepian, variance.bound=upper.bound.1))
+  return (list(feasible=ifelse(residual.slepian < variance.upper.bound, TRUE, FALSE),
+               residual.slepian=residual.slepian, variance.bound=variance.upper.bound))
 }
