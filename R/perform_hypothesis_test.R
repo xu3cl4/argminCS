@@ -509,7 +509,9 @@ argmin.HT.MT <- function(difference.matrix, sample.mean=NULL, test='z', alpha=0.
     res <- stats::t.test(difference.matrix.non.identical[,argmax], alternative='greater')
   } else {
     ## z test
-    res <- BSDA::z.test(difference.matrix.non.identical[,argmax], alternative='greater')
+    res <- BSDA::z.test(difference.matrix.non.identical[,argmax],
+                        sigma.x=stats::sd(difference.matrix.non.identical[,argmax]),
+                          alternative='greater')
   }
   p.val <- res$p.value
   ans <- ifelse(p.val > val.critical, 'Accept', 'Reject')
