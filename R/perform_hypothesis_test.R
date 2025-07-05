@@ -355,7 +355,8 @@ argmin.HT.LOO <- function(difference.matrix, sample.mean=NULL, min.algor='softmi
       } else if (min.algor == 'argmin') {
         min.indices <- which(sample.mean.noi == max(sample.mean.noi))
         if (!is.null(seed)) {
-          seed.argmin.i <- ceiling(abs(seed*sample.mean.noi[p.minus.1]*p) + i) %% (2^31-1)
+          # seed.argmin.i <- ceiling(abs(seed*sample.mean.noi[p.minus.1]*p) + i) %% (2^31-1)
+          seed.argmin.i <- (seed*p + i) %% (2^31-1)
           withr::with_seed(seed.argmin.i, {
             idx.min <- ifelse((length(min.indices) > 1), sample(c(min.indices), 1), min.indices[1])
           })
