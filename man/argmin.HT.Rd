@@ -78,6 +78,8 @@ argmin.HT(difference.matrix.r, method='NS', lambda=sqrt(n)/2.5)
 
 ## Bonferroni (choose t test because of normal data)
 argmin.HT(difference.matrix.r, method='MT', test='t')
+## z test
+argmin.HT(difference.matrix.r, method='MT', test='z')
 
 ## Gupta
 critical.val <- get.quantile.gupta.selection(p=length(mu))

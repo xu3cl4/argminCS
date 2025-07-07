@@ -67,6 +67,8 @@
 #'
 #' ## Bonferroni (choose t test because of normal data)
 #' argmin.HT(difference.matrix.r, method='MT', test='t')
+#' ## z test
+#' argmin.HT(difference.matrix.r, method='MT', test='z')
 #'
 #' ## Gupta
 #' critical.val <- get.quantile.gupta.selection(p=length(mu))
@@ -510,6 +512,14 @@ argmin.HT.MT <- function(difference.matrix, sample.mean=NULL, test='z', alpha=0.
     res <- stats::t.test(difference.matrix.non.identical[,argmax], alternative='greater')
   } else {
     ## z test
+
+    # ## hard-coded version
+    # sample.size <- nrow(difference.matrix)
+    # wald.test.stat <-
+    #   mean(difference.matrix.non.identical[,argmax])/(stats::sd(difference.matrix.non.identical[,argmax])/sqrt(sample.size))
+    # p.value <- 1 - pnorm(wald.test.stat)
+    # res <- list(p.value=p.value, test.stat=wald.test.stat)
+
     res <- BSDA::z.test(difference.matrix.non.identical[,argmax],
                         sigma.x=stats::sd(difference.matrix.non.identical[,argmax]),
                           alternative='greater')
