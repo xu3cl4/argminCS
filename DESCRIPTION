@@ -13,7 +13,8 @@ Description: Provides methods to construct frequentist confidence sets with vali
     For instance, given an n by p loss matrix—where n is the sample size and p is the 
     number of models—the CS.argmin() method produces a discrete confidence set that contains 
     the model with the minimal (best) expected risk with desired probability. The argmin.HT() 
-    method helps check if a specific model should be included in such a confidence set.
+    method helps check if a specific model should be included in such a confidence set. The main
+    implemented method is proposed by Tianyu Zhang, Hao Lee, Jing Lei (2024) "Winners with confidence: Discrete argmin inference with an application to model selection"
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
