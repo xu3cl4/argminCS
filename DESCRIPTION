@@ -15,11 +15,11 @@ Description: Provides methods to construct frequentist confidence sets with vali
     the model with the minimal (best) expected risk with desired probability. The argmin.HT() 
     method helps check if a specific model should be included in such a confidence set. The main
     implemented method is proposed by Tianyu Zhang, Hao Lee and Jing Lei (2024) 
-    "Winners with confidence: Discrete argmin inference with an application to model selection"
+    "Winners with confidence: Discrete argmin inference with an application to model selection".
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
 RdMacros: Rdpack
-Imports: BSDA, glue, LDATS, MASS, Rdpack, stats, withr
+Imports: BSDA, glue, LDATS, MASS, methods, Rdpack, stats, withr
 URL: https://github.com/xu3cl4/argminCS
