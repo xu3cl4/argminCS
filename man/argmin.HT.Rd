@@ -26,7 +26,7 @@ This is a wrapper to perform hypothesis test to see if a given dimension may be 
 }
 \details{
 The supported methods include:\tabular{ll}{
-   \code{softmin.LOO (SML)} \tab LOO (leave-one-out) algorithm, using the exponential weightings. \cr
+   \code{softmin.LOO (SML)} \tab LOO (leave-one-out) algorithm, using the exponential weightings. Proposed by \insertRef{zhang2024winners}{argminCS}. \cr
    \tab \cr
    \code{argmin.LOO (HML)} \tab A variant of SML, but it uses (hard) argmin rather than exponential weighting.
    The method is not recommended because its type 1 error is not controlled. \cr
@@ -88,6 +88,8 @@ argmin.HT(data, r, method='GTA', critical.val=critical.val)
 }
 \references{
 {
+  \insertRef{zhang2024winners}{argminCS}
+
   \insertRef{cck.many.moments}{argminCS}
 
   \insertRef{gupta.1965}{argminCS}

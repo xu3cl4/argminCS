@@ -65,6 +65,8 @@ CS.argmax(data, method = "FCHK", alpha.1 = alpha.1, alpha.2 = alpha.2)
 
 }
 \references{
+\insertRef{zhang2024winners}{argminCS}
+
 \insertRef{gupta.1965}{argminCS}
 
 \insertRef{futschik.1995}{argminCS}

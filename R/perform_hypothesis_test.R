@@ -4,7 +4,7 @@
 #'
 #' @importFrom Rdpack reprompt
 #' @details The supported methods include:\tabular{ll}{
-#'    \code{softmin.LOO (SML)} \tab LOO (leave-one-out) algorithm, using the exponential weightings. \cr
+#'    \code{softmin.LOO (SML)} \tab LOO (leave-one-out) algorithm, using the exponential weightings. Proposed by \insertRef{zhang2024winners}{argminCS}. \cr
 #'    \tab \cr
 #'    \code{argmin.LOO (HML)} \tab A variant of SML, but it uses (hard) argmin rather than exponential weighting.
 #'    The method is not recommended because its type 1 error is not controlled. \cr

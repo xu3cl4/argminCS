@@ -25,7 +25,7 @@ This is a wrapper to construct a discrete confidence set for argmin. Multiple me
 }
 \details{
 The supported methods include:\tabular{ll}{
-  \code{softmin.LOO (SML)} \tab Leave-one-out algorithm using exponential weighting. \cr
+  \code{softmin.LOO (SML)} \tab Leave-one-out algorithm using exponential weighting. Proposed by \insertRef{zhang2024winners}{argminCS}. \cr
   \tab \cr
   \code{argmin.LOO (HML)} \tab A variant of SML that uses hard argmin instead of exponential weighting. Not recommended. \cr
   \tab \cr
@@ -78,7 +78,9 @@ CS.argmin(data, method='FCHK', alpha.1=0.0005, alpha.2=alpha.2)
 }
 \references{
 {
-  \insertRef{cck.many.moments}{argminCS}
+ \insertRef{zhang2024winners}{argminCS}
+
+ \insertRef{cck.many.moments}{argminCS}
 
  \insertRef{gupta.1965}{argminCS}
 
