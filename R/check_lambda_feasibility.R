@@ -35,7 +35,7 @@ is.lambda.feasible.LOO <- function(lambda, scaled.difference.matrix, sample.mean
 
   # sub-sample from the given sample
   if (!is.null(seed)){
-    seed <- ceiling(abs(seed*(scaled.difference.matrix[n,p.minus.1]**5 + 11)*lambda + n.pairs*seed)) %% (2^31 - 1)
+    seed <- ceiling(abs(seed*(scaled.difference.matrix[n,p.minus.1]*17)*lambda + (lambda + 1)*n.pairs*seed)) %% (2^31 - 1)
     # seed <- (n.pairs*seed) %% (2^31 - 1)
     # seed <- ceiling(lambda) %% (2^31 - 1)
     withr::with_seed(seed, {

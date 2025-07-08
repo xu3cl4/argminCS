@@ -77,40 +77,57 @@ CS.argmin <- function(data, method='softmin.LOO', alpha=0.05, ...){
 
   n <- nrow(data)
   p <- ncol(data)
+  dot_args <- list(...)
 
   if (method %in% c('softmin.LOO', 'SML', 'sml')){
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
+      if ("seed" %in% names(dot_args)) {
+        dot_args$seed <- dot_args$seed*r
+      }
       difference.matrix <- get.difference.matrix(data, r)
       sample.mean.r <- get.sample.mean.r(sample.mean, r)
-      return (argmin.HT.LOO(difference.matrix, sample.mean=sample.mean.r, alpha=alpha, ...)$ans)
+      return (do.call(argmin.HT.LOO, c(list(difference.matrix=difference.matrix, sample.mean=sample.mean.r,
+                                          alpha=alpha), dot_args))$ans)
       })
     return (which(res == 'Accept'))
 
   } else if (method %in% c('argmin.LOO', 'HML', 'hml')) {
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
+      if ("seed" %in% names(dot_args)) {
+        dot_args$seed <- dot_args$seed*r
+      }
       difference.matrix <- get.difference.matrix(data, r)
       sample.mean.r <- get.sample.mean.r(sample.mean, r)
-      return (argmin.HT.LOO(difference.matrix, sample.mean=sample.mean.r, min.algor='argmin', alpha=alpha, ...)$ans)
+      return (do.call(argmin.HT.LOO, c(list(difference.matrix=difference.matrix, sample.mean=sample.mean.r,
+                                            min.algor='argmin', alpha=alpha), dot_args))$ans)
     })
     return (which(res == 'Accept'))
 
   } else if (method %in% c('nonsplit', 'NS', 'ns')) {
     sample.mean <- colMeans(data)
     res <- sapply(1:p, function(r) {
+      if ("seed" %in% names(dot_args)) {
+        dot_args$seed <- dot_args$seed*r
+      }
       difference.matrix <- get.difference.matrix(data, r)
       sample.mean.r <- get.sample.mean.r(sample.mean, r)
-      return (argmin.HT.nonsplit(difference.matrix, sample.mean=sample.mean.r, alpha=alpha, ...)$ans)
+      return (do.call(argmin.HT.nonsplit, c(list(difference.matrix=difference.matrix, sample.mean=sample.mean.r,
+                                            alpha=alpha), dot_args))$ans)
       })
     return (which(res == 'Accept'))
 
   } else if (method %in% c('Bonferroni', 'bonferroni', 'MT', 'mt')) {
     sample.mean <- colMeans(data) # np
     res <- sapply(1:p, function(r) {
+      if ("seed" %in% names(dot_args)) {
+        dot_args$seed <- dot_args$seed*r
+      }
       difference.matrix <- get.difference.matrix(data, r)
       sample.mean.r <- get.sample.mean.r(sample.mean, r)
-      return (argmin.HT.MT(difference.matrix, sample.mean=sample.mean.r, alpha=alpha, ...)$ans)
+      return (do.call(argmin.HT.MT, c(list(difference.matrix=difference.matrix, sample.mean=sample.mean.r,
+                                                 alpha=alpha), dot_args))$ans)
       })
     return (which(res == 'Accept'))
 
