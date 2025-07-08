@@ -76,6 +76,8 @@
 #'
 #' @importFrom Rdpack reprompt
 #' @references{
+#'   \insertRef{zhang2024winners}{argminCS}
+#'
 #'   \insertRef{cck.many.moments}{argminCS}
 #'
 #'   \insertRef{gupta.1965}{argminCS}
