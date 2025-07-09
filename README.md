@@ -85,6 +85,9 @@ CS.argmin(data, method='SML')
 Here is a detailed
 [tutorial](https://xu3cl4.github.io/argminCS/demo_CSargmin.html).
 
+Regarding other details of methods, we encourage users to install the
+package and check function documentation.
+
 ## Loss Matrices
 
 There are two differentially private loss matrices provided in this
@@ -117,9 +120,6 @@ head(loss.2024[,1:5])
 dim(loss.2024)
 #> [1] 1236   39
 ```
-
-Regarding other details of methods, we encourage users to install the
-package and check function documentation.
 
 ## Key References
 
