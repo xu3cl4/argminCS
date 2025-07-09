@@ -67,12 +67,12 @@ There are two differentially private loss matrices provided in this package for 
 ```{r}
 file_2023 <- system.file("extdata", "loss_matrix_2023_differentially_private.csv", package = "argminCS")
 loss.2023 <- read.csv(file_2023)
-head(loss.2023)
+head(loss.2023[,1:5])
 dim(loss.2023)
 
 file_2024 <- system.file("extdata", "loss_matrix_2024_differentially_private.csv", package = "argminCS")
 loss.2024 <- read.csv(file_2024)
-head(loss.2024)
+head(loss.2024[,1:5])
 dim(loss.2024)
 ```
 
