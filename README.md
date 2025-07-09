@@ -85,6 +85,60 @@ CS.argmin(data, method='SML')
 Here is a detailed
 [tutorial](https://xu3cl4.github.io/argminCS/demo_CSargmin.html).
 
+## Loss Matrices
+
+There are two differentially private loss matrices provided in this
+package for reproducibility. You can access them via
+
+``` r
+file_2023 <- system.file("extdata", "loss_matrix_2023_differentially_private.csv", package = "argminCS")
+loss.2023 <- read.csv(file_2023)
+head(loss.2023)
+#>   V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 V11 V12 V13 V14 V15 V16 V17 V18 V19 V20 V21
+#> 1  0  0  0  0  0  0  0  0  0   0   0   0   0   0   0   0   0   1   1   1   0
+#> 2  0  0  0  0  0  0  0  0  0   0   0   1   0   0   0   0   0   0   0   0   0
+#> 3  0  0  0  0  0  0  0  0  0   0   0   0   0   0   0   1   0   0   0   0   0
+#> 4  0  1  0  0  0  1  1  1  1   0   0   1   1   0   0   1   0   0   1   0   0
+#> 5  0  0  0  0  0  0  0  0  0   0   0   0   0   0   0   0   0   0   0   0   0
+#> 6  0  0  0  0  0  0  0  0  1   0   0   1   0   0   0   0   0   0   0   0   0
+#>   V22 V23 V24 V25 V26 V27 V28 V29 V30 V31 V32 V33 V34 V35 V36 V37 V38 V39 V40
+#> 1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   0
+#> 2   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   0
+#> 3   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+#> 4   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+#> 5   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+#> 6   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+#>   V41 V42 V43 V44
+#> 1   0   0   0   0
+#> 2   0   0   0   0
+#> 3   0   0   0   0
+#> 4   0   1   0   0
+#> 5   0   0   0   0
+#> 6   0   0   0   0
+dim(loss.2023)
+#> [1] 183  44
+
+file_2024 <- system.file("extdata", "loss_matrix_2024_differentially_private.csv", package = "argminCS")
+loss.2024 <- read.csv(file_2024)
+head(loss.2024)
+#>   V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 V11 V12 V13 V14 V15 V16 V17 V18 V19 V20 V21
+#> 1  0  0  0  1  0  0  1  0  0   0   0   0   0   0   0   0   0   0   0   0   0
+#> 2  0  0  0  0  0  0  0  0  0   0   0   0   0   0   0   0   0   0   0   0   0
+#> 3  0  0  0  0  0  0  0  1  0   0   0   0   0   0   0   0   0   0   0   0   0
+#> 4  0  0  0  0  0  0  0  0  0   0   0   0   0   0   0   0   1   0   0   0   0
+#> 5  0  0  0  0  0  0  0  0  1   0   0   0   0   1   0   0   0   0   0   0   0
+#> 6  0  0  0  0  0  0  0  0  0   0   0   0   0   0   1   0   0   0   0   0   0
+#>   V22 V23 V24 V25 V26 V27 V28 V29 V30 V31 V32 V33 V34 V35 V36 V37 V38 V39
+#> 1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+#> 2   0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+#> 3   0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0
+#> 4   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+#> 5   0   0   0   0   0   0   1   0   1   0   0   0   0   0   0   0   0   0
+#> 6   0   0   0   0   0   0   0   0   1   0   1   0   0   0   0   0   0   0
+dim(loss.2024)
+#> [1] 1236   39
+```
+
 Regarding other details of methods, we encourage users to install the
 package and check function documentation.
 
@@ -137,6 +191,14 @@ Mogstad, Magne, Joseph P Romano, Azeem M Shaikh, and Daniel Wilhelm.
 2024. “Inference for Ranks with Applications to Mobility Across
 Neighbourhoods and Academic Achievement Across Countries.” *Review of
 Economic Studies* 91 (1): 476–518.
+
+</div>
+
+<div id="ref-zhang2024winners" class="csl-entry">
+
+Zhang, Tianyu, Hao Lee, and Jing Lei. 2024. “Winners with Confidence:
+Discrete Argmin Inference with an Application to Model Selection.”
+*arXiv Preprint arXiv:2408.02060*.
 
 </div>
 

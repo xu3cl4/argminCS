@@ -61,6 +61,21 @@ CS.argmin(data, method='SML')
 ## Detailed Tutorial
 Here is a detailed [tutorial](https://xu3cl4.github.io/argminCS/demo_CSargmin.html). 
 
+## Loss Matrices
+There are two differentially private loss matrices provided in this package for reproducibility. You can access them via
+
+```{r}
+file_2023 <- system.file("extdata", "loss_matrix_2023_differentially_private.csv", package = "argminCS")
+loss.2023 <- read.csv(file_2023)
+head(loss.2023)
+dim(loss.2023)
+
+file_2024 <- system.file("extdata", "loss_matrix_2024_differentially_private.csv", package = "argminCS")
+loss.2024 <- read.csv(file_2024)
+head(loss.2024)
+dim(loss.2024)
+```
+
 Regarding other details of methods, we encourage users to install the package and check function documentation.
 
 ## Key References
